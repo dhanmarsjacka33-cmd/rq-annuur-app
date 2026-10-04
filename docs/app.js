@@ -46,9 +46,9 @@ function applyTheme() {
 
 /* ---------- ONBOARDING ---------- */
 const ONBOARD_STEPS = [
-  { icon: '🎉', title: 'Selamat Datang!', desc: 'Aplikasi ini untuk mencatat mutaba'ah santri, absensi, dan keuangan RQ An-Nuur.' },
-  { icon: '📖', title: 'Catat Setoran', desc: 'Klik menu "Catat Mutaba'ah" untuk input setoran Jilid, Surah, Doa, atau Hadits.' },
-  { icon: '📋', title: 'Lihat Riwayat Anak', desc: 'Setelah pilih murid, otomatis muncul riwayat terakhir — memudahkan jika santri lupa bawa mutaba'ah.' },
+  { icon: '🎉', title: 'Selamat Datang!', desc: `Aplikasi ini untuk mencatat mutaba'ah santri, absensi, dan keuangan RQ An-Nuur.` },
+  { icon: '📖', title: 'Catat Setoran', desc: `Klik menu "Catat Mutaba'ah" untuk input setoran Jilid, Surah, Doa, atau Hadits.` },
+  { icon: '📋', title: 'Lihat Riwayat Anak', desc: `Setelah pilih murid, otomatis muncul riwayat terakhir — memudahkan jika santri lupa bawa mutaba'ah.` },
   { icon: '⭐', title: 'Beri Poin', desc: 'Beri poin untuk kebaikan santri. Poin muncul di leaderboard dan dashboard wali.' },
   { icon: '🎨', title: 'Personalisasi', desc: 'Ganti tema 🌙, matikan suara 🔇, atau install ke home screen HP untuk akses cepat.' }
 ];
