@@ -13,15 +13,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ink:#0d5563; --mint:#06d6a0; --blue:#0f7fa1; --pink:#ef476f; --muted:#5a8c9a;
-  --sunshine:#FFD166; --sky:#06AED5; --coral:#FF6B6B; --lime:#A8E06E; --lavender:#B794F6; --peach:#FFB085;
-  --bg:#f3f8f9; --card:#ffffff; --frame:#fbfdfc; --text:#0d5563; --text-muted:#5a8c9a;
-}
-[data-theme="dark"]{
-  --ink:#e8f4f6; --muted:#8aa9b3; --bg:#0a1f26; --card:#132a33; --frame:#0d1f28;
-  --text:#e8f4f6; --text-muted:#8aa9b3;
-}
+:root{--ink:#0d5563;--mint:#06d6a0;--blue:#0f7fa1;--pink:#ef476f;--muted:#5a8c9a;--sunshine:#FFD166;--sky:#06AED5;--coral:#FF6B6B;--lime:#A8E06E;--lavender:#B794F6;--peach:#FFB085;--bg:#f3f8f9;--card:#ffffff;--frame:#fbfdfc;--text:#0d5563;--text-muted:#5a8c9a}
+[data-theme="dark"]{--ink:#e8f4f6;--muted:#8aa9b3;--bg:#0a1f26;--card:#132a33;--frame:#0d1f28;--text:#e8f4f6;--text-muted:#8aa9b3}
 *{box-sizing:border-box}
 body{margin:0;font-family:Nunito,sans-serif;color:var(--text);background:var(--bg);transition:background .3s,color .3s}
 button,input,select{font:inherit}
@@ -37,7 +30,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .menu-card{transition:transform .2s ease,box-shadow .2s ease;background:var(--card);border:2px solid #dbeef0;text-align:left;color:var(--text)}
 [data-theme="dark"] .menu-card{border-color:#2a4a55;background:var(--card)}
 .menu-card:hover{transform:translateY(-4px) rotate(-1deg);box-shadow:0 14px 0 rgba(13,85,99,.08),0 20px 28px rgba(13,85,99,.12)}
-.menu-card:active{transform:scale(.96);transition:transform .1s ease}
+.menu-card:active{transform:scale(.96)}
 .menu-icon{filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
 .field{width:100%;border:2px solid #dbeef0;border-radius:16px;padding:12px 14px;color:var(--text);background:var(--card)}
 [data-theme="dark"] .field{border-color:#2a4a55;background:#0d2028}
@@ -52,39 +45,29 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 [data-theme="dark"] .report-table td{border-color:#1e3840}
 .att-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--card);border-radius:12px;margin-bottom:6px}
 .att-row select{width:auto;padding:6px 10px;border-radius:10px;font-size:12px;border:2px solid #dbeef0}
-.mascot{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;
-  background:linear-gradient(135deg,#FFD166 0%,#FF6B6B 100%);
-  box-shadow:0 6px 0 rgba(13,85,99,.15),0 10px 20px rgba(13,85,99,.18);
-  animation:bounce 3s ease-in-out infinite}
+.mascot{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;background:linear-gradient(135deg,#FFD166 0%,#FF6B6B 100%);box-shadow:0 6px 0 rgba(13,85,99,.15),0 10px 20px rgba(13,85,99,.18);animation:bounce 3s ease-in-out infinite}
 .mascot-sm{width:44px;height:44px;font-size:1.5rem;animation:none}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .loading-overlay{position:fixed;inset:0;background:rgba(13,85,99,.85);color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999;font-weight:bold;gap:12px}
 .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#06d6a0;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:calc(100% - 32px);max-width:440px}
-.toast-item{padding:14px 18px;border-radius:16px;color:white;font-weight:700;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.2);
-  animation:toastSlide .3s ease;display:flex;align-items:center;gap:10px;pointer-events:auto}
+.toast-item{padding:14px 18px;border-radius:16px;color:white;font-weight:700;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:toastSlide .3s ease;display:flex;align-items:center;gap:10px;pointer-events:auto}
 .toast-item.success{background:linear-gradient(135deg,#06d6a0,#0f7fa1)}
 .toast-item.error{background:linear-gradient(135deg,#FF6B6B,#c83252)}
 .toast-item.info{background:linear-gradient(135deg,#06AED5,#0f7fa1)}
 @keyframes toastSlide{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 .toast-item.hide{animation:toastOut .3s ease forwards}
 @keyframes toastOut{to{opacity:0;transform:translateY(-20px)}}
-.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-weight:800;color:white;font-size:14px;flex-shrink:0;background-size:cover;background-position:center;
-  box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:14px;flex-shrink:0;background-size:cover;background-position:center;box-shadow:0 2px 4px rgba(0,0,0,.15)}
 .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin:12px 0;min-height:170px}
-.podium-step{border-radius:14px 14px 0 0;padding:12px 8px;text-align:center;flex:1;position:relative;
-  box-shadow:0 -4px 12px rgba(0,0,0,.08),inset 0 2px 0 rgba(255,255,255,.3)}
+.podium-step{border-radius:14px 14px 0 0;padding:12px 8px;text-align:center;flex:1;position:relative;box-shadow:0 -4px 12px rgba(0,0,0,.08),inset 0 2px 0 rgba(255,255,255,.3)}
 .podium-1{height:130px;background:linear-gradient(180deg,#FFE082,#FFA500)}
 .podium-2{height:100px;background:linear-gradient(180deg,#E0E0E0,#A0A0A0)}
 .podium-3{height:80px;background:linear-gradient(180deg,#E0A878,#A06020)}
 .podium-medal{font-size:1.5rem;display:block;margin-bottom:4px}
-.podium-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-weight:800;color:white;font-size:12px;margin:0 auto 4px;background:white;background-size:cover;background-position:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.podium-name{font-size:9px;font-weight:800;text-transform:uppercase;line-height:1.1;letter-spacing:.3px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;color:#0d5563}
+.podium-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:12px;margin:0 auto 4px;background:white;background-size:cover;background-position:center;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.podium-name{font-size:9px;font-weight:800;text-transform:uppercase;line-height:1.1;letter-spacing:.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;color:#0d5563}
 .podium-value{font-size:9px;font-weight:700;opacity:.85;margin-top:2px;color:#0d5563}
 .podium-step.animate{animation:podiumRise .6s cubic-bezier(.34,1.56,.64,1) both}
 .podium-1.animate{animation-delay:.15s}.podium-2.animate{animation-delay:0s}.podium-3.animate{animation-delay:.3s}
@@ -94,13 +77,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .streak-cell.hadir{background:linear-gradient(135deg,#A8E06E,#06d6a0);color:white;box-shadow:0 2px 4px rgba(168,224,110,.3)}
 .streak-cell.today{outline:2px solid #FFD166;outline-offset:1px}
 .progress-track{width:100%;height:12px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden}
-.progress-fill{height:100%;border-radius:999px;transition:width .8s cubic-bezier(.34,1.56,.64,1);
-  background:linear-gradient(90deg,#FFD166,#FF6B6B);box-shadow:0 0 10px rgba(255,209,102,.5)}
-.icon-btn{width:38px;height:38px;border-radius:14px;background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 0 rgba(13,85,99,.08),0 8px 16px rgba(13,85,99,.08);transition:transform .15s ease;cursor:pointer;border:none}
+.progress-fill{height:100%;border-radius:999px;transition:width .8s cubic-bezier(.34,1.56,.64,1);background:linear-gradient(90deg,#FFD166,#FF6B6B);box-shadow:0 0 10px rgba(255,209,102,.5)}
+.icon-btn{width:38px;height:38px;border-radius:14px;background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(13,85,99,.08),0 8px 16px rgba(13,85,99,.08);transition:transform .15s ease;cursor:pointer;border:none}
 .icon-btn:active{transform:scale(.92)}
-.badge-item{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;
-  background:linear-gradient(135deg,#FFF3CE,#FFE599);color:#916912;border:1px solid #FFE8A1;box-shadow:0 2px 4px rgba(0,0,0,.06)}
+.badge-item{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;background:linear-gradient(135deg,#FFF3CE,#FFE599);color:#916912;border:1px solid #FFE8A1;box-shadow:0 2px 4px rgba(0,0,0,.06)}
 .badge-item.locked{background:#f0f0f0;color:#bbb;border-color:#e0e0e0;filter:grayscale(1)}
 .riwayat-card{background:linear-gradient(135deg,#E8F7FA,#D5EEF5);border-radius:16px;padding:12px;margin-bottom:12px;border:2px solid #B0E0EC}
 [data-theme="dark"] .riwayat-card{background:linear-gradient(135deg,#1a3a44,#0f2a33);border-color:#2a4a55}
@@ -110,28 +90,56 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .mutabaah-tabs::-webkit-scrollbar{display:none}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh}}
-@media print {
-  body *{visibility:hidden}
-  #raport-printout, #raport-printout *, #slip-gaji-printout, #slip-gaji-printout *{visibility:visible}
-  #raport-printout, #slip-gaji-printout{position:absolute;left:0;top:0;width:100%}
-}
+@media print{body *{visibility:hidden}#raport-printout,#raport-printout *,#slip-gaji-printout,#slip-gaji-printout *{visibility:visible}#raport-printout,#slip-gaji-printout{position:absolute;left:0;top:0;width:100%}}
 </style>
 </head>
 <body>
+
 <div id="loading-overlay" class="loading-overlay is-hidden"><div class="spinner"></div><span id="loading-text">Memuat data...</span></div>
 <div id="toast-container"></div>
 
-<!-- ONBOARDING OVERLAY -->
+<!-- ONBOARDING -->
 <div id="onboarding-overlay" class="loading-overlay is-hidden" style="background:rgba(13,85,99,.95)">
-  <div class="bg-white rounded-3xl p-6 max-w-sm mx-4 text-[#0d5563]" style="max-width:400px">
+  <div class="bg-white rounded-3xl p-6 mx-4 text-[#0d5563]" style="max-width:400px">
     <div id="onboard-icon" style="font-size:4rem;text-align:center;margin-bottom:12px">🎉</div>
     <h2 id="onboard-title" class="font-extrabold text-lg text-center mb-2">Selamat Datang!</h2>
-    <p id="onboard-desc" class="text-sm text-center text-[#5a8c9a] mb-4">Aplikasi ini untuk mencatat mutaba'ah santri.</p>
+    <p id="onboard-desc" class="text-sm text-center text-[#5a8c9a] mb-4"></p>
     <div class="flex gap-2">
       <button onclick="nextOnboarding()" id="onboard-btn" class="flex-1 bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-full py-3 font-extrabold">Lanjut →</button>
       <button onclick="skipOnboarding()" class="px-4 text-[#5a8c9a] font-bold text-xs">Lewati</button>
     </div>
-    <p class="text-center text-[10px] text-[#5a8c9a] mt-3"><span id="onboard-step">1</span> / 5</p>
+    <p class="text-center text-[10px] text-[#5a8c9a] mt-3"><span id="onboard-step">1</span> / 6</p>
+  </div>
+</div>
+
+<!-- MODAL ABSEN MULTI-POSISI -->
+<div id="modal-absen" class="fixed inset-0 z-50 is-hidden" style="background:rgba(13,85,99,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
+  <div class="bg-white rounded-3xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-extrabold text-lg text-[#0d5563]">📍 Konfirmasi Absen</h3>
+      <button id="modal-absen-close" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
+    <div class="bg-gradient-to-br from-[#E8F7FA] to-[#D5EEF5] p-3 rounded-xl mb-3">
+      <p class="text-xs font-bold text-[#0d5563]">🕐 <span id="modal-absen-sesi"></span></p>
+      <p class="text-[11px] text-[#5a8c9a] mt-0.5" id="modal-absen-tanggal"></p>
+    </div>
+    <p class="text-xs font-bold text-[#0d5563] mb-2">Posisi yang Anda perankan (max 2):</p>
+    <div id="modal-posisi-list" class="space-y-1 mb-4"></div>
+    <div class="border-t pt-3 mb-3">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" id="modal-pengganti-toggle" class="w-4 h-4 accent-[#FF6B6B]">
+        <span class="text-xs font-bold text-[#0d5563]">🎯 Saya juga menggantikan guru lain</span>
+      </label>
+      <div id="modal-pengganti-fields" class="is-hidden mt-2 space-y-2 pl-6">
+        <select id="modal-pengganti-guru" class="field text-xs p-2"></select>
+        <select id="modal-pengganti-peran" class="field text-xs p-2"></select>
+      </div>
+    </div>
+    <div class="bg-gradient-to-r from-[#FFF3CE] to-[#FFE599] p-3 rounded-xl mb-4 flex justify-between items-center">
+      <span class="text-xs font-bold text-[#916912]">💰 Total Fee Sesi Ini:</span>
+      <span class="text-lg font-extrabold text-[#916912]">Rp <span id="modal-absen-total">0</span></span>
+    </div>
+    <button id="modal-absen-konfirmasi" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-full py-3 font-extrabold shadow-lg">✅ Konfirmasi Hadir</button>
   </div>
 </div>
 
@@ -155,7 +163,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div><label class="block font-bold text-sm mb-1">Username</label><input type="text" id="login-username" class="field" required autocomplete="username"></div>
         <div><label class="block font-bold text-sm mb-1">Password</label><input type="password" id="login-password" class="field" required autocomplete="current-password"></div>
         <p id="login-pesan" class="text-xs text-[#ef476f] font-bold text-center"></p>
-        <button type="submit" id="btn-login" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-full py-4 font-extrabold shadow-lg text-base">Masuk →</button>
+        <button type="submit" id="btn-login" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-full py-4 font-extrabold shadow-lg">Masuk →</button>
       </form>
     </div>
     <p class="text-center text-[10px] text-[#5a8c9a] mt-6 font-bold">Dibuat dengan 💚 untuk RQ An-Nuur</p>
@@ -174,12 +182,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
     </div>
     <div class="flex gap-2">
-      <button id="theme-toggle" class="icon-btn" title="Ganti Tema"><i data-lucide="moon" width="18"></i></button>
+      <button id="theme-toggle" class="icon-btn" title="Tema"><i data-lucide="moon" width="18"></i></button>
       <button id="sound-toggle" class="icon-btn" title="Suara"><i data-lucide="volume-2" width="18"></i></button>
-      <button onclick="logout()" class="icon-btn text-red-500" title="Keluar"><i data-lucide="log-out" width="18"></i></button>
+      <button onclick="logout()" class="icon-btn text-red-500"><i data-lucide="log-out" width="18"></i></button>
     </div>
   </div>
-  
   <div class="mt-6 rounded-[25px] p-4 flex items-center gap-4 soft-card" style="background:linear-gradient(135deg,#FFD166,#FFB085)">
     <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center bg-white/90 text-[#0d5563] flex-shrink-0 shadow-inner">
       <span id="cal-month" class="text-[10px] font-bold uppercase tracking-widest text-[#FF6B6B] mt-1"></span>
@@ -197,7 +204,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <p class="text-[11px] text-white/80 truncate">Ananda: <span id="wali-child-name" class="font-bold text-white uppercase"></span></p>
       </div>
     </div>
-    
     <div class="grid grid-cols-2 gap-3 mb-4">
       <div class="bg-white/10 rounded-xl p-3 border border-white/20">
         <p class="text-[10px] uppercase tracking-wider text-[#FFD166] font-bold">⭐ Total Poin</p>
@@ -210,9 +216,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="progress-track mt-2"><div class="progress-fill" id="wali-hadir-bar" style="width:0%;background:linear-gradient(90deg,#A8E06E,#06d6a0)"></div></div>
       </div>
     </div>
-    
     <div id="wali-badges" class="mb-4 flex flex-wrap gap-2"></div>
-    
     <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4">
       <div class="flex justify-between items-center mb-1">
         <h4 class="font-bold text-[11px] text-[#FFD166]">🔥 Kalender Kehadiran (30 hari)</h4>
@@ -220,14 +224,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <div id="streak-calendar" class="streak-grid"></div>
     </div>
-    
     <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4">
       <h4 class="font-bold text-[11px] text-[#FFD166] mb-2">📊 Grafik Progres (6 bulan)</h4>
       <div class="chart-container"><canvas id="wali-chart"></canvas></div>
     </div>
-    
     <div id="wali-tagihan-container" class="mb-4"></div>
-    
     <h4 class="font-bold text-xs text-[#FFD166] mb-2 border-t border-white/10 pt-3">💚 Informasi Tabungan & Iuran</h4>
     <div id="wali-keuangan-container" class="space-y-3"></div>
   </div>
@@ -253,6 +254,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button id="open-absen" class="menu-card rounded-[24px] p-4" style="background:linear-gradient(135deg,#EFFAE0,#DEF5C5)"><span class="text-3xl menu-icon">✅</span><span class="block font-extrabold mt-2 text-sm">Absensi Murid</span></button>
     <button id="open-points" class="menu-card rounded-[24px] p-4" style="background:linear-gradient(135deg,#FDF3FF,#EFE0FF)"><span class="text-3xl menu-icon">⭐</span><span class="block font-extrabold mt-2 text-sm">Beri Poin</span></button>
     <button id="open-manage" class="menu-card rounded-[24px] p-4" style="background:linear-gradient(135deg,#F0F8FF,#DEEFFF)"><span class="text-3xl menu-icon">👥</span><span class="block font-extrabold mt-2 text-sm">Data Master</span></button>
+    <button id="open-kalender-guru" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#E8F7FA,#D5EEF5);border-color:#A0DDE8">
+      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📅</span><span class="font-extrabold text-sm text-[#0d5563]">Kalender Kehadiran</span></div><i data-lucide="chevron-right" class="text-[#0d5563]"></i>
+    </button>
     <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFE8A1);border-color:#FFD166">
       <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏆</span><span class="font-extrabold text-sm text-amber-800">Klasemen / Leaderboard</span></div><i data-lucide="chevron-right" class="text-amber-800"></i>
     </button>
@@ -260,7 +264,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🌟</span><span class="font-extrabold text-sm text-purple-900">Hall of Fame</span></div><i data-lucide="chevron-right" class="text-purple-800"></i>
     </button>
   </div>
-  
   <button id="open-report" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between" style="background:linear-gradient(to right,#E8F7FA,white)">
     <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📊</span><span class="font-extrabold text-sm">Laporan & Raport</span></div><i data-lucide="chevron-right"></i>
   </button>
@@ -290,7 +293,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <section id="mutabaah-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📖 <span>Setoran Mutaba'ah</span></h1>
-  
   <div class="grid grid-cols-2 gap-3 mt-4">
     <div><label class="block font-bold text-xs mb-1">Lembaga</label><select id="mutabaah-unit" class="field text-sm" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
     <div><label class="block font-bold text-xs mb-1">Kelas</label><select id="mutabaah-kelas" class="field text-sm" required></select></div>
@@ -299,8 +301,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div><label class="block font-bold text-xs mb-1">Guru</label><select id="mutabaah-guru-select" class="field text-sm" required></select></div>
     <div><label class="block font-bold text-xs mb-1">Murid</label><select id="mutabaah-child-select" class="field text-sm" required></select></div>
   </div>
-  
-  <!-- KARTU RIWAYAT TERAKHIR -->
   <div id="riwayat-card" class="riwayat-card mt-4 is-hidden">
     <div class="flex justify-between items-center mb-2">
       <span class="font-extrabold text-sm">📋 Riwayat Terakhir</span>
@@ -308,9 +308,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     </div>
     <div id="riwayat-content" class="space-y-1 text-xs"></div>
   </div>
-  
   <div id="anomali-alert" class="anomali-alert is-hidden mt-3"></div>
-  
   <form id="mutabaah-form" class="mt-4 space-y-4">
     <div class="mutabaah-tabs flex overflow-x-auto gap-2 border-b border-gray-200 pb-2 mt-2">
       <button type="button" class="tab-btn bg-[#0d5563] text-white active px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="jilid">📚 Jilid</button>
@@ -319,7 +317,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="doa">🤲 Doa</button>
       <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="hadits">📜 Hadits</button>
     </div>
-
     <div id="panel-jilid" class="mutabaah-panel space-y-3">
       <div class="grid grid-cols-2 gap-2">
         <div><label class="block font-bold text-xs mb-1">Jilid</label><select id="mutabaah-jilid-number" class="field text-sm"></select></div>
@@ -337,7 +334,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         </div>
       </div>
     </div>
-
     <div id="panel-surah" class="mutabaah-panel space-y-3 is-hidden">
       <div class="grid grid-cols-[1fr_2fr_1fr] gap-2">
         <div><label class="block font-bold text-[11px] mb-1">Juz</label><select id="mutabaah-surah-juz" class="field text-[11px] p-2"></select></div>
@@ -345,11 +341,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div><label class="block font-bold text-[11px] mb-1">Ayat</label><select id="mutabaah-ayat-count" class="field text-[11px] p-2"></select></div>
       </div>
     </div>
-
     <div id="panel-buku" class="mutabaah-panel space-y-3 is-hidden">
       <div><label class="block font-bold text-xs mb-1">Sampai Halaman Berapa?</label><input id="mutabaah-buku-page" class="field text-sm" type="number" min="1" placeholder="Cth: 15"></div>
     </div>
-
     <div id="panel-doa" class="mutabaah-panel space-y-3 is-hidden">
       <div class="flex justify-between items-end mb-1">
         <label class="block font-bold text-xs">Pilih Doa</label>
@@ -357,7 +351,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <select id="mutabaah-doa-select" class="field text-sm"><option value="">Pilih doa harian...</option></select>
     </div>
-
     <div id="panel-hadits" class="mutabaah-panel space-y-3 is-hidden">
       <div class="flex justify-between items-end mb-1">
         <label class="block font-bold text-xs">Pilih Hadits</label>
@@ -365,7 +358,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <select id="mutabaah-hadits-select" class="field text-sm"><option value="">Pilih hafalan hadits...</option></select>
     </div>
-
     <div id="master-manage-box" class="is-hidden bg-gray-50 p-3 rounded-2xl border border-gray-200 mt-2 shadow-inner">
       <div class="flex justify-between mb-2"><h4 id="master-manage-title" class="font-extrabold text-sm">Kelola</h4><button type="button" onclick="closeMasterManage()" class="text-red-500 font-bold text-xs">Tutup</button></div>
       <div id="master-manage-list" class="space-y-1 mb-3 max-h-32 overflow-y-auto bg-white p-2 rounded-xl border"></div>
@@ -375,7 +367,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <p id="master-manage-status" class="text-[10px] font-bold text-center mt-1"></p>
     </div>
-
     <div class="mt-3 pt-3 border-t border-gray-200">
       <label class="block font-bold text-sm mb-2 text-[#ef476f]">Status Setoran / Kelancaran</label>
       <select id="mutabaah-status-select" class="field font-bold" required>
@@ -383,10 +374,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <option value="Ulang">🔴 Ulang (Belum Lancar)</option>
       </select>
     </div>
-
     <p id="mutabaah-status" class="toast text-sm font-bold text-center"></p>
     <button id="mutabaah-save" type="submit" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-full py-4 font-extrabold shadow-lg">💾 Simpan Setoran</button>
   </form>
+</section>
+
+<!-- KALENDER GURU -->
+<section id="kalender-guru-screen" class="screen overflow-y-auto">
+  <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
+  <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📅 <span>Kalender Kehadiran</span></h1>
+  <div id="kalender-guru-selector" class="mt-3">
+    <select id="kalender-guru-select" class="field text-sm is-hidden"></select>
+  </div>
+  <div class="mt-4 p-4 rounded-2xl" style="background:var(--card);border:2px solid #dbeef0">
+    <div class="flex justify-between items-center mb-3">
+      <button onclick="kalenderPrevMonth()" class="icon-btn">◀</button>
+      <div class="text-center">
+        <h2 id="kalender-guru-title" class="font-extrabold text-base text-[#0d5563]"></h2>
+        <p id="kalender-guru-month" class="text-xs text-[#5a8c9a] font-bold"></p>
+      </div>
+      <button onclick="kalenderNextMonth()" class="icon-btn">▶</button>
+    </div>
+    <div id="kalender-guru-grid"></div>
+  </div>
+  <p class="text-[10px] text-[#5a8c9a] text-center mt-3 italic">Klik tanggal untuk lihat detail posisi</p>
 </section>
 
 <!-- LEADERBOARD -->
@@ -399,14 +410,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div><label class="block text-xs font-bold mb-1">Kelas</label><select id="lb-kelas" class="field text-sm"><option value="">Semua...</option></select></div>
   </div>
   <div class="space-y-6">
-    <div class="bg-gradient-to-br from-[#FFF3CE] to-[#FFE599] p-4 rounded-3xl shadow-sm border border-[#FFE8A1]"><h3 class="font-extrabold text-[#916912] mb-1 text-sm">📚 Capaian Jilid Terjauh</h3><div id="lb-jilid"></div></div>
+    <div class="bg-gradient-to-br from-[#FFF3CE] to-[#FFE599] p-4 rounded-3xl shadow-sm border border-[#FFE8A1]"><h3 class="font-extrabold text-[#916912] mb-1 text-sm">📚 Capaian Jilid</h3><div id="lb-jilid"></div></div>
     <div class="bg-gradient-to-br from-[#E2F4E8] to-[#C1EBD1] p-4 rounded-3xl shadow-sm border border-[#B2E3C5]"><h3 class="font-extrabold text-[#267152] mb-1 text-sm">🕌 Setoran Hafalan</h3><div id="lb-hafalan"></div></div>
-    <div class="bg-gradient-to-br from-[#EEE1FA] to-[#DCB7F6] p-4 rounded-3xl shadow-sm border border-[#D2A3F3]"><h3 class="font-extrabold-[#674083] mb-1 text-sm">✨ Tilawah Terjauh</h3><div id="lb-tilawah"></div></div>
+    <div class="bg-gradient-to-br from-[#EEE1FA] to-[#DCB7F6] p-4 rounded-3xl shadow-sm border border-[#D2A3F3]"><h3 class="font-extrabold text-[#674083] mb-1 text-sm">✨ Tilawah Terjauh</h3><div id="lb-tilawah"></div></div>
     <div class="bg-gradient-to-br from-[#CCE5F0] to-[#A2D4E8] p-4 rounded-3xl shadow-sm border border-[#8EC7DF]"><h3 class="font-extrabold text-[#0d5563] mb-1 text-sm">⭐ Sultan Poin</h3><div id="lb-points"></div></div>
   </div>
 </section>
 
-<!-- HALL OF FAME -->
+<!-- HALL -->
 <section id="hall-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-purple-700 flex items-center gap-2">🌟 <span>Hall of Fame</span></h1>
@@ -450,7 +461,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </form>
 </section>
 
-<!-- ABSENSI MURID -->
+<!-- ABSEN MURID -->
 <section id="absen-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">✅ <span>Absensi Murid</span></h1>
@@ -523,7 +534,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <p id="murid-status" class="toast text-xs mt-2"></p>
     </div>
     <div class="pt-4 border-t">
-      <h3 class="font-bold text-sm mb-3">⚙️ Master Kategori Pemasukan/Pengeluaran</h3>
+      <h3 class="font-bold text-sm mb-3">⚙️ Master Kategori</h3>
       <div id="kategori-list-pemasukan" class="space-y-1 mb-3"></div>
       <div id="kategori-list-pengeluaran" class="space-y-1 mb-3"></div>
       <div class="flex gap-2">
@@ -536,7 +547,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </section>
 
-<!-- REPORT / RAPORT -->
+<!-- REPORT -->
 <section id="report-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📊 <span>Laporan & Raport</span></h1>
@@ -547,12 +558,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     </div>
     <div><label class="block text-xs font-bold mb-1">Pilih Anak</label><select id="report-child" class="field text-sm"><option value="">Pilih murid...</option></select></div>
     <div class="grid grid-cols-2 gap-3">
-      <div><label class="block text-xs font-bold mb-1">Dari Tanggal</label><input id="report-start" type="date" class="field text-sm"></div>
-      <div><label class="block text-xs font-bold mb-1">Sampai Tanggal</label><input id="report-end" type="date" class="field text-sm"></div>
+      <div><label class="block text-xs font-bold mb-1">Dari</label><input id="report-start" type="date" class="field text-sm"></div>
+      <div><label class="block text-xs font-bold mb-1">Sampai</label><input id="report-end" type="date" class="field text-sm"></div>
     </div>
     <div class="grid grid-cols-2 gap-2">
       <button id="generate-report-btn" type="button" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📈 Tampilkan</button>
-      <button id="btn-print-raport" type="button" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#087a61] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">🖨️ Cetak Raport</button>
+      <button id="btn-print-raport" type="button" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#087a61] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">🖨️ Cetak</button>
     </div>
   </div>
   <div id="report-output" class="mt-5 is-hidden">
@@ -594,7 +605,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-indigo-900 flex items-center gap-2">🪙 <span>Keuangan Santri</span></h1>
   <p class="text-xs text-[#5a8c9a] mb-4 font-bold">Iuran, Tabungan, & Tagihan.</p>
-
   <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border-color:#B0BFFF">
     <h3 class="font-bold text-sm text-indigo-900 mb-3">💵 Catat Transaksi Baru</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -619,7 +629,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p id="keu-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-simpan-keu" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
     <h3 class="font-bold text-sm text-amber-900 mb-2">📌 Set Tarif SPP Khusus</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -629,9 +638,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <select id="tarif-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
     <input type="number" id="tarif-nominal" class="field text-sm mb-2" placeholder="Nominal SPP (Rp)">
     <p id="tarif-status" class="text-xs font-bold text-center mb-2"></p>
-    <button id="btn-simpan-tarif" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan Tarif</button>
+    <button id="btn-simpan-tarif" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FAF5FF,#EEE1FA);border-color:#D2A3F3">
     <h3 class="font-bold text-sm text-purple-900 mb-2">📝 Catat Tagihan Tambahan</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -646,9 +654,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p id="tagihan-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-simpan-tagihan" class="w-full bg-purple-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:#dbeef0">
-    <h3 class="font-bold text-sm mb-3">🔎 Cek Riwayat Keuangan Santri</h3>
+    <h3 class="font-bold text-sm mb-3">🔎 Cek Riwayat Keuangan</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
       <select id="cek-keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
       <select id="cek-keu-kelas" class="field text-sm"><option value="">Kelas...</option></select>
@@ -674,7 +681,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-red-700 flex items-center gap-2">📢 <span>Dashboard Penagihan</span></h1>
   <p class="text-xs text-[#5a8c9a] mb-4 font-bold">Rekap & kirim WA pengingat.</p>
-
   <div class="grid grid-cols-2 gap-3 mb-4">
     <div class="p-4 rounded-2xl text-white text-center" style="background:linear-gradient(135deg,#FF6B6B,#c83252)">
       <p class="text-[10px] font-bold uppercase opacity-80">Total Tunggakan</p>
@@ -685,20 +691,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <p id="penagihan-total-lunas" class="text-xl font-extrabold mt-1">Rp 0</p>
     </div>
   </div>
-
   <div class="p-4 rounded-2xl mb-4 border-2" style="background:var(--card);border-color:#dbeef0">
     <div class="flex justify-between items-center mb-2">
       <span class="font-bold text-xs">Progress Bulan Ini</span>
       <span id="penagihan-progress-label" class="text-xs font-extrabold">0%</span>
     </div>
-    <div class="progress-track" style="background:#eef5f3"><div class="progress-bar-fill" id="penagihan-progress-bar" style="height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#06d6a0,#0f7fa1);transition:width .6s"></div></div>
+    <div class="progress-track" style="background:#eef5f3"><div id="penagihan-progress-bar" style="height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#06d6a0,#0f7fa1);transition:width .6s"></div></div>
   </div>
-
   <div class="grid grid-cols-2 gap-2 mb-4">
     <button id="penagihan-blast" class="bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-xl py-3 text-xs font-bold shadow-lg">📤 Preview Blast WA</button>
     <button id="penagihan-export" class="bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-bold shadow-lg">📥 Export CSV</button>
   </div>
-
   <div id="penagihan-list" class="space-y-2"></div>
 </section>
 
@@ -707,12 +710,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-teal-900 flex items-center gap-2">🏦 <span>Buku Kas Umum</span></h1>
   <p class="text-xs text-[#5a8c9a] mb-4 font-bold">Pemasukan & Pengeluaran Operasional.</p>
-  
   <div class="text-white p-5 rounded-3xl shadow-xl text-center mb-5" style="background:linear-gradient(135deg,#06d6a0,#0f7fa1)">
     <p class="text-[10px] font-bold uppercase tracking-wider text-white/80">Total Saldo Kas</p>
     <p class="text-3xl font-extrabold mt-1" id="kas-saldo-total">Rp 0</p>
   </div>
-
   <div class="p-4 border rounded-2xl" style="background:var(--card);border-color:#dbeef0">
     <h3 class="font-bold text-sm mb-3">📝 Input Transaksi Kas</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -727,19 +728,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p id="kas-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-simpan-kas" class="w-full bg-teal-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:#dbeef0">
     <h3 class="font-bold text-sm mb-3">📋 Transaksi (10 Terakhir)</h3>
     <div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table></div>
   </div>
 </section>
 
-<!-- BENDAHARA -->
+<!-- BENDAHARA (GAJI) -->
 <section id="bendahara-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-amber-900 flex items-center gap-2">💰 <span>Penggajian Guru</span></h1>
-  
-  <div class="p-4 border rounded-2xl mt-5" style="background:linear-gradient(135deg,#E8F4FF,#D5EAFF);border-color:#B0D0FF">
+  <p class="text-xs text-[#5a8c9a] mb-4 font-bold">Rekap dari data absen guru (multi-posisi).</p>
+
+  <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#E8F4FF,#D5EAFF);border-color:#B0D0FF">
     <h3 class="font-bold text-sm mb-3">📝 Input Izin / Absen Manual</h3>
     <select id="izin-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru...</option></select>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -752,7 +753,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 
   <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#E8FBF2,#D5F5E3);border-color:#A8E0C0">
-    <h3 class="font-bold text-sm mb-3">🎯 Catat Guru Pengganti</h3>
+    <h3 class="font-bold text-sm mb-3">🎯 Catat Guru Pengganti (Manual)</h3>
+    <p class="text-[10px] text-[#5a8c9a] mb-2 leading-tight">Untuk penggantian yang tidak tercatat via absen mandiri guru pengganti.</p>
     <select id="gp-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru Pengganti...</option></select>
     <input type="date" id="gp-tanggal" class="field text-sm mb-2">
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -763,45 +765,21 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p id="gp-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-simpan-gp" class="w-full bg-[#087a61] text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
   </div>
-  
+
   <div class="mt-5 space-y-3">
-    <div><label class="block text-sm font-bold mb-1">👨‍🏫 Pilih Guru untuk Slip</label><select id="salary-teacher-select" class="field text-sm"></select></div>
+    <div><label class="block text-sm font-bold mb-1">👨‍🏫 Pilih Guru untuk Slip Gaji</label><select id="salary-teacher-select" class="field text-sm"><option value="">-- Pilih Guru --</option></select></div>
     <div class="grid grid-cols-2 gap-2">
-      <div><label class="text-[11px] font-bold block mb-1">Dari</label><input type="date" id="salary-start" class="field text-xs"></div>
-      <div><label class="text-[11px] font-bold block mb-1">Sampai</label><input type="date" id="salary-end" class="field text-xs"></div>
+      <div><label class="text-[11px] font-bold block mb-1">Dari Tanggal</label><input type="date" id="salary-start" class="field text-xs"></div>
+      <div><label class="text-[11px] font-bold block mb-1">Sampai Tanggal</label><input type="date" id="salary-end" class="field text-xs"></div>
     </div>
   </div>
 
-  <div class="p-4 border rounded-2xl mt-4 space-y-3" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
-    <h3 class="font-bold text-xs uppercase text-amber-900 tracking-wider">⚙️ Parameter Gaji</h3>
-    <div class="p-3 rounded-xl border text-center" style="background:var(--card);border-color:#FFE8A1">
-      <p class="text-[10px] font-bold text-gray-500">Total Hadir Sistem</p>
-      <p id="info-sistem-hadir" class="text-2xl font-extrabold mt-1">0 Sesi</p>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-      <div><label class="text-[10px] font-bold block mb-1">Wali PAUDQU</label><input id="sal-hadir-wali" type="number" class="field p-2 text-xs" placeholder="0"></div>
-      <div><label class="text-[10px] font-bold block mb-1">Pendamping</label><input id="sal-hadir-pendamping" type="number" class="field p-2 text-xs" placeholder="0"></div>
-      <div><label class="text-[10px] font-bold block mb-1">TKQ</label><input id="sal-hadir-tkq" type="number" class="field p-2 text-xs" placeholder="0"></div>
-      <div><label class="text-[10px] font-bold block mb-1">TPQ</label><input id="sal-hadir-tpq" type="number" class="field p-2 text-xs" placeholder="0"></div>
-      <div><label class="text-[10px] font-bold block mb-1">RTQ</label><input id="sal-hadir-rtq" type="number" class="field p-2 text-xs" placeholder="0"></div>
-      <div><label class="text-[10px] font-bold block mb-1">Bimbel</label><input id="sal-hadir-bimbel" type="number" class="field p-2 text-xs" placeholder="0"></div>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-      <div><label class="text-[10px] font-bold block mb-1">Transport</label><input id="sal-transport" type="number" class="field p-2 text-xs"></div>
-      <div><label class="text-[10px] font-bold block mb-1">Bonus Hadir</label><input id="sal-bonus" type="number" class="field p-2 text-xs"></div>
-    </div>
-    <div class="p-3 rounded-xl border space-y-2" style="background:var(--card);border-color:#A8E0C0">
-      <h4 class="font-bold text-[10px]">💎 Insentif Tambahan</h4>
-      <div id="insentif-list" class="space-y-1"></div>
-      <div class="flex gap-2">
-        <input id="insentif-nama" type="text" class="field p-2 text-[11px] flex-1" placeholder="Nama">
-        <input id="insentif-nominal" type="number" class="field p-2 text-[11px] w-24" placeholder="Rp">
-        <button type="button" id="btn-add-insentif" class="bg-emerald-500 text-white font-bold px-2 py-1 rounded text-[10px]">+</button>
-      </div>
-    </div>
+  <div class="p-3 rounded-2xl mt-3 border-2 text-center" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
+    <p class="text-[10px] font-bold text-amber-800">Total Sesi dalam Rentang</p>
+    <p id="info-sistem-hadir" class="text-2xl font-extrabold text-[#0d5563] mt-1">0 Sesi</p>
   </div>
 
-  <button id="btn-calculate-salary" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white font-extrabold rounded-xl py-3 text-sm mt-4 shadow-lg">🧮 Hitung & Rekap</button>
+  <button id="btn-calculate-salary" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white font-extrabold rounded-xl py-3 text-sm mt-4 shadow-lg">🧮 Hitung & Rekap Otomatis</button>
 
   <div id="salary-output-box" class="mt-5 p-5 rounded-3xl is-hidden border-2" style="background:var(--card);border-color:#06d6a0">
     <div id="slip-gaji-printout" class="space-y-4">
@@ -811,25 +789,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <div class="text-xs space-y-2">
         <p class="text-sm"><strong>Nama:</strong> <span id="slip-nama-guru" class="uppercase"></span></p>
-        <div class="flex justify-between font-bold text-[10px] text-[#0f7fa1]"><span>Total Hadir:</span><span id="sv-hadir"></span></div>
+        <div class="flex justify-between font-bold text-[10px] text-[#0f7fa1]"><span>Total Sesi:</span><span id="sv-hadir"></span></div>
         <div class="mt-3 border-t border-b py-2 space-y-1">
-          <p class="font-bold text-gray-700 mb-1">PENDAPATAN</p>
-          <div id="sr-wali" class="flex justify-between is-hidden"><span>Wali PAUDQU (<span id="sv-c-wali"></span>x):</span><span id="sv-wali"></span></div>
-          <div id="sr-pendamping" class="flex justify-between is-hidden"><span>Pendamping (<span id="sv-c-pendamping"></span>x):</span><span id="sv-pendamping"></span></div>
-          <div id="sr-tkq" class="flex justify-between is-hidden"><span>TKQ (<span id="sv-c-tkq"></span>x):</span><span id="sv-tkq"></span></div>
-          <div id="sr-tpq" class="flex justify-between is-hidden"><span>TPQ (<span id="sv-c-tpq"></span>x):</span><span id="sv-tpq"></span></div>
-          <div id="sr-rtq" class="flex justify-between is-hidden"><span>RTQ (<span id="sv-c-rtq"></span>x):</span><span id="sv-rtq"></span></div>
-          <div id="sr-bimbel" class="flex justify-between is-hidden"><span>Bimbel (<span id="sv-c-bimbel"></span> Siswa):</span><span id="sv-bimbel"></span></div>
-          <div id="sr-gp" class="flex justify-between text-blue-700 is-hidden"><span>Guru Pengganti (<span id="sv-gp-ket"></span>):</span><span id="sv-gp"></span></div>
-          <p class="font-bold text-gray-700 mt-3 mb-1">TAMBAHAN</p>
-          <div id="sr-transport" class="flex justify-between is-hidden"><span>Transport:</span><span id="sv-transport"></span></div>
-          <div id="sr-bonus" class="flex justify-between text-emerald-600 font-bold is-hidden"><span>Bonus 100% Hadir:</span><span id="sv-bonus"></span></div>
+          <p class="font-bold text-gray-700 mb-1">PENDAPATAN PER POSISI</p>
           <div id="dynamic-insentif-container"></div>
         </div>
         <div class="flex justify-between text-base font-extrabold text-emerald-700 pt-2 pb-2 bg-emerald-50 p-2 rounded-lg border border-emerald-200 mt-2">
           <span>TAKE HOME PAY:</span><span id="sv-bersih"></span>
         </div>
       </div>
+      <div id="slip-detail-sesi" class="text-[10px] mt-3"></div>
     </div>
     <div class="grid grid-cols-2 gap-2 mt-5 print:hidden">
       <button id="btn-simpan-slip" class="w-full bg-emerald-600 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1 shadow-lg"><i data-lucide="save" width="16"></i> Simpan DB</button>
@@ -844,7 +813,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-pink-700 flex items-center gap-2">📸 <span>Foto & Pencapaian</span></h1>
   <p class="text-xs text-[#5a8c9a] mb-4 font-bold">Upload foto santri & momen pencapaian.</p>
-
   <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border-color:#F48FB1">
     <h3 class="font-bold text-sm mb-3">👦 Foto Santri</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -857,13 +825,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div class="flex-1">
         <input type="file" id="foto-file" accept="image/*" capture="environment" class="hidden">
         <label for="foto-file" class="block w-full text-center bg-pink-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer shadow">📷 Pilih Foto</label>
-        <p class="text-[10px] text-[#5a8c9a] mt-1 text-center">Maks 2MB, format JPG/PNG</p>
+        <p class="text-[10px] text-[#5a8c9a] mt-1 text-center">Maks 2MB</p>
       </div>
     </div>
     <p id="foto-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-upload-foto" class="w-full bg-pink-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Foto Santri</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFE8A1);border-color:#FFD166">
     <h3 class="font-bold text-sm mb-3">🏆 Upload Pencapaian</h3>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -871,7 +838,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <select id="cap-kelas" class="field text-sm"><option value="">Kelas...</option></select>
     </div>
     <select id="cap-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
-    <input id="cap-caption" type="text" class="field text-sm mb-2" placeholder="Cth: Naik ke Jilid 3! MasyaAllah 🎉" maxlength="100">
+    <input id="cap-caption" type="text" class="field text-sm mb-2" placeholder="Cth: Naik ke Jilid 3! 🎉" maxlength="100">
     <div class="flex items-center gap-3 mb-3">
       <div id="cap-preview" class="avatar" style="width:60px;height:60px;font-size:24px;background:linear-gradient(135deg,#FFD166,#FFB085);color:#0d5563">📸</div>
       <div class="flex-1">
@@ -882,7 +849,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p id="cap-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-upload-cap" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Pencapaian</button>
   </div>
-
   <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:#dbeef0">
     <h3 class="font-bold text-sm mb-3">📋 Pencapaian Terbaru</h3>
     <div id="cap-list" class="space-y-2 max-h-72 overflow-y-auto"></div>

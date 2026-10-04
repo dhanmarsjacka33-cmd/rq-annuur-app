@@ -1,7 +1,6 @@
 /* ==========================================================
-   API LAYER + UI HELPERS v3.0
+   API LAYER v4.0
    ========================================================== */
-
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec';
 
 async function gasCall(action, payload = {}) {
@@ -22,10 +21,12 @@ window.gas = {
   updateSheetData: (s, r) => gasCall('updateSheetData', { sheetName: s, record: r }),
   deleteSheetData: (s, r) => gasCall('deleteSheetData', { sheetName: s, record: r }),
   uploadFoto: (p) => gasCall('uploadFoto', p),
-  logAktivitas: (p) => gasCall('logAktivitas', p)
+  logAktivitas: (p) => gasCall('logAktivitas', p),
+  simpanAbsenGuru: (p) => gasCall('simpanAbsenGuru', p),
+  getKalenderGuru: (p) => gasCall('getKalenderGuru', p),
+  getRekapGaji: (p) => gasCall('getRekapGaji', p)
 };
 
-/* ---------- LOADING ---------- */
 window.showLoading = (t) => {
   const el = document.getElementById('loading-overlay');
   const txt = document.getElementById('loading-text');
@@ -36,7 +37,6 @@ window.hideLoading = () => {
   if (el) el.classList.add('is-hidden');
 };
 
-/* ---------- TOAST ---------- */
 window.showToast = (msg, type = 'success', dur = 2500) => {
   const c = document.getElementById('toast-container');
   if (!c) return;
@@ -48,7 +48,6 @@ window.showToast = (msg, type = 'success', dur = 2500) => {
   setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 300); }, dur);
 };
 
-/* ---------- CONFETTI ---------- */
 window.fireConfetti = (big = false) => {
   if (typeof confetti === 'undefined') return;
   const colors = ['#FFD166', '#06d6a0', '#06AED5', '#FF6B6B', '#A8E06E', '#B794F6'];
@@ -59,7 +58,6 @@ window.fireConfetti = (big = false) => {
   }
 };
 
-/* ---------- SOUND ---------- */
 window.SOUND_ENABLED = localStorage.getItem('sound_enabled') !== 'false';
 window.playSound = (type = 'success') => {
   if (!window.SOUND_ENABLED) return;
@@ -78,10 +76,8 @@ window.playSound = (type = 'success') => {
   } catch (e) {}
 };
 
-/* ---------- VIBRATE ---------- */
-window.vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern || [30, 20, 30]); };
+window.vibrate = (p) => { if (navigator.vibrate) navigator.vibrate(p || [30, 20, 30]); };
 
-/* ---------- CELEBRATE ---------- */
 window.celebrate = (msg, opts = {}) => {
   const { confetti: c = true, sound = true, vibrate: v = true, big = false } = opts;
   if (msg) window.showToast(msg, 'success');
