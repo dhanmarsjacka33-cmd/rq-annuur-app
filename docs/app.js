@@ -879,6 +879,7 @@ async function hitungRekapGaji() {
     document.getElementById("slip-periode").textContent = `${formatDate(sDate)} s.d ${formatDate(eDate)}`;
     document.getElementById("slip-nama-guru").textContent = t;
     document.getElementById("sv-hadir").textContent = `${res.totalSesi} Sesi`;
+    document.getElementById("info-sistem-hadir").textContent = `${res.totalSesi} Sesi`;
     const posContainer = document.getElementById('dynamic-insentif-container');
     const posisiEntries = Object.values(res.perPosisi).sort((a, b) => b.total - a.total);
     posContainer.innerHTML = posisiEntries.map(p => 
