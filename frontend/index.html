@@ -1,1 +1,574 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mutaba'ah RQ An-Nuur</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#0d5563;--mint:#06d6a0;--blue:#0f7fa1;--pink:#ef476f;--muted:#5a8c9a}
+    *{box-sizing:border-box}body{margin:0;font-family:Nunito,sans-serif;color:var(--ink); background-color: #f3f8f9;}
+    button,input,select{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+    .app-shell{width:100%;min-height:100vh;display:flex;justify-content:center;padding:18px}
+    .phone-frame{width:100%;max-width:470px;min-height:calc(100vh - 36px);position:relative;overflow-x:hidden;border-radius:32px;box-shadow:0 20px 55px rgba(13,85,99,.22); background: #fbfdfc;}
+    .screen{min-height:calc(100vh - 36px);padding:28px 24px;display:none;animation:rise .35s ease both}
+    .screen.active{display:flex;flex-direction:column}.is-hidden{display:none!important}
+    .bubble{position:absolute;border-radius:999px;opacity:.35;pointer-events:none}
+    .soft-card{border:2px solid rgba(255,255,255,.8);box-shadow:0 10px 0 rgba(13,85,99,.08),0 16px 26px rgba(13,85,99,.10)}
+    .menu-card{transition:transform .2s ease,box-shadow .2s ease; background: white; border: 2px solid #dbeef0; text-align: left;}
+    .menu-card:hover{transform:translateY(-4px) rotate(-1deg);box-shadow:0 14px 0 rgba(13,85,99,.08),0 20px 28px rgba(13,85,99,.12)}
+    .field{width:100%;border:2px solid #dbeef0;border-radius:16px;padding:12px 14px;color:var(--ink);background:white}.field:focus{border-color:var(--blue)}
+    .history-item{border-left:5px solid var(--mint)}.toast{min-height:22px}
+    .report-metric{border-radius:16px;padding:14px;text-align:center}
+    .report-table{width:100%;border-collapse:collapse;font-size:12px}
+    .report-table th{text-align:left;padding:6px 8px;font-weight:700;color:var(--muted);border-bottom:2px solid #dbeef0;font-size:10px;text-transform:uppercase}
+    .report-table td{padding:8px;border-bottom:1px solid #eef5f3}
+    .att-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:white;border-radius:12px;margin-bottom:6px}
+    .att-row select{width:auto;padding:6px 10px;border-radius:10px;font-size:12px;border:2px solid #dbeef0}
+    .mutabaah-tabs::-webkit-scrollbar { display: none; }
+    .loading-overlay{position:fixed;inset:0;background:rgba(13,85,99,.85);color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999;font-weight:bold;gap:12px}
+    .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#06d6a0;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh}}
+    @media print { body * { visibility: hidden; } #slip-gaji-printout, #slip-gaji-printout * { visibility: visible; } #slip-gaji-printout { position: absolute; left: 0; top: 0; width: 100%; } }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay" class="loading-overlay is-hidden">
+    <div class="spinner"></div>
+    <span id="loading-text">Memuat data...</span>
+  </div>
 
+  <main class="app-shell">
+   <section class="phone-frame">
+     
+    <!-- LOGIN SCREEN -->
+    <section id="login-screen" class="screen active relative overflow-hidden justify-center items-center">
+      <span class="bubble w-48 h-48 bg-[#06d6a0] -top-10 -right-10"></span><span class="bubble w-32 h-32 bg-[#ef476f] bottom-10 -left-10"></span>
+      <div class="w-full bg-white/80 backdrop-blur-md p-6 rounded-3xl soft-card z-10">
+        <h1 class="text-2xl font-extrabold text-center mb-2 text-[#0d5563]">Login Mutaba'ah</h1>
+        <p class="text-sm text-center text-[#5a8c9a] mb-6">Silakan masuk menggunakan akun Anda</p>
+        <form id="form-login" class="space-y-4">
+          <div><label class="block font-bold text-sm mb-1 text-[#0d5563]">Username</label><input type="text" id="login-username" class="field" required autocomplete="username"></div>
+          <div><label class="block font-bold text-sm mb-1 text-[#0d5563]">Password</label><input type="password" id="login-password" class="field" required autocomplete="current-password"></div>
+          <p id="login-pesan" class="text-xs text-[#ef476f] font-bold text-center"></p>
+          <button type="submit" id="btn-login" class="w-full bg-[#0d5563] text-white rounded-full py-4 font-extrabold shadow-lg">Masuk</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- DASHBOARD UTAMA -->
+    <section id="dashboard-screen" class="screen relative overflow-y-auto">
+     <div class="flex justify-between items-start gap-3">
+      <div>
+       <p class="font-bold text-sm text-[#06d6a0]">Assalamu'alaikum,</p>
+       <h1 id="user-greeting" class="mt-1 font-extrabold text-xl"></h1>
+       <p id="today-date" class="mt-1 text-xs font-bold text-[#5a8c9a]"></p>
+      </div>
+      <button onclick="logout()" class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center soft-card text-red-500 hover:bg-red-50"><i data-lucide="log-out" width="18"></i></button>
+     </div>
+     
+     <div class="mt-6 rounded-[25px] p-4 flex items-center gap-4 bg-white soft-card">
+      <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center bg-[#0d5563] text-white flex-shrink-0 shadow-inner border-[3px] border-[#dbeef0]">
+        <span id="cal-month" class="text-[10px] font-bold uppercase tracking-widest text-[#06d6a0] mt-1"></span>
+        <span id="cal-day" class="text-2xl font-extrabold leading-none mb-1"></span>
+      </div>
+      <div><p class="font-extrabold text-sm text-[#0d5563]">Semangat Hari Ini!</p><p class="text-xs mt-1 text-[#5a8c9a]">Catat progres hari ini.</p></div>
+     </div>
+
+     <!-- WALI DASHBOARD -->
+     <div id="wali-dashboard" class="mt-6 rounded-[25px] p-5 bg-gradient-to-br from-[#0f7fa1] to-[#0d5563] text-white shadow-xl is-hidden">
+       <h3 class="font-bold text-sm text-[#06d6a0] mb-1"><i data-lucide="user" width="16" class="inline"></i> Dasbor Wali Murid</h3>
+       <p class="text-[11px] text-white/80 mb-4">Ananda: <span id="wali-child-name" class="font-bold text-white uppercase"></span></p>
+       <div class="grid grid-cols-2 gap-3 mb-4">
+         <div class="bg-white/10 rounded-xl p-3 text-center border border-white/20">
+            <p class="text-[10px] uppercase tracking-wider text-[#06d6a0] font-bold">Total Poin</p>
+            <p class="text-2xl font-extrabold mt-1" id="wali-poin">0</p>
+         </div>
+         <div class="bg-white/10 rounded-xl p-3 text-center border border-white/20">
+            <p class="text-[10px] uppercase tracking-wider text-[#06d6a0] font-bold">Hadir (Bln Ini)</p>
+            <p class="text-2xl font-extrabold mt-1" id="wali-hadir">0</p>
+         </div>
+       </div>
+       <div id="wali-tagihan-container" class="mb-4"></div>
+       <h4 class="font-bold text-xs text-[#06d6a0] mb-2 border-t border-white/10 pt-3">Informasi Tabungan & Iuran 1 Tahun</h4>
+       <div id="wali-keuangan-container" class="space-y-3"></div>
+     </div>
+
+     <!-- GURU ATTENDANCE CARD -->
+     <div id="guru-attendance-card" class="mt-6 rounded-[25px] p-5 bg-gradient-to-br from-[#0d5563] to-[#0f7fa1] text-white shadow-xl is-hidden">
+        <h3 class="font-bold text-sm text-[#06d6a0] flex items-center gap-2"><i data-lucide="check-circle" width="16"></i> Presensi Kehadiran Guru</h3>
+        <p class="text-[10px] text-white/80 mt-1 leading-tight">Sesi 1: 07.30-10.00 | Sesi 2: 10.30-12.00<br>Sesi 3: 15.30-17.00 WIB</p>
+        <button id="btn-absen-masuk-guru" class="w-full mt-4 bg-[#06d6a0] text-[#0d5563] rounded-xl py-3 text-xs font-extrabold shadow-md hover:scale-105 transition">Absen Kehadiran Sekarang</button>
+        <p id="guru-live-status-absen" class="text-[11px] font-bold mt-2 text-center text-white"></p>
+     </div>
+
+     <div id="menu-container" class="grid grid-cols-2 gap-3 mt-6">
+      <button id="open-mutabaah" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between bg-gradient-to-r from-teal-50 to-[#eef9fa]">
+          <div class="flex items-center gap-3"><span class="text-3xl">📖</span>
+             <div class="text-left">
+                <span class="font-extrabold text-sm text-[#0d5563] block">Catat Mutaba'ah (Setoran)</span>
+                <span class="text-[10px] text-[#5a8c9a] font-bold">Jilid, Surah, Buku, Doa, Hadits</span>
+             </div>
+          </div>
+          <i data-lucide="chevron-right" class="text-[#0d5563] mt-2"></i>
+      </button>
+
+      <button id="open-bimbel" class="menu-card rounded-[24px] p-4"><span class="text-3xl">🎓</span><span class="block font-extrabold mt-2 text-sm text-[#0d5563]">Bimbel</span></button> 
+      <button id="open-absen" class="menu-card rounded-[24px] p-4"><span class="text-3xl">✅</span><span class="block font-extrabold mt-2 text-sm text-[#0d5563]">Absensi Murid</span></button> 
+      <button id="open-points" class="menu-card rounded-[24px] p-4"><span class="text-3xl">⭐</span><span class="block font-extrabold mt-2 text-sm text-[#0d5563]">Beri Poin</span></button> 
+      <button id="open-manage" class="menu-card rounded-[24px] p-4"><span class="text-3xl">👥</span><span class="block font-extrabold mt-2 text-sm text-[#0d5563]">Data Master</span></button> 
+      
+      <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between bg-[#fff9e6] border-[#ffe8a1]">
+         <div class="flex items-center gap-3"><span class="text-3xl">🏆</span><span class="font-extrabold text-sm text-amber-700">Klasemen / Leaderboard</span></div><i data-lucide="chevron-right" class="text-amber-700"></i>
+      </button>
+     </div>
+     
+     <button id="open-report" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between"><div class="flex items-center gap-3"><span class="text-3xl">📊</span><span class="font-extrabold text-sm text-[#0d5563]">Laporan Detail Anak</span></div><i data-lucide="chevron-right"></i></button>
+     
+     <button id="open-kas" class="mt-3 w-full menu-card bg-teal-50 border-teal-200 rounded-[24px] p-4 flex justify-between is-hidden"><div class="flex items-center gap-3"><span class="text-3xl">🏦</span><span class="font-extrabold text-sm text-teal-900">Buku Kas Umum</span></div><i data-lucide="chevron-right" class="text-teal-800"></i></button>
+     
+     <button id="open-keu-santri" class="mt-3 w-full menu-card bg-indigo-50 border-indigo-200 rounded-[24px] p-4 flex justify-between is-hidden"><div class="flex items-center gap-3"><span class="text-3xl">🪙</span><span class="font-extrabold text-sm text-indigo-900">Tabungan & Iuran Anak</span></div><i data-lucide="chevron-right" class="text-indigo-800"></i></button>
+
+     <button id="open-bendahara" class="mt-3 w-full menu-card bg-amber-50 border-amber-200 rounded-[24px] p-4 flex justify-between is-hidden"><div class="flex items-center gap-3"><span class="text-3xl">💰</span><span class="font-extrabold text-sm text-amber-900">Penggajian Guru</span></div><i data-lucide="chevron-right" class="text-amber-800"></i></button>
+
+     <section id="history-section" class="mt-8 pb-5"><h2 class="font-bold text-lg mb-3">Riwayat Terakhir</h2><div id="history-list" class="space-y-3"></div></section>
+    </section>
+
+    <!-- LAYAR MUTABA'AH TERPADU -->
+    <section id="mutabaah-screen" class="screen overflow-y-auto">
+      <button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button>
+      <h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Setoran Mutaba'ah</h1>
+      
+      <form id="mutabaah-form" class="mt-4 space-y-4">
+         <div class="grid grid-cols-2 gap-3">
+            <div><label class="block font-bold text-xs mb-1">Lembaga</label><select id="mutabaah-unit" class="field text-sm" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+            <div><label class="block font-bold text-xs mb-1">Kelas</label><select id="mutabaah-kelas" class="field text-sm" required></select></div>
+         </div>
+         <div class="grid grid-cols-2 gap-3">
+            <div><label class="block font-bold text-xs mb-1">Guru</label><select id="mutabaah-guru-select" class="field text-sm" required></select></div>
+            <div><label class="block font-bold text-xs mb-1">Murid</label><select id="mutabaah-child-select" class="field text-sm" required></select></div>
+         </div>
+
+         <div class="mutabaah-tabs flex overflow-x-auto gap-2 border-b border-gray-200 pb-2 mt-2">
+            <button type="button" class="tab-btn bg-[#0d5563] text-white active px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="jilid">Jilid</button>
+            <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="surah">Surah</button>
+            <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="buku">Buku</button>
+            <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="doa">Doa Harian</button>
+            <button type="button" class="tab-btn bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" data-target="hadits">Hadits</button>
+         </div>
+
+         <div id="panel-jilid" class="mutabaah-panel space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+               <div><label class="block font-bold text-xs mb-1">Jilid</label><select id="mutabaah-jilid-number" class="field text-sm"></select></div>
+               <div><label class="block font-bold text-xs mb-1">Halaman</label><select id="mutabaah-page-from" class="field text-sm"></select></div>
+            </div>
+            <div class="p-3 bg-white/60 rounded-2xl border border-[#dbeef0] space-y-3">
+               <div class="flex items-center gap-2"><input id="jilid-tilawah-toggle" type="checkbox" class="w-4 h-4 accent-[#ef476f]"><label for="jilid-tilawah-toggle" class="text-sm font-bold">Tambah Tilawah Al-Qur'an?</label></div>
+               <div id="tilawah-fields" class="grid grid-cols-[1fr_2fr_1fr] gap-2 is-hidden">
+                 <div><select id="jilid-juz" class="field text-[11px] p-2"></select></div><div><select id="jilid-tilawah-surah" class="field text-[11px] p-2"></select></div><div><select id="jilid-tilawah-ayat" class="field text-[11px] p-2"></select></div>
+               </div>
+            </div>
+         </div>
+
+         <div id="panel-surah" class="mutabaah-panel space-y-3 is-hidden">
+            <div class="grid grid-cols-[1fr_2fr_1fr] gap-2">
+               <div><label class="block font-bold text-[11px] mb-1">Juz</label><select id="mutabaah-surah-juz" class="field text-[11px] p-2"></select></div>
+               <div><label class="block font-bold text-[11px] mb-1">Surat</label><select id="mutabaah-surah-number" class="field text-[11px] p-2"></select></div>
+               <div><label class="block font-bold text-[11px] mb-1">Ayat</label><select id="mutabaah-ayat-count" class="field text-[11px] p-2"></select></div>
+            </div>
+         </div>
+
+         <div id="panel-buku" class="mutabaah-panel space-y-3 is-hidden">
+            <div><label class="block font-bold text-xs mb-1">Sampai Halaman Berapa?</label><input id="mutabaah-buku-page" class="field text-sm" type="number" min="1" placeholder="Cth: 15"></div>
+         </div>
+
+         <div id="panel-doa" class="mutabaah-panel space-y-3 is-hidden">
+            <div class="flex justify-between items-end mb-1">
+               <label class="block font-bold text-xs">Pilih Doa</label>
+               <button type="button" onclick="toggleMasterManage('Doa')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola Daftar Doa</button>
+            </div>
+            <select id="mutabaah-doa-select" class="field text-sm"><option value="">Pilih doa harian...</option></select>
+         </div>
+
+         <div id="panel-hadits" class="mutabaah-panel space-y-3 is-hidden">
+            <div class="flex justify-between items-end mb-1">
+               <label class="block font-bold text-xs">Pilih Hadits</label>
+               <button type="button" onclick="toggleMasterManage('Hadits')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola Daftar Hadits</button>
+            </div>
+            <select id="mutabaah-hadits-select" class="field text-sm"><option value="">Pilih hafalan hadits...</option></select>
+         </div>
+
+         <div id="master-manage-box" class="is-hidden bg-gray-50 p-3 rounded-2xl border border-gray-200 mt-2 shadow-inner">
+             <div class="flex justify-between mb-2"><h4 id="master-manage-title" class="font-extrabold text-sm text-[#0d5563]">Kelola</h4><button type="button" onclick="closeMasterManage()" class="text-red-500 font-bold text-xs">Tutup</button></div>
+             <div id="master-manage-list" class="space-y-1 mb-3 max-h-32 overflow-y-auto bg-white p-2 rounded-xl border border-gray-100 shadow-sm"></div>
+             <div class="flex gap-2">
+                 <input id="master-new-input" type="text" class="field text-xs p-2 flex-1" placeholder="Ketik nama baru...">
+                 <button type="button" id="btn-save-master" class="bg-[#06d6a0] text-[#0d5563] font-bold px-3 rounded-xl text-xs">Simpan</button>
+             </div>
+             <p id="master-manage-status" class="text-[10px] font-bold text-center mt-1"></p>
+         </div>
+
+         <div class="mt-3 pt-3 border-t border-gray-200">
+            <label class="block font-bold text-sm mb-2 text-[#ef476f]">Status Setoran / Kelancaran</label>
+            <select id="mutabaah-status-select" class="field font-bold text-[#0d5563]" required>
+               <option value="Lanjut">🟢 Lanjut (Lulus / Lancar)</option>
+               <option value="Ulang">🔴 Ulang (Belum Lancar)</option>
+            </select>
+         </div>
+
+         <p id="mutabaah-status" class="toast text-sm font-bold text-center"></p>
+         <button id="mutabaah-save" type="submit" class="w-full bg-[#0d5563] text-white rounded-full py-4 font-extrabold">Simpan Setoran</button>
+      </form>
+    </section>
+
+    <!-- LEADERBOARD SCREEN -->
+    <section id="leaderboard-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button>
+       <h1 class="mt-5 font-extrabold text-2xl text-amber-700 flex items-center gap-2">🏆 Leaderboard</h1>
+       <p class="text-xs text-[#5a8c9a] mb-5">Peringkat santri terbaik berdasarkan kriteria.</p>
+       
+       <div class="grid grid-cols-2 gap-3 mb-5">
+         <div>
+            <label class="block text-xs font-bold mb-1">Lembaga</label>
+            <select id="lb-unit" class="field text-sm"><option value="">Semua Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+         </div>
+         <div>
+            <label class="block text-xs font-bold mb-1">Kelas</label>
+            <select id="lb-kelas" class="field text-sm"><option value="">Semua Kelas...</option></select>
+         </div>
+       </div>
+
+       <div class="space-y-6">
+          <div class="bg-gradient-to-br from-[#fff3ce] to-[#ffe599] p-4 rounded-3xl shadow-sm border border-[#ffe8a1]">
+             <h3 class="font-extrabold text-[#916912] mb-3 text-sm">Capaian Jilid Terjauh</h3>
+             <div id="lb-jilid" class="space-y-2"></div>
+          </div>
+          <div class="bg-gradient-to-br from-[#e2f4e8] to-[#c1ebd1] p-4 rounded-3xl shadow-sm border border-[#b2e3c5]">
+             <h3 class="font-extrabold text-[#267152] mb-3 text-sm">Total Setoran Hafalan (Sering)</h3>
+             <div id="lb-hafalan" class="space-y-2"></div>
+          </div>
+          <div class="bg-gradient-to-br from-[#eee1fa] to-[#dcb7f6] p-4 rounded-3xl shadow-sm border border-[#d2a3f3]">
+             <h3 class="font-extrabold text-[#674083] mb-3 text-sm">Capaian Tilawah Terjauh</h3>
+             <div id="lb-tilawah" class="space-y-2"></div>
+          </div>
+          <div class="bg-gradient-to-br from-[#cce5f0] to-[#a2d4e8] p-4 rounded-3xl shadow-sm border border-[#8ec7df]">
+             <h3 class="font-extrabold text-[#0d5563] mb-3 text-sm">Sultan Poin Terbanyak</h3>
+             <div id="lb-points" class="space-y-2"></div>
+          </div>
+       </div>
+    </section>
+
+    <!-- BIMBEL SCREEN -->
+    <section id="bimbel-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button><h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Bimbel</h1><form id="bimbel-form" class="mt-5 space-y-4"><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="bimbel-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="bimbel-kelas" class="field" required></select></div></div><div><label class="block font-bold text-sm mb-2">Guru</label><select id="bimbel-guru-select" class="field" required></select></div><div><label class="block font-bold text-sm mb-2">Murid</label><select id="bimbel-child-select" class="field" required></select></div><div><label class="block font-bold text-sm mb-2">Mata Pelajaran</label> <select id="bimbel-subject" class="field" required><option value="">Pilih mapel...</option><option value="Calistung">Calistung</option><option value="B. Inggris">B. Inggris</option><option value="Matematika">Matematika</option></select></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Materi/Hal.</label><input id="bimbel-material" class="field" type="text" required></div><div><label class="block font-bold text-sm mb-2">Status</label><select id="bimbel-status-select" class="field" required><option value="Lanjut">Lanjut</option><option value="Ulang">Ulang</option></select></div></div><p id="bimbel-status" class="toast text-sm font-bold"></p><button id="bimbel-save" type="submit" class="w-full bg-[#0d5563] text-white rounded-full py-4 font-extrabold">Simpan Data</button></form></section>
+
+    <!-- ABSENSI (KHUSUS MURID) SCREEN -->
+    <section id="absen-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button><h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Absensi Murid</h1><div class="mt-5 space-y-4"><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="absen-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="absen-kelas" class="field" required></select></div></div><div><label class="block font-bold text-sm mb-2">Tanggal</label><input id="absen-date" type="date" class="field" required></div>
+      <div><h3 class="font-bold text-sm mb-2">Daftar Murid</h3><div id="absen-murid-list" class="space-y-1"></div></div>
+      <p id="absen-status" class="toast text-sm font-bold"></p><button id="absen-save" type="button" class="w-full bg-[#0d5563] text-white rounded-full py-4 font-extrabold">Simpan Absen Murid</button></div></section>
+
+    <!-- POIN SCREEN -->
+    <section id="points-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button><h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Beri Poin</h1><form id="points-form" class="mt-5 space-y-4"><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="points-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="points-kelas" class="field" required></select></div></div>
+      <div id="points-single-child-container"><label class="block font-bold text-sm mb-2">Pilih Murid</label><select id="points-child-select" class="field" required></select></div>
+      <div><label class="block font-bold text-sm mb-2">Aturan Poin</label><select id="points-rule" class="field"><option value="">Pilih aturan poin...</option><option value="custom">Custom</option></select></div><div id="custom-points-fields" class="grid grid-cols-2 gap-3 is-hidden"><div><input id="points-amount" type="number" class="field" placeholder="+5 / -3"></div><div><input id="points-note" type="text" class="field" placeholder="Keterangan"></div></div>
+      <div id="bulk-points-fields" class="space-y-2 rounded-2xl bg-white/60 p-3 border border-[#dbeef0]"><label class="block font-bold text-sm">Aksi Poin Sekaligus (Bulk)</label><select id="bulk-points" class="field"><option value="">Satu murid saja</option><option value="selected">Pilih beberapa murid...</option><option value="present">Beri ke Semua Murid yang Hadir Hari Ini</option></select><div id="selected-points-children" class="is-hidden space-y-1 max-h-32 overflow-y-auto mt-2 p-2 bg-white rounded-lg border"></div></div>
+      <div class="space-y-2 rounded-2xl bg-white/60 p-3 border border-[#dbeef0]"><p class="block font-bold text-sm">Aturan Custom Tersimpan</p><div id="custom-rules-list" class="space-y-1"></div><div class="grid grid-cols-[1fr_80px] gap-2 mt-2"><input id="new-rule-name" class="field" type="text" placeholder="Nama aturan"><input id="new-rule-amount" class="field" type="number" placeholder="+5"></div><p id="rule-save-status" class="text-xs font-bold text-[#087a61]"></p><button id="add-rule-button" type="button" class="w-full bg-[#06d6a0] text-[#0d5563] rounded-xl py-2 font-bold">Tambah Aturan</button></div><p id="points-status" class="toast text-sm font-bold text-center"></p><button id="points-save" type="submit" class="w-full bg-[#0d5563] text-white rounded-full py-4 font-extrabold">Simpan Poin</button></form></section>
+
+    <!-- MANAGE SCREEN -->
+    <section id="manage-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button><h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Kelola Data</h1><div class="mt-5 space-y-4"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="manage-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="manage-kelas" class="field" required></select></div><div><label class="block font-bold text-sm mb-3">Daftar Guru</label><div id="guru-list" class="space-y-2 mb-4 p-3 rounded-lg bg-white/50 border border-[#dbeef0]"></div><form id="add-guru-form" class="flex gap-2"><input id="add-guru-input" class="field flex-1" placeholder="Nama guru baru" required><button type="submit" class="rounded-full bg-[#06d6a0] text-[#074b42] font-bold px-4 py-2">Tambah</button></form><p id="guru-status" class="toast text-xs mt-2"></p></div><div><label class="block font-bold text-sm mb-3">Daftar Murid</label><div id="murid-list" class="space-y-2 mb-4 p-3 rounded-lg bg-white/50 border border-[#dbeef0]"></div><form id="add-murid-form" class="flex gap-2"><input id="add-murid-input" class="field flex-1" placeholder="Nama murid baru" required><button type="submit" class="rounded-full bg-[#06d6a0] text-[#074b42] font-bold px-4 py-2">Tambah</button></form><p id="murid-status" class="toast text-xs mt-2"></p></div></div></section>
+
+    <!-- REPORT SCREEN -->
+    <section id="report-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button><h1 class="mt-5 font-extrabold text-2xl text-[#0d5563]">Laporan Anak</h1><div class="mt-5 space-y-3">
+      <div id="report-filters" class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold mb-1">Lembaga</label><select id="report-unit" class="field text-sm"><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block text-xs font-bold mb-1">Kelas</label><select id="report-kelas" class="field text-sm"></select></div></div>
+      <div><label class="block text-xs font-bold mb-1">Pilih Anak</label><select id="report-child" class="field text-sm"><option value="">Pilih murid...</option></select></div>
+      <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold mb-1">Dari Tanggal</label><input id="report-start" type="date" class="field text-sm"></div><div><label class="block text-xs font-bold mb-1">Sampai Tanggal</label><input id="report-end" type="date" class="field text-sm"></div></div>
+      <button id="generate-report-btn" type="button" class="w-full bg-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm">Tampilkan Laporan</button>
+     </div>
+     <div id="report-output" class="mt-5 is-hidden">
+      <div class="bg-white rounded-2xl p-4 soft-card">
+       <div class="text-center mb-5"><h3 id="report-child-name" class="font-extrabold text-lg text-[#0d5563]"></h3><p id="report-meta" class="text-xs text-[#5a8c9a]"></p></div>
+       <div class="grid grid-cols-3 gap-2 mb-3"><div class="report-metric bg-[#e2f4e8]"><p class="text-[10px] font-bold text-[#267152]">Total Setoran</p><p id="rpt-total" class="text-2xl font-extrabold text-[#267152] mt-1">0</p></div><div class="report-metric bg-[#cce5f0]"><p class="text-[10px] font-bold text-[#0d5563]">Jilid/Tilawah Terakhir</p><p id="rpt-jilid" class="text-[10px] font-extrabold text-[#0d5563] mt-1 leading-tight">—</p></div><div class="report-metric bg-[#fff3ce]"><p class="text-[10px] font-bold text-[#916912]">Total Poin</p><p id="rpt-points" class="text-2xl font-extrabold text-[#916912] mt-1">0</p></div></div>
+       <div class="grid grid-cols-2 gap-2 mb-6"><div class="report-metric bg-[#eee1fa]"><p class="text-[10px] font-bold text-[#674083]">Hafalan Terakhir</p><p id="rpt-hafalan" class="text-[10px] font-extrabold text-[#674083] mt-1 leading-tight">—</p></div><div class="report-metric bg-[#fce4ec]"><p class="text-[10px] font-bold text-[#c83252]">Kehadiran</p><p id="rpt-attendance" class="text-sm font-extrabold text-[#c83252] mt-1">—</p></div></div>
+       <h4 class="text-xs font-bold text-[#5a8c9a] mb-2">Riwayat Detail</h4>
+       <div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Detail</th><th>Status</th></tr></thead><tbody id="report-table-body"></tbody></table></div><p id="report-empty-msg" class="text-center text-xs text-[#5a8c9a] py-4 is-hidden">Tidak ada data.</p>
+      </div>
+     </div>
+    </section>
+
+    <!-- KEUANGAN SANTRI SCREEN (BENDAHARA) -->
+    <section id="keu-santri-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button>
+       <h1 class="mt-5 font-extrabold text-2xl text-indigo-900">Keuangan Santri</h1>
+       <p class="text-xs text-[#5a8c9a] mb-4">Pengelolaan Iuran, Tabungan, & Tagihan Lainnya.</p>
+
+       <div class="bg-indigo-50 p-4 border border-indigo-200 rounded-2xl shadow-sm">
+          <h3 class="font-bold text-sm text-indigo-900 mb-3">Catat Transaksi Baru (Bayar/Nabung)</h3>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+            <select id="keu-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+          </div>
+          <select id="keu-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="date" id="keu-tanggal" class="field text-sm">
+            <select id="keu-kategori" class="field text-sm">
+                <option value="Iuran Bulanan">Iuran Bulanan</option>
+                <option value="Tabungan Masuk">Tabungan Masuk</option>
+                <option value="Tarik Tabungan">Tarik Tabungan</option>
+                <option value="Pelunasan Tagihan Tambahan">Pelunasan Tagihan Tambahan</option>
+                <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          
+          <div id="iuran-range-container" class="grid grid-cols-2 gap-2 mb-2">
+            <div><label class="text-[10px] font-bold text-indigo-700">Iuran Dari Bulan</label><input type="month" id="keu-iuran-start" class="field text-sm"></div>
+            <div><label class="text-[10px] font-bold text-indigo-700">Sampai Bulan</label><input type="month" id="keu-iuran-end" class="field text-sm"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+             <input type="number" id="keu-nominal" class="field text-sm" placeholder="Nominal Rp">
+             <input type="text" id="keu-ket" class="field text-sm" placeholder="Keterangan">
+          </div>
+          <p id="keu-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-keu" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold">Simpan Transaksi</button>
+       </div>
+
+       <div class="bg-amber-50 p-4 border border-amber-200 rounded-2xl shadow-sm mt-4">
+          <h3 class="font-bold text-sm text-amber-900 mb-2">Set Tarif SPP / Iuran Khusus</h3>
+          <p class="text-[9px] text-amber-700 mb-3 leading-tight">Tetapkan tarif khusus jika anak memiliki nominal bulanan berbeda (misal: beasiswa/adik-kakak).</p>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="tarif-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+            <select id="tarif-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+          </div>
+          <select id="tarif-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+          <input type="number" id="tarif-nominal" class="field text-sm mb-2" placeholder="Nominal SPP Khusus (Rp)">
+          <p id="tarif-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-tarif" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold">Simpan Tarif Khusus</button>
+       </div>
+
+       <div class="bg-purple-50 p-4 border border-purple-200 rounded-2xl mt-4 shadow-sm">
+          <h3 class="font-bold text-sm text-purple-900 mb-2">Catat Tagihan Tambahan (Hutang)</h3>
+          <p class="text-[9px] text-purple-700 mb-3 leading-tight">Gunakan ini untuk menambah tagihan *selain* SPP bulanan (misal: Seragam, Buku Jilid, Daftar Ulang).</p>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="tagihan-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+            <select id="tagihan-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+          </div>
+          <select id="tagihan-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="tagihan-nominal" class="field text-sm" placeholder="Nominal Rp">
+            <input type="text" id="tagihan-ket" class="field text-sm" placeholder="Cth: Buku Jilid 3">
+          </div>
+          <p id="tagihan-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-tagihan" class="w-full bg-purple-600 text-white py-2 rounded-xl text-xs font-bold">Simpan Tagihan Tambahan</button>
+       </div>
+
+       <div class="bg-red-50 p-4 border border-red-200 rounded-2xl mt-4 shadow-sm">
+          <div class="flex justify-between items-center mb-2">
+             <h3 class="font-bold text-sm text-red-900">Rekap Tunggakan & Pengingat</h3>
+             <button id="btn-cek-tunggakan" class="bg-red-600 text-white rounded-lg px-3 py-1.5 text-[10px] font-bold shadow-sm">Cek Sekarang</button>
+          </div>
+          <p class="text-[9px] text-red-700 mb-1 leading-tight">Mengecek SPP & Tagihan Tambahan, lalu siapkan tautan pesan WA otomatis.</p>
+          <div id="list-tunggakan" class="mt-3 is-hidden space-y-2"></div>
+       </div>
+
+       <div class="bg-white p-4 border border-indigo-100 rounded-2xl mt-4 shadow-sm">
+          <h3 class="font-bold text-sm text-[#0d5563] mb-3">Cek Riwayat Keuangan per Santri</h3>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="cek-keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+            <select id="cek-keu-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+          </div>
+          <select id="cek-keu-child-select" class="field text-sm mb-3"><option value="">Pilih Murid...</option></select>
+          <button id="btn-cek-keu" class="w-full bg-[#0d5563] text-white py-2 rounded-xl text-xs font-bold mb-3">Tampilkan Riwayat</button>
+          
+          <div class="is-hidden mb-3 space-y-2" id="info-keuangan-panel">
+              <div class="bg-green-50 text-green-800 p-3 rounded-lg border border-green-200 text-center flex flex-col justify-center">
+                 <p class="text-[10px] font-bold uppercase">Saldo Tabungan Mengendap</p>
+                 <p class="text-lg font-extrabold mt-1" id="saldo-tabungan">Rp 0</p>
+              </div>
+              <div class="bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200 flex flex-col justify-center">
+                 <p class="text-[10px] font-bold uppercase mb-1 text-center">Status Iuran (TA Berjalan)</p>
+                 <div id="status-iuran-text" class="w-full"></div>
+              </div>
+          </div>
+
+          <div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Kategori</th><th>Nominal</th><th>Info Tambahan</th></tr></thead><tbody id="tbody-keu-santri"><tr><td colspan="4" class="text-center">Pilih murid dan klik tombol cek</td></tr></tbody></table></div>
+       </div>
+    </section>
+
+    <!-- BUKU KAS SCREEN -->
+    <section id="kas-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button>
+       <h1 class="mt-5 font-extrabold text-2xl text-teal-900">Buku Kas Umum</h1>
+       <p class="text-xs text-[#5a8c9a] mb-4">Pencatatan Pemasukan dan Pengeluaran Operasional Harian.</p>
+       
+       <div class="bg-teal-700 text-white p-4 rounded-2xl shadow-lg text-center mb-5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-teal-200">Total Saldo Kas Tersedia</p>
+          <p class="text-3xl font-extrabold mt-1" id="kas-saldo-total">Rp 0</p>
+       </div>
+
+       <div class="bg-white p-4 border border-teal-100 rounded-2xl shadow-sm">
+          <h3 class="font-bold text-sm text-[#0d5563] mb-3">Input Transaksi Kas</h3>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="date" id="kas-tanggal" class="field text-sm">
+            <select id="kas-jenis" class="field text-sm">
+                <option value="Pemasukan">Pemasukan (+)</option>
+                <option value="Pengeluaran">Pengeluaran (-)</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="kas-kategori" class="field text-sm">
+                <option value="Infaq/Sedekah">Infaq/Sedekah</option>
+                <option value="Operasional">Operasional</option>
+                <option value="Gaji Guru">Gaji Guru</option>
+                <option value="Inventaris">Inventaris</option>
+                <option value="Lainnya">Lainnya</option>
+            </select>
+            <input type="number" id="kas-nominal" class="field text-sm" placeholder="Nominal Rp">
+          </div>
+          <input type="text" id="kas-ket" class="field text-sm mb-3" placeholder="Keterangan Rinci">
+          <p id="kas-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-kas" class="w-full bg-teal-600 text-white py-2 rounded-xl text-xs font-bold">Simpan Transaksi Kas</button>
+       </div>
+
+       <div class="bg-white p-4 border border-gray-200 rounded-2xl mt-4 shadow-sm">
+          <h3 class="font-bold text-sm text-[#0d5563] mb-3">Riwayat Transaksi (10 Terakhir)</h3>
+          <div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table></div>
+       </div>
+    </section>
+
+    <!-- BENDAHARA SCREEN (Penggajian) -->
+    <section id="bendahara-screen" class="screen overflow-y-auto"><button type="button" class="back-button self-start rounded-full bg-white p-3"><i data-lucide="arrow-left"></i></button>
+       <h1 class="mt-5 font-extrabold text-2xl text-amber-900">Penggajian Guru</h1>
+       <p class="text-xs text-[#5a8c9a] mb-2">Pencatatan Kehadiran & Rekapitulasi Gaji.</p>
+       
+       <div class="bg-blue-50 p-4 border border-blue-200 rounded-2xl mt-5 shadow-sm">
+          <h3 class="font-bold text-sm text-[#0d5563] mb-3">Input Perizinan / Absen Manual Guru</h3>
+          <select id="izin-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru...</option></select>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="date" id="izin-guru-tanggal" class="field text-sm">
+            <select id="izin-guru-status" class="field text-sm">
+                <option value="Sakit (Dengan Surat)">Sakit (Dengan Surat)</option>
+                <option value="Sakit (Tanpa Surat)">Sakit (Tanpa Surat)</option>
+                <option value="Izin">Izin</option>
+                <option value="Alpha">Alpha</option>
+            </select>
+          </div>
+          <input type="text" id="izin-guru-ket" class="field text-sm mb-3" placeholder="Keterangan (Opsional)"><p id="izin-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-izin" class="w-full bg-[#0f7fa1] text-white py-2 rounded-xl text-xs font-bold">Simpan Absen Manual</button>
+       </div>
+
+       <div class="bg-emerald-50 p-4 border border-emerald-200 rounded-2xl mt-4 shadow-sm">
+          <h3 class="font-bold text-sm text-[#0d5563] mb-3">Catat Hadir Guru Pengganti</h3>
+          <p class="text-[10px] text-[#5a8c9a] mb-2 leading-tight">Pilih posisi yang digantikan agar tarif sesuai.</p>
+          <select id="gp-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru Pengganti...</option></select>
+          <input type="date" id="gp-tanggal" class="field text-sm mb-2">
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="gp-unit" class="field text-sm">
+                <option value="">Posisi digantikan...</option>
+                <option value="Wali PAUDQU">Wali PAUDQU (30k)</option>
+                <option value="Pendamping PAUDQU">Pendamping PAUDQU (20k)</option>
+                <option value="TKQ">TKQ (20k)</option>
+                <option value="TPQ">TPQ (20k)</option>
+                <option value="RTQ">RTQ (20k)</option>
+                <option value="Bimbel">Bimbel (10k/Siswa)</option>
+            </select>
+            <select id="gp-kelas" class="field text-sm"><option value="">Kelas...</option><option>A</option><option>B</option><option>C</option><option>Calistung</option><option>B. Inggris</option><option>Matematika</option></select>
+          </div>
+          <input type="number" id="gp-nominal" class="field text-sm mb-3" placeholder="Nominal Fee (Rp) per sesi">
+          <p id="gp-status" class="text-xs font-bold text-center mb-2"></p>
+          <button id="btn-simpan-gp" class="w-full bg-[#087a61] text-white py-2 rounded-xl text-xs font-bold">Simpan Guru Pengganti</button>
+       </div>
+       
+       <div class="mt-5 space-y-3">
+          <div><label class="block text-sm font-bold mb-1">Pilih Guru untuk Slip Gaji</label><select id="salary-teacher-select" class="field text-sm"><option value="">Memuat daftar guru...</option></select></div>
+          <div class="grid grid-cols-2 gap-2">
+              <div><label class="text-[11px] font-bold block mb-1">Dari Tgl (Cut-off)</label><input type="date" id="salary-start" class="field text-xs"></div>
+              <div><label class="text-[11px] font-bold block mb-1">Sampai Tanggal</label><input type="date" id="salary-end" class="field text-xs"></div>
+          </div>
+       </div>
+
+       <div class="bg-amber-50 p-4 border border-amber-200 rounded-2xl mt-4 space-y-3 shadow-inner">
+          <h3 class="font-bold text-xs uppercase text-amber-900 tracking-wider">Parameter Gaji & Insentif</h3>
+          
+          <div class="p-3 bg-white rounded-xl border border-amber-200 mb-2 text-center shadow-sm">
+             <p class="text-[10px] font-bold text-gray-500">Total Hadir Sistem (Rentang Tanggal Ini)</p>
+             <p id="info-sistem-hadir" class="text-2xl font-extrabold text-[#0d5563] mt-1">0 Sesi</p>
+          </div>
+
+          <p class="text-[10px] font-bold text-amber-800 mb-1">Distribusikan jumlah kehadiran ke posisi berikut:</p>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+             <div><label class="text-[10px] font-bold block mb-1">Wali PAUDQU (30k)</label><input id="sal-hadir-wali" type="number" class="field p-2 text-xs" placeholder="0"></div>
+             <div><label class="text-[10px] font-bold block mb-1">Pendamping (20k)</label><input id="sal-hadir-pendamping" type="number" class="field p-2 text-xs" placeholder="0"></div>
+             <div><label class="text-[10px] font-bold block mb-1">TKQ (20k)</label><input id="sal-hadir-tkq" type="number" class="field p-2 text-xs" placeholder="0"></div>
+             <div><label class="text-[10px] font-bold block mb-1">TPQ (20k)</label><input id="sal-hadir-tpq" type="number" class="field p-2 text-xs" placeholder="0"></div>
+             <div><label class="text-[10px] font-bold block mb-1">RTQ (20k)</label><input id="sal-hadir-rtq" type="number" class="field p-2 text-xs" placeholder="0"></div>
+             <div><label class="text-[10px] font-bold block mb-1">Bimbel (Per Siswa 10k)</label><input id="sal-hadir-bimbel" type="number" class="field p-2 text-xs" placeholder="0"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+             <div><label class="text-[10px] font-bold block mb-1">Transport</label><input id="sal-transport" type="number" class="field p-2 text-xs" placeholder="Nominal..."></div>
+             <div><label class="text-[10px] font-bold block mb-1">Bonus Hadir 100%</label><input id="sal-bonus" type="number" class="field p-2 text-xs" placeholder="Nominal..."></div>
+          </div>
+
+          <div class="mt-3 p-3 bg-white rounded-xl border border-emerald-200 space-y-2">
+             <h4 class="font-bold text-[10px] text-emerald-900 mb-1">Insentif Tambahan (Custom)</h4>
+             <div id="insentif-list" class="space-y-1 mb-2"></div>
+             <div class="flex gap-2">
+                <input id="insentif-nama" type="text" class="field p-2 text-[11px] flex-1" placeholder="Nama Insentif">
+                <input id="insentif-nominal" type="number" class="field p-2 text-[11px] w-24" placeholder="Rp">
+                <button type="button" id="btn-add-insentif" class="bg-emerald-500 text-white font-bold px-2 py-1 rounded text-[10px]">Tambah</button>
+             </div>
+          </div>
+       </div>
+
+       <button id="btn-calculate-salary" class="w-full bg-amber-600 text-white font-extrabold rounded-xl py-3 text-sm mt-4">Hitung & Rekap Gaji</button>
+
+       <div id="salary-output-box" class="mt-5 bg-white border border-gray-200 rounded-3xl p-5 is-hidden">
+          <div id="slip-gaji-printout" class="space-y-4">
+             <div class="text-center border-b pb-3"><h2 class="font-extrabold text-lg uppercase text-[#0d5563]">SLIP GAJI GURU</h2><p id="slip-periode" class="text-[11px] mt-1 text-[#0f7fa1] font-mono"></p></div>
+             
+             <div class="text-xs space-y-2">
+                <p class="text-sm"><strong>Nama:</strong> <span id="slip-nama-guru" class="uppercase"></span></p>
+                <div class="flex justify-between text-[#0f7fa1] font-bold mb-1 text-[10px]"><span>Total Kehadiran Sistem:</span><span id="sv-hadir"></span></div>
+                
+                <div class="mt-3 border-t border-b py-2 space-y-1">
+                   <p class="font-bold text-gray-700 mb-1">PENDAPATAN KEHADIRAN</p>
+                   <div id="sr-wali" class="flex justify-between is-hidden"><span>Wali PAUDQU (<span id="sv-c-wali"></span>x):</span><span id="sv-wali"></span></div>
+                   <div id="sr-pendamping" class="flex justify-between is-hidden"><span>Pendamping (<span id="sv-c-pendamping"></span>x):</span><span id="sv-pendamping"></span></div>
+                   <div id="sr-tkq" class="flex justify-between is-hidden"><span>TKQ (<span id="sv-c-tkq"></span>x):</span><span id="sv-tkq"></span></div>
+                   <div id="sr-tpq" class="flex justify-between is-hidden"><span>TPQ (<span id="sv-c-tpq"></span>x):</span><span id="sv-tpq"></span></div>
+                   <div id="sr-rtq" class="flex justify-between is-hidden"><span>RTQ (<span id="sv-c-rtq"></span>x):</span><span id="sv-rtq"></span></div>
+                   <div id="sr-bimbel" class="flex justify-between is-hidden"><span>Bimbel (<span id="sv-c-bimbel"></span> Siswa):</span><span id="sv-bimbel"></span></div>
+                   <div id="sr-gp" class="flex justify-between text-blue-700 is-hidden"><span>Guru Pengganti (<span id="sv-gp-ket"></span>):</span><span id="sv-gp"></span></div>
+                   
+                   <p class="font-bold text-gray-700 mt-3 mb-1">TAMBAHAN / INSENTIF</p>
+                   <div id="sr-transport" class="flex justify-between is-hidden"><span>Transport:</span><span id="sv-transport"></span></div>
+                   <div id="sr-bonus" class="flex justify-between text-emerald-600 font-bold is-hidden"><span>Bonus 100% Hadir:</span><span id="sv-bonus"></span></div>
+                   <div id="dynamic-insentif-container"></div>
+                </div>
+                
+                <div class="flex justify-between text-base font-extrabold text-emerald-700 pt-2 pb-2 bg-emerald-50 p-2 rounded-lg border border-emerald-200 mt-2">
+                    <span>TAKE HOME PAY:</span><span id="sv-bersih"></span>
+                </div>
+             </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 mt-5 print:hidden">
+              <button id="btn-simpan-slip" class="w-full bg-emerald-600 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1"><i data-lucide="save" width="16"></i> Simpan Draft DB</button>
+              <button onclick="window.print()" class="w-full bg-gray-800 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1"><i data-lucide="printer" width="16"></i> Cetak / PDF</button>
+          </div>
+          <p id="slip-save-status" class="text-[10px] font-bold text-center mt-2 print:hidden"></p>
+       </div>
+    </section>
+
+   </section>
+  </main>
+  
+  <template id="history-template"><article class="history-item rounded-2xl bg-white p-4 mb-3 shadow-sm" data-record-id=""><div class="flex justify-between items-center"><div><h3 class="history-name font-extrabold text-[#0d5563] text-sm"></h3><p class="history-detail mt-1 text-xs text-[#5a8c9a]"></p><p class="history-date mt-2 text-[10px] text-[#0f7fa1] font-bold"></p></div><div class="action-buttons flex gap-2"></div></div></article></template>
+
+  <!-- API LAYER (harus diload pertama) -->
+  <script src="api.js"></script>
+  <!-- APP LOGIC -->
+  <script src="app.js"></script>
+</body>
+</html>
