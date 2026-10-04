@@ -734,7 +734,7 @@ document.getElementById('modal-absen-konfirmasi')?.addEventListener('click', asy
     const res = await window.gas.simpanAbsenGuru({ record: rec });
     if (!res.sukses) {
       setSaving(btn, false);
-      if (res.error === 'DUPLIKAT') {
+      if (res.error === 'SUDAH_ABSEN' || res.error === 'DUPLIKAT') {
         if (confirm(`⚠️ ${res.message}\n\nTetap absen (override)?`)) {
           rec.force_override = true;
           const res2 = await window.gas.simpanAbsenGuru({ record: rec });
