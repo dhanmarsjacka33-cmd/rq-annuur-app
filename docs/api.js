@@ -1,5 +1,5 @@
 /* ==========================================================
-   API LAYER v4.0
+   API LAYER v5.1
    ========================================================== */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec';
 
@@ -24,17 +24,37 @@ window.gas = {
   logAktivitas: (p) => gasCall('logAktivitas', p),
   simpanAbsenGuru: (p) => gasCall('simpanAbsenGuru', p),
   getKalenderGuru: (p) => gasCall('getKalenderGuru', p),
-  getRekapGaji: (p) => gasCall('getRekapGaji', p)
+  getRekapGaji: (p) => gasCall('getRekapGaji', p),
+  getAuditKeuangan: (p) => gasCall('getAuditKeuangan', p)
 };
 
-window.showLoading = (t) => {
+window.showLoading = function(text, percent) {
   const el = document.getElementById('loading-overlay');
   const txt = document.getElementById('loading-text');
-  if (el) { el.classList.remove('is-hidden'); if (txt) txt.textContent = t || 'Memuat...'; }
+  const bar = document.getElementById('loading-bar');
+  const pct = document.getElementById('loading-percent');
+  if (el) { el.classList.remove('is-hidden'); if (txt) txt.textContent = text || 'Memuat...'; }
+  if (typeof percent === 'number') {
+    if (bar) bar.style.width = percent + '%';
+    if (pct) pct.textContent = percent + '%';
+  } else {
+    if (bar) bar.style.width = '30%';
+    if (pct) pct.textContent = '';
+  }
 };
-window.hideLoading = () => {
+window.updateLoading = function(percent, text) {
+  const bar = document.getElementById('loading-bar');
+  const pct = document.getElementById('loading-percent');
+  const txt = document.getElementById('loading-text');
+  if (bar) bar.style.width = percent + '%';
+  if (pct) pct.textContent = percent + '%';
+  if (txt && text) txt.textContent = text;
+};
+window.hideLoading = function() {
   const el = document.getElementById('loading-overlay');
   if (el) el.classList.add('is-hidden');
+  const bar = document.getElementById('loading-bar');
+  if (bar) bar.style.width = '0%';
 };
 
 window.showToast = (msg, type = 'success', dur = 2500) => {
@@ -52,10 +72,6 @@ window.fireConfetti = (big = false) => {
   if (typeof confetti === 'undefined') return;
   const colors = ['#FFD166', '#06d6a0', '#06AED5', '#FF6B6B', '#A8E06E', '#B794F6'];
   confetti({ particleCount: big ? 120 : 60, spread: big ? 100 : 70, origin: { y: 0.7 }, colors });
-  if (big) {
-    setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors }), 200);
-    setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors }), 200);
-  }
 };
 
 window.SOUND_ENABLED = localStorage.getItem('sound_enabled') !== 'false';
