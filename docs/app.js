@@ -1878,7 +1878,8 @@ document.getElementById('btn-refresh-audit')?.addEventListener('click', loadAudi
 /* ==========================================================
    ⚡ POIN CEPAT (FAB) — v5.2
    ========================================================== */
-const QP_PRESETS = [
+// Preset default (dipakai kalau Aturan Poin di Sheet kosong)
+const QP_PRESETS_DEFAULT = [
   { name: 'Baca Lancar', amount: 1 },
   { name: 'Setoran Baru', amount: 3 },
   { name: 'Naik Jilid', amount: 5 },
@@ -1890,6 +1891,22 @@ const QP_PRESETS = [
   { name: 'Tidak Fokus', amount: -2 },
   { name: 'Melanggar Aturan', amount: -5 }
 ];
+
+// Ambil preset dari Aturan Poin (sinkron dengan form "Beri Poin")
+function getQpPresets() {
+  const rules = records.filter(r => r.type === "Aturan Poin");
+  if (rules.length === 0) return QP_PRESETS_DEFAULT;
+  // Urut: positif dulu (descending), lalu negatif (ascending)
+  return rules.map(r => ({
+    name: r.points_rule_name || r.points_note || 'Tanpa Nama',
+    amount: parseInt(r.points) || 0
+  })).filter(r => r.amount !== 0).sort((a, b) => {
+    if (a.amount > 0 && b.amount < 0) return -1;
+    if (a.amount < 0 && b.amount > 0) return 1;
+    if (a.amount > 0 && b.amount > 0) return b.amount - a.amount;
+    return a.amount - b.amount;
+  });
+}
 let qpActivePreset = null;
 let qpSelectedMurid = new Set();
 let qpRecentMurid = JSON.parse(localStorage.getItem('qp_recent') || '[]');
@@ -1973,7 +1990,12 @@ function renderQpTabs() {
 
 function renderQpPresets() {
   const container = document.getElementById('qp-presets');
-  container.innerHTML = QP_PRESETS.map((p, i) => {
+  const presets = getQpPresets();
+  if (presets.length === 0) {
+    container.innerHTML = '<p class="text-[10px] italic w-full text-center py-2" style="color:var(--text-muted)">Belum ada aturan. Tambah di menu "Beri Poin".</p>';
+    return;
+  }
+  container.innerHTML = presets.map((p, i) => {
     const isPos = p.amount > 0;
     const isActive = qpActivePreset && qpActivePreset.name === p.name && qpActivePreset.amount === p.amount;
     const bg = isActive ? (isPos ? 'linear-gradient(135deg,#06d6a0,#0f7fa1)' : 'linear-gradient(135deg,#FF6B6B,#c83252)') : (isPos ? '#E8FBF2' : '#FFF0F0');
@@ -1984,7 +2006,9 @@ function renderQpPresets() {
 }
 
 function selectQpPreset(idx) {
-  const p = QP_PRESETS[idx];
+  const presets = getQpPresets();
+  const p = presets[idx];
+  if (!p) return;
   qpActivePreset = { name: p.name, amount: p.amount };
   renderQpPresets();
   updateQpActiveInfo();
