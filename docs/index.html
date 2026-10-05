@@ -217,6 +217,48 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </div>
 
+<!-- FAB POINT -->
+<button id="fab-point" class="fixed z-40 rounded-full shadow-2xl flex items-center justify-center" style="display:none;bottom:90px;right:20px;width:60px;height:60px;background:linear-gradient(135deg,#FFD166,#FF6B6B);color:white;font-size:1.8rem;border:3px solid rgba(255,255,255,.3);cursor:pointer" title="⚡ Poin Cepat">⚡</button>
+
+<!-- MODAL QUICK POINT -->
+<div id="modal-quickpoint" class="fixed inset-0 z-[70] is-hidden" style="background:rgba(13,85,99,.9);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
+  <div class="rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" style="background:var(--card)">
+    <div class="p-4 flex justify-between items-center border-b" style="border-color:var(--border)">
+      <h3 class="font-extrabold text-lg">⚡ Poin Cepat</h3>
+      <button onclick="closeQuickPoint()" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
+    <div class="p-3 border-b" style="border-color:var(--border);background:var(--bg)">
+      <p class="text-[10px] font-bold mb-2" style="color:var(--text-muted)">Pilih Preset Poin:</p>
+      <div id="qp-presets" class="flex flex-wrap gap-1.5"></div>
+      <div class="flex gap-1.5 mt-2">
+        <input type="text" id="qp-custom-name" class="field text-xs p-2 flex-1" placeholder="Custom (mis: Bantu Teman)">
+        <input type="number" id="qp-custom-amount" class="field text-xs p-2 w-20" placeholder="+/-" min="-100" max="100">
+        <button onclick="applyCustomPoint()" class="bg-emerald-500 text-white font-bold px-3 rounded-lg text-xs">OK</button>
+      </div>
+    </div>
+    <div class="p-3 flex-1 overflow-y-auto">
+      <div id="qp-active-info" class="text-[10px] font-bold mb-2 hidden">
+        Pilih murid untuk: <span id="qp-active-preset" class="text-amber-700"></span>
+      </div>
+      <input type="text" id="qp-search" class="field text-sm mb-2" placeholder="🔍 Cari nama murid...">
+      <div class="grid grid-cols-2 gap-1.5 mb-3">
+        <button type="button" id="qp-tab-hadir" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2 transition active:scale-95" onclick="switchQpTab('hadir')">✅ Hadir Hari Ini (<span id="qp-hadir-count">0</span>)</button>
+        <button type="button" id="qp-tab-semua" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2 transition active:scale-95" onclick="switchQpTab('semua')">📋 Semua (<span id="qp-semua-count">0</span>)</button>
+      </div>
+      <div id="qp-recent-wrap" class="mb-3 hidden">
+        <p class="text-[10px] font-bold mb-1" style="color:var(--text-muted)">🕐 Baru saja:</p>
+        <div id="qp-recent" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <p id="qp-list-label" class="text-[10px] font-bold mb-1" style="color:var(--text-muted)">📋 Semua Murid:</p>
+      <div id="qp-murid-list" class="grid grid-cols-2 gap-2"></div>
+    </div>
+    <div class="p-3 border-t" style="border-color:var(--border);background:var(--bg)">
+      <p id="qp-status" class="text-[10px] font-bold text-center mb-2 min-h-[14px]"></p>
+      <button id="qp-save-btn" onclick="saveQuickPoint()" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white rounded-xl py-3 text-sm font-extrabold shadow-lg" disabled>💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
 <main class="app-shell">
 <section class="phone-frame">
 
@@ -319,7 +361,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </form>
 </section>
 
-<!-- KALENDER -->
+<!-- KALENDER GURU -->
 <section id="kalender-guru-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📅 <span>Kalender Kehadiran</span></h1>
@@ -387,6 +429,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <section id="points-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">⭐ <span>Beri Poin</span></h1>
+  <div class="mt-4 p-3 rounded-2xl flex items-center justify-between" style="background:linear-gradient(135deg,#FFF3CE,#FFE599)">
+    <p class="text-xs font-bold text-[#916912]">⚡ Mau lebih cepat? Pakai tombol ⚡ di pojok kanan bawah!</p>
+  </div>
   <form id="points-form" class="mt-5 space-y-4">
     <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="points-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="points-kelas" class="field" required></select></div></div>
     <div id="points-single-child-container"><label class="block font-bold text-sm mb-2">Pilih Murid</label><select id="points-child-select" class="field" required></select></div>
@@ -412,7 +457,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </section>
 
-<!-- REPORT + RAPORT -->
+<!-- REPORT -->
 <section id="report-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📊 <span>Laporan & Raport</span></h1>

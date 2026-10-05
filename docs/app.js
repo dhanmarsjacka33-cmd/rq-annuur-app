@@ -1,5 +1,6 @@
 /* ==========================================================
-   MUTABA'AH RQ AN-NUUR — APP LOGIC v5.1
+   MUTABA'AH RQ AN-NUUR — APP LOGIC v5.2
+   Fitur baru: Quick Point (FAB) dengan tab Hadir Hari Ini
    ========================================================== */
 
 let activeUser = {};
@@ -36,7 +37,7 @@ const BADGE_LIST = [
 const ONBOARD_STEPS = [
   { icon: '🎉', title: 'Selamat Datang!', desc: `Aplikasi untuk mencatat mutaba'ah santri, absensi guru, dan keuangan RQ An-Nuur.` },
   { icon: '📖', title: 'Catat Setoran', desc: `Klik menu "Catat Mutaba'ah" untuk input setoran Jilid, Surah, Doa, atau Hadits.` },
-  { icon: '📋', title: 'Riwayat Otomatis', desc: `Setelah pilih murid, otomatis muncul riwayat terakhir.` },
+  { icon: '⚡', title: 'Poin Cepat', desc: `Klik tombol ⚡ melayang untuk beri poin instan ke banyak murid sekaligus.` },
   { icon: '📍', title: 'Absen Multi-Posisi', desc: `Guru bisa absen hingga 2 posisi per sesi, plus catat penggantian.` },
   { icon: '📅', title: 'Kalender & Edit', desc: `Klik tanggal di kalender untuk lihat detail dan edit absen.` },
   { icon: '🎨', title: 'Personalisasi', desc: `Ganti tema, matikan suara, atau install ke home screen.` }
@@ -117,7 +118,7 @@ function applyTheme() {
 
 /* ---------- ONBOARDING ---------- */
 function showOnboarding() {
-  if (localStorage.getItem('onboarded_v5') === 'true') return;
+  if (localStorage.getItem('onboarded_v52') === 'true') return;
   onboardIdx = 0;
   document.getElementById('onboarding-overlay').classList.remove('is-hidden');
   updateOnboardingUI();
@@ -132,11 +133,11 @@ function updateOnboardingUI() {
 }
 window.nextOnboarding = function() {
   onboardIdx++;
-  if (onboardIdx >= ONBOARD_STEPS.length) { localStorage.setItem('onboarded_v5', 'true'); document.getElementById('onboarding-overlay').classList.add('is-hidden'); return; }
+  if (onboardIdx >= ONBOARD_STEPS.length) { localStorage.setItem('onboarded_v52', 'true'); document.getElementById('onboarding-overlay').classList.add('is-hidden'); return; }
   updateOnboardingUI();
 };
 window.skipOnboarding = function() {
-  localStorage.setItem('onboarded_v5', 'true');
+  localStorage.setItem('onboarded_v52', 'true');
   document.getElementById('onboarding-overlay').classList.add('is-hidden');
 };
 
@@ -356,6 +357,14 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('mutabaah-child-select')?.addEventListener('change', () => { renderRiwayatCard(); checkAnomali(); });
   document.getElementById('open-mutabaah')?.addEventListener('click', () => setTimeout(loadFormPreference, 50));
 
+  // FAB Point
+  const fab = document.getElementById('fab-point');
+  if (fab) fab.addEventListener('click', openQuickPoint);
+  const searchEl = document.getElementById('qp-search');
+  if (searchEl) searchEl.addEventListener('input', (e) => renderQpMuridList(e.target.value));
+  const customAmt = document.getElementById('qp-custom-amount');
+  if (customAmt) customAmt.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyCustomPoint(); });
+
   setTimeout(() => {
     const today = getLocalDateString();
     ['absen-date','keu-tanggal','kas-tanggal','izin-guru-tanggal','gp-tanggal'].forEach(id => {
@@ -420,8 +429,8 @@ const showScreen = id => {
   screens.forEach(s => s.classList.toggle("active", s.id === id));
   lucide.createIcons();
   window.scrollTo(0, 0);
-  // Sync bottom nav
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === id));
+  updateFabVisibility();
 };
 const setStatus = (id, msg, error = false) => {
   const e = document.getElementById(id);
@@ -430,6 +439,15 @@ const setStatus = (id, msg, error = false) => {
   e.style.color = error ? "#c83252" : "#087a61";
 };
 const setSaving = (b, on) => { if (!b) return; b.disabled = on; b.style.opacity = on ? ".65" : "1"; };
+
+function updateFabVisibility() {
+  const fab = document.getElementById('fab-point');
+  if (!fab) return;
+  const role = (activeUser.role || '').toLowerCase();
+  const allowed = ['guru', 'bendahara', 'admin'].includes(role);
+  const loginActive = document.getElementById('login-screen').classList.contains('active');
+  fab.style.display = (allowed && !loginActive) ? 'flex' : 'none';
+}
 
 /* ---------- ROLE UI ---------- */
 function processRoleUI(role) {
@@ -449,6 +467,7 @@ function processRoleUI(role) {
     }
   }
   try { setupBottomNav(role); } catch(e) {}
+  try { updateFabVisibility(); } catch(e) {}
 }
 
 /* ---------- LOGIN ---------- */
@@ -481,6 +500,7 @@ function logout() {
   records = []; recordsKeu = []; recordsKas = []; recordsKategori = []; recordsFoto = []; recordsPencapaian = []; recordsAbsensiGuru = [];
   activeUser = {}; appKontakWali = {};
   document.getElementById('bottom-nav').classList.remove('visible');
+  document.getElementById('fab-point').style.display = 'none';
 }
 window.logout = logout;
 
@@ -507,6 +527,7 @@ const handler = {
     ["mutabaah","bimbel"].forEach(p => refreshNames(p));
     if (document.getElementById('manage-screen').classList.contains('active')) updateManageListsAndDropdowns();
     if (activeUser.role && activeUser.role.toLowerCase() === 'wali') renderWaliDashboard();
+    try { updateFabVisibility(); } catch(e) {}
   }
 };
 
@@ -1021,18 +1042,14 @@ function afterAbsenSuccess() {
   window.appSdk.init(handler, false);
 }
 
-/* ---------- KALENDER GURU + EDIT ---------- */
+/* ---------- KALENDER GURU ---------- */
 function initKalenderGuru() {
   const role = activeUser.role.toLowerCase();
   kalenderState.month = new Date().toISOString().slice(0, 7);
   if (role === 'bendahara' || role === 'admin') {
     const guruList = [...new Set(records.filter(r => r.guru).map(r => r.guru))].sort();
     const sel = document.getElementById('kalender-guru-select');
-    if (sel) {
-      sel.innerHTML = '<option value="">-- Semua Guru --</option>' + guruList.map(g => `<option value="${g}">${g}</option>`).join('');
-      sel.classList.remove('is-hidden');
-      sel.onchange = () => { kalenderState.guru = sel.value; renderKalenderGuru(); };
-    }
+    if (sel) { sel.innerHTML = '<option value="">-- Semua Guru --</option>' + guruList.map(g => `<option value="${g}">${g}</option>`).join(''); sel.classList.remove('is-hidden'); sel.onchange = () => { kalenderState.guru = sel.value; renderKalenderGuru(); }; }
     kalenderState.guru = '';
   } else {
     kalenderState.guru = normalizeName(activeUser.nama_terkait || activeUser.username);
@@ -1101,14 +1118,10 @@ window.showKalenderDetail = function(dateStr) {
     }).join('');
   }
   const modal = document.getElementById('modal-kalender-detail');
-  modal.classList.remove('is-hidden');
-  modal.style.display = 'flex';
+  modal.classList.remove('is-hidden'); modal.style.display = 'flex';
 };
-window.closeKalenderDetail = function() {
-  const m = document.getElementById('modal-kalender-detail');
-  m.classList.add('is-hidden');
-  m.style.display = 'none';
-};
+window.closeKalenderDetail = function() { const m = document.getElementById('modal-kalender-detail'); m.classList.add('is-hidden'); m.style.display = 'none'; };
+
 window.openEditAbsen = function(recordId) {
   const guruList = [...new Set(records.filter(r => r.guru).map(r => r.guru))].sort();
   document.getElementById('edit-absen-guru').innerHTML = guruList.map(g => `<option value="${g}">${g}</option>`).join('');
@@ -1157,14 +1170,10 @@ window.openEditAbsen = function(recordId) {
     document.getElementById('btn-delete-absen').classList.add('is-hidden');
   }
   const modal = document.getElementById('modal-edit-absen');
-  modal.classList.remove('is-hidden');
-  modal.style.display = 'flex';
+  modal.classList.remove('is-hidden'); modal.style.display = 'flex';
 };
-window.closeEditAbsen = function() {
-  const m = document.getElementById('modal-edit-absen');
-  m.classList.add('is-hidden');
-  m.style.display = 'none';
-};
+window.closeEditAbsen = function() { const m = document.getElementById('modal-edit-absen'); m.classList.add('is-hidden'); m.style.display = 'none'; };
+
 document.getElementById('edit-p1-peran')?.addEventListener('change', (e) => { const opt = e.target.selectedOptions[0]; if (opt && opt.dataset.tarif) document.getElementById('edit-p1-tarif').value = opt.dataset.tarif; });
 document.getElementById('edit-p2-peran')?.addEventListener('change', (e) => { const opt = e.target.selectedOptions[0]; if (opt && opt.dataset.tarif) document.getElementById('edit-p2-tarif').value = opt.dataset.tarif; });
 document.getElementById('edit-pg-peran')?.addEventListener('change', (e) => { const opt = e.target.selectedOptions[0]; if (opt && opt.dataset.tarif) document.getElementById('edit-pg-tarif').value = opt.dataset.tarif; });
@@ -1199,21 +1208,14 @@ window.saveEditAbsen = async function() {
     total_fee: totalFee, latitude: '', longitude: '', status_geofence: 'Edit Manual',
     input_by: activeUser.username, catatan: document.getElementById('edit-absen-catatan').value || ''
   };
-  setSaving(btn, true);
-  statusEl.textContent = 'Menyimpan...';
-  statusEl.style.color = '#087a61';
+  setSaving(btn, true); statusEl.textContent = 'Menyimpan...'; statusEl.style.color = '#087a61';
   try {
     let ok = false;
     if (recordId) { record.__backendId = recordId; const r = await window.gas.updateSheetData('AbsensiGuru', record); ok = r === true || r === 'true'; }
     else { const r = await window.gas.simpanAbsenGuru({ record: record, force_override: true }); ok = r && (r.sukses === true || r === true); }
     setSaving(btn, false);
-    if (ok) {
-      statusEl.textContent = '';
-      window.celebrate(recordId ? 'Absen diperbarui! ✏️' : 'Absen ditambahkan! ➕');
-      closeEditAbsen(); closeKalenderDetail();
-      await window.appSdk.init(handler, false);
-      renderKalenderGuru();
-    } else { statusEl.textContent = 'Gagal menyimpan.'; statusEl.style.color = '#c83252'; }
+    if (ok) { statusEl.textContent = ''; window.celebrate(recordId ? 'Absen diperbarui! ✏️' : 'Absen ditambahkan! ➕'); closeEditAbsen(); closeKalenderDetail(); await window.appSdk.init(handler, false); renderKalenderGuru(); }
+    else { statusEl.textContent = 'Gagal menyimpan.'; statusEl.style.color = '#c83252'; }
   } catch (e) { setSaving(btn, false); statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#c83252'; }
 };
 window.deleteAbsenFromDetail = async function(recordId) {
@@ -1289,7 +1291,7 @@ document.getElementById("btn-simpan-slip").addEventListener("click", async () =>
   else { stat.textContent = "❌ Gagal."; stat.style.color = "#ef476f"; }
 });
 
-/* ---------- CHART BENDAHARA & KAS ---------- */
+/* ---------- CHART ---------- */
 function renderGajiChart(perPosisi) {
   const canvas = document.getElementById('gaji-chart');
   if (!canvas || typeof Chart === 'undefined') return;
@@ -1738,7 +1740,7 @@ function updateHistory(data) {
   lucide.createIcons();
 }
 
-/* ---------- REPORT + RAPORT ---------- */
+/* ---------- REPORT ---------- */
 function updateReportChildList() {
   if (activeUser.role && activeUser.role.toLowerCase() === 'wali') {
     const children = (activeUser.nama_terkait||"").split(',').map(s => normalizeName(s));
@@ -1767,7 +1769,6 @@ document.getElementById("generate-report-btn").addEventListener("click", () => {
   document.getElementById("rpt-jilid").innerText = labelJilid;
   const hRec = f.find(r => r.type === "Setoran Hafalan");
   document.getElementById("rpt-hafalan").innerText = hRec ? `${hRec.surah_number} (Ay.${hRec.ayat_count})` : "—";
-  // Bintang rating
   let stars = 3;
   if (totalPoin >= 100 && hadirPersen >= 90) stars = 5;
   else if (totalPoin >= 50 || hadirPersen >= 80) stars = 4;
@@ -1784,15 +1785,8 @@ document.getElementById("generate-report-btn").addEventListener("click", () => {
   if (rAv) { const av = getChildAvatar(c); if (av.url) { rAv.style.background = `url('${av.url}') center/cover`; rAv.textContent = ''; } else { rAv.style.background = 'linear-gradient(135deg,#FFD166,#FF6B6B)'; rAv.textContent = av.initial; } }
   const bEl = document.getElementById("rpt-badges");
   if (bEl) { const bgs = getBadgesForChild(c).filter(b => b.earned); bEl.innerHTML = bgs.length ? bgs.map(b => `<span class="raport-badge">${b.icon} ${b.label}</span>`).join('') : '<span class="raport-badge empty">Belum ada badge</span>'; }
-  // Catatan guru otomatis
   const cEl = document.getElementById("raport-catatan");
-  const notes = {
-    5: `"MasyaAllah, ananda luar biasa! Konsisten rajin, semangat tinggi, dan akhlaknya mulia. Pertahankan ya!"`,
-    4: `"Hebat! Ananda menunjukkan kemajuan yang baik. Sedikit lagi menuju sempurna, terus semangat!"`,
-    3: `"Bagus! Ananda sudah berusaha dengan baik. Yuk tingkatkan lagi supaya makin hebat!"`,
-    2: `"Ananda perlu lebih semangat lagi. Ayah/Bunda di rumah mohon bantu motivasi ya!"`,
-    1: `"Yuk semangat! Ananda pasti bisa kalau rajin. Mohon bimbingan lebih dari Ayah/Bunda di rumah."`
-  };
+  const notes = { 5: `"MasyaAllah, ananda luar biasa! Konsisten rajin, semangat tinggi, dan akhlaknya mulia. Pertahankan ya!"`, 4: `"Hebat! Ananda menunjukkan kemajuan yang baik. Sedikit lagi menuju sempurna, terus semangat!"`, 3: `"Bagus! Ananda sudah berusaha dengan baik. Yuk tingkatkan lagi supaya makin hebat!"`, 2: `"Ananda perlu lebih semangat lagi. Ayah/Bunda di rumah mohon bantu motivasi ya!"`, 1: `"Yuk semangat! Ananda pasti bisa kalau rajin. Mohon bimbingan lebih dari Ayah/Bunda di rumah."` };
   cEl.textContent = notes[stars] || notes[3];
   document.getElementById("report-table-body").innerHTML = f.map(r => {
     let d = "";
@@ -1880,6 +1874,278 @@ async function loadAuditKeuangan() {
   } catch (e) { list.innerHTML = '<p class="text-xs text-center text-red-500">Error: ' + e.message + '</p>'; }
 }
 document.getElementById('btn-refresh-audit')?.addEventListener('click', loadAuditKeuangan);
+
+/* ==========================================================
+   ⚡ POIN CEPAT (FAB) — v5.2
+   ========================================================== */
+const QP_PRESETS = [
+  { name: 'Baca Lancar', amount: 1 },
+  { name: 'Setoran Baru', amount: 3 },
+  { name: 'Naik Jilid', amount: 5 },
+  { name: 'Adab Baik', amount: 2 },
+  { name: 'Bantu Teman', amount: 2 },
+  { name: 'Terlambat', amount: -1 },
+  { name: 'Gaduh/Kribo', amount: -2 },
+  { name: 'Tidak Bawa Buku', amount: -3 },
+  { name: 'Tidak Fokus', amount: -2 },
+  { name: 'Melanggar Aturan', amount: -5 }
+];
+let qpActivePreset = null;
+let qpSelectedMurid = new Set();
+let qpRecentMurid = JSON.parse(localStorage.getItem('qp_recent') || '[]');
+let qpAllMurid = [];
+let qpActiveTab = 'hadir';
+
+function openQuickPoint() {
+  if (!dataReady) return window.showToast('Memuat data...', 'info');
+  qpAllMurid = [...new Set(records.filter(r => r.child_name && r.unit).map(r => r.child_name))].sort();
+  window.qpMuridMap = {};
+  records.forEach(r => {
+    if (r.child_name && r.unit && !qpMuridMap[r.child_name]) {
+      qpMuridMap[r.child_name] = { unit: r.unit, kelas: r.kelas || '' };
+    }
+  });
+  qpActivePreset = null;
+  qpSelectedMurid = new Set();
+  document.getElementById('qp-search').value = '';
+  document.getElementById('qp-status').textContent = '';
+  document.getElementById('qp-save-btn').disabled = true;
+  document.getElementById('qp-custom-name').value = '';
+  document.getElementById('qp-custom-amount').value = '';
+  const hadirCount = getQpHadirList().length;
+  qpActiveTab = hadirCount > 0 ? 'hadir' : 'semua';
+  renderQpPresets();
+  renderQpRecent();
+  renderQpMuridList('');
+  renderQpTabs();
+  updateQpActiveInfo();
+  updateQpSaveBtn();
+  const m = document.getElementById('modal-quickpoint');
+  m.classList.remove('is-hidden');
+  m.style.display = 'flex';
+}
+
+function closeQuickPoint() {
+  const m = document.getElementById('modal-quickpoint');
+  m.classList.add('is-hidden');
+  m.style.display = 'none';
+}
+
+function getQpHadirList() {
+  const today = getLocalDateString();
+  const hadirSet = new Set();
+  records.forEach(r => {
+    if (r.type === "Absensi" && r.attendance_type === "murid" && r.attendance_status === "Hadir") {
+      if (r.date && r.date.startsWith(today) && r.child_name) {
+        hadirSet.add(r.child_name);
+      }
+    }
+  });
+  return [...hadirSet].sort();
+}
+
+function switchQpTab(tab) {
+  qpActiveTab = tab;
+  renderQpTabs();
+  const f = document.getElementById('qp-search').value;
+  renderQpMuridList(f);
+  if (window.vibrate) window.vibrate(15);
+}
+
+function renderQpTabs() {
+  const hadirBtn = document.getElementById('qp-tab-hadir');
+  const semuaBtn = document.getElementById('qp-tab-semua');
+  const hadirList = getQpHadirList();
+  document.getElementById('qp-hadir-count').textContent = hadirList.length;
+  document.getElementById('qp-semua-count').textContent = qpAllMurid.length;
+  const activeStyle = 'background:linear-gradient(135deg,#06d6a0,#0f7fa1);color:white;border-color:#06d6a0';
+  const inactiveHadir = 'background:#E8FBF2;color:#087a61;border-color:#A8E0C0';
+  const inactiveSemua = 'background:var(--bg);color:var(--text-muted);border-color:var(--border)';
+  hadirBtn.style.cssText = qpActiveTab === 'hadir' ? activeStyle : inactiveHadir;
+  semuaBtn.style.cssText = qpActiveTab === 'semua' ? activeStyle : inactiveSemua;
+  const lbl = document.getElementById('qp-list-label');
+  if (lbl) {
+    lbl.textContent = qpActiveTab === 'hadir' 
+      ? `✅ Murid yang hadir hari ini (${hadirList.length}):` 
+      : `📋 Semua Murid (${qpAllMurid.length}):`;
+  }
+}
+
+function renderQpPresets() {
+  const container = document.getElementById('qp-presets');
+  container.innerHTML = QP_PRESETS.map((p, i) => {
+    const isPos = p.amount > 0;
+    const isActive = qpActivePreset && qpActivePreset.name === p.name && qpActivePreset.amount === p.amount;
+    const bg = isActive ? (isPos ? 'linear-gradient(135deg,#06d6a0,#0f7fa1)' : 'linear-gradient(135deg,#FF6B6B,#c83252)') : (isPos ? '#E8FBF2' : '#FFF0F0');
+    const color = isActive ? 'white' : (isPos ? '#087a61' : '#c83252');
+    const border = isPos ? '#A8E0C0' : '#FFB0B0';
+    return `<button type="button" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold border-2 transition active:scale-95" style="background:${bg};color:${color};border-color:${border}" onclick="selectQpPreset(${i})">${p.amount>0?'+':''}${p.amount} ${p.name}</button>`;
+  }).join('');
+}
+
+function selectQpPreset(idx) {
+  const p = QP_PRESETS[idx];
+  qpActivePreset = { name: p.name, amount: p.amount };
+  renderQpPresets();
+  updateQpActiveInfo();
+  updateQpSaveBtn();
+  if (window.vibrate) window.vibrate([20, 10, 20]);
+}
+
+function applyCustomPoint() {
+  const name = document.getElementById('qp-custom-name').value.trim();
+  const amount = parseInt(document.getElementById('qp-custom-amount').value);
+  if (!name || isNaN(amount)) return window.showToast('Isi nama & angka poin', 'error');
+  if (amount === 0) return window.showToast('Angka tidak boleh 0', 'error');
+  qpActivePreset = { name, amount };
+  renderQpPresets();
+  updateQpActiveInfo();
+  updateQpSaveBtn();
+  window.showToast(`Preset: ${amount>0?'+':''}${amount} ${name}`, 'success', 1500);
+}
+
+function updateQpActiveInfo() {
+  const el = document.getElementById('qp-active-info');
+  const label = document.getElementById('qp-active-preset');
+  if (qpActivePreset) {
+    el.classList.remove('hidden');
+    const sign = qpActivePreset.amount > 0 ? '+' : '';
+    label.textContent = `${sign}${qpActivePreset.amount} ${qpActivePreset.name}`;
+    label.style.color = qpActivePreset.amount > 0 ? '#087a61' : '#c83252';
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
+function renderQpRecent() {
+  const wrap = document.getElementById('qp-recent-wrap');
+  const container = document.getElementById('qp-recent');
+  qpRecentMurid = qpRecentMurid.filter(n => qpAllMurid.includes(n)).slice(0, 6);
+  if (qpRecentMurid.length === 0) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  container.innerHTML = qpRecentMurid.map(n => renderQpMuridBtn(n)).join('');
+}
+
+function renderQpMuridList(filter) {
+  const container = document.getElementById('qp-murid-list');
+  const f = (filter || '').toLowerCase();
+  let source = qpActiveTab === 'hadir' ? getQpHadirList() : qpAllMurid;
+  if (qpActiveTab === 'hadir' && source.length === 0) {
+    container.innerHTML = `<div class="col-span-2 text-center py-6">
+      <div class="text-4xl mb-2">🤔</div>
+      <p class="text-xs font-bold" style="color:var(--text-muted)">Belum ada murid yang diabsensi hari ini</p>
+      <p class="text-[10px] mt-1" style="color:var(--text-muted)">Coba tab "Semua" atau absensi dulu</p>
+    </div>`;
+    return;
+  }
+  const list = f ? source.filter(n => n.toLowerCase().includes(f)) : source;
+  if (list.length === 0) {
+    container.innerHTML = '<p class="text-xs italic text-center py-3 col-span-2" style="color:var(--text-muted)">Tidak ada murid</p>';
+    return;
+  }
+  container.innerHTML = list.map(n => renderQpMuridBtn(n)).join('');
+}
+
+function renderQpMuridBtn(name) {
+  const isSelected = qpSelectedMurid.has(name);
+  const av = getChildAvatar(name);
+  const avStyle = av.url ? `background:url('${av.url}') center/cover` : `background:${av.color}`;
+  const bg = isSelected ? 'linear-gradient(135deg,#FFD166,#FFB085)' : 'var(--bg)';
+  const border = isSelected ? '#FFD166' : 'var(--border)';
+  return `<button type="button" class="flex items-center gap-2 p-2 rounded-xl border-2 transition active:scale-95 text-left" style="background:${bg};border-color:${border}" onclick="toggleQpMurid('${name.replace(/'/g,"\\'")}')">
+    <div class="avatar" style="${avStyle};width:28px;height:28px;font-size:12px">${av.url?'':av.initial}</div>
+    <span class="text-xs font-bold flex-1 truncate">${escapeHtml(name)}</span>
+    ${isSelected ? '<span class="text-sm">✓</span>' : ''}
+  </button>`;
+}
+
+function toggleQpMurid(name) {
+  if (qpSelectedMurid.has(name)) qpSelectedMurid.delete(name);
+  else qpSelectedMurid.add(name);
+  renderQpRecent();
+  const f = document.getElementById('qp-search').value;
+  renderQpMuridList(f);
+  updateQpSaveBtn();
+  if (window.vibrate) window.vibrate(15);
+}
+
+function updateQpSaveBtn() {
+  const btn = document.getElementById('qp-save-btn');
+  const canSave = qpActivePreset && qpSelectedMurid.size > 0;
+  btn.disabled = !canSave;
+  btn.style.opacity = canSave ? '1' : '0.5';
+  if (canSave) {
+    const sign = qpActivePreset.amount > 0 ? '+' : '';
+    btn.textContent = `💾 Simpan untuk ${qpSelectedMurid.size} murid (${sign}${qpActivePreset.amount} ${qpActivePreset.name})`;
+  } else if (!qpActivePreset) {
+    btn.textContent = '1️⃣ Pilih preset poin dulu';
+  } else {
+    btn.textContent = '2️⃣ Pilih murid yang diberi poin';
+  }
+}
+
+async function saveQuickPoint() {
+  if (!qpActivePreset || qpSelectedMurid.size === 0) return;
+  const btn = document.getElementById('qp-save-btn');
+  const statusEl = document.getElementById('qp-status');
+  btn.disabled = true;
+  statusEl.textContent = 'Menyimpan...';
+  statusEl.style.color = '#087a61';
+
+  const muridArr = [...qpSelectedMurid];
+  let ok = 0, fail = 0;
+
+  for (const name of muridArr) {
+    const info = window.qpMuridMap[name] || { unit: '', kelas: '' };
+    const res = await window.appSdk.create('Data', {
+      child_name: name,
+      unit: info.unit,
+      kelas: info.kelas,
+      guru: normalizeName(activeUser.nama_terkait || activeUser.username),
+      type: "Poin",
+      jilid_number: "", page_from: "", surah_number: "", ayat_count: "", fluency_stars: 0,
+      date: getWIBISOString(),
+      status: "", juz: "", tilawah_surah: "", tilawah_ayat: "",
+      attendance_type: "", attendance_status: "",
+      subject: "",
+      points: qpActivePreset.amount,
+      points_note: qpActivePreset.name,
+      points_rule_name: qpActivePreset.name,
+      points_rule_active: true
+    });
+    if (res.isOk) ok++; else fail++;
+  }
+
+  muridArr.forEach(n => { qpRecentMurid = [n, ...qpRecentMurid.filter(x => x !== n)].slice(0, 6); });
+  localStorage.setItem('qp_recent', JSON.stringify(qpRecentMurid));
+
+  statusEl.textContent = `✅ ${ok} murid tersimpan${fail > 0 ? ` (${fail} gagal)` : ''}`;
+  const sign = qpActivePreset.amount > 0 ? '+' : '';
+
+  if (qpActivePreset.amount > 0) {
+    window.celebrate(`${ok} murid dapat ${sign}${qpActivePreset.amount} poin! ⭐`);
+  } else {
+    window.showToast(`${ok} murid: ${sign}${qpActivePreset.amount} ${qpActivePreset.name}`, 'info', 2500);
+    if (window.playSound) window.playSound('info');
+    if (window.vibrate) window.vibrate([40, 30, 40]);
+  }
+
+  qpSelectedMurid.clear();
+  qpActivePreset = null;
+  setTimeout(() => {
+    renderQpPresets();
+    renderQpRecent();
+    renderQpTabs();
+    const f = document.getElementById('qp-search').value;
+    renderQpMuridList(f);
+    updateQpActiveInfo();
+    updateQpSaveBtn();
+    statusEl.textContent = '';
+    btn.disabled = false;
+  }, 500);
+
+  window.appSdk.init(handler, false);
+}
 
 /* ---------- SURAH DROPDOWN SETUP ---------- */
 const juzOptions = '<option value="">Semua Juz...</option>' + Array.from({ length: 30 }, (_, i) => i + 1).map(j => `<option value="${j}">Juz ${j}</option>`).join("");
