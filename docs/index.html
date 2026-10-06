@@ -97,6 +97,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 [data-theme="dark"] .text-\[\#0d5563\],[data-theme="dark"] .text-gray-700,[data-theme="dark"] .text-gray-900{color:var(--text)!important}
 [data-theme="dark"] .text-\[\#5a8c9a\],[data-theme="dark"] .text-gray-500,[data-theme="dark"] .text-gray-600{color:var(--text-muted)!important}
 [data-theme="dark"] .border-\[\#dbeef0\],[data-theme="dark"] .border-gray-200,[data-theme="dark"] .border-gray-300{border-color:var(--border)!important}
+.modal-scroll{position:fixed;inset:0;z-index:50;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;background:rgba(13,85,99,.9);backdrop-filter:blur(4px)}
+.modal-scroll.is-hidden{display:none}
+.modal-card{background:var(--card);border-radius:24px;width:100%;max-width:28rem;margin:auto;box-shadow:0 25px 50px rgba(0,0,0,.25);padding:20px}
+.modal-card.wide{max-width:32rem}
 #raport-cetak{background:#fff;color:#0d5563}
 .raport-header{background:linear-gradient(135deg,#FFD166,#FF6B6B);padding:20px;text-align:center;border-radius:20px 20px 0 0;color:#fff;position:relative;overflow:hidden}
 .raport-header::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.15);border-radius:50%}
@@ -127,6 +131,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .raport-detail-table th{background:#F0F8FF;padding:8px;text-align:left;font-size:9px;font-weight:800;color:#0d5563;text-transform:uppercase;border-bottom:2px solid #B0E0EC}
 .raport-detail-table td{padding:8px;border-bottom:1px solid #eef5f3;color:#0d5563}
 .raport-mascot{font-size:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))}
+.qp-preset-btn{transition:transform .15s}
+.qp-preset-btn:active{transform:scale(.95)}
+.qp-tab{transition:all .15s}
+.qp-tab:active{transform:scale(.95)}
+.qp-murid-btn{transition:transform .15s}
+.qp-murid-btn:active{transform:scale(.95)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh;padding-bottom:80px}.bottom-nav{max-width:100%}}
 @media(min-width:521px){.bottom-nav{display:none!important}}
@@ -156,9 +166,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </div>
 
-<div id="modal-absen" class="fixed inset-0 z-50 is-hidden" style="background:rgba(13,85,99,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
-  <div class="rounded-3xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" style="background:var(--card)">
-    <div class="flex justify-between items-center mb-3"><h3 class="font-extrabold text-lg">📍 Konfirmasi Absen</h3><button id="modal-absen-close" class="text-gray-400 text-2xl leading-none">✕</button></div>
+<div id="modal-absen" class="modal-scroll is-hidden">
+  <div class="modal-card">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-extrabold text-lg">📍 Konfirmasi Absen</h3>
+      <button id="modal-absen-close" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
     <div class="p-3 rounded-xl mb-3" style="background:linear-gradient(135deg,#E8F7FA,#D5EEF5)">
       <p class="text-xs font-bold" style="color:#0d5563">🕐 <span id="modal-absen-sesi"></span></p>
       <p class="text-[11px] mt-0.5" style="color:#5a8c9a" id="modal-absen-tanggal"></p>
@@ -166,8 +179,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p class="text-xs font-bold mb-2">Posisi yang Anda perankan (max 2):</p>
     <div id="modal-posisi-list" class="space-y-1 mb-4"></div>
     <div class="border-t pt-3 mb-3" style="border-color:var(--border)">
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="modal-pengganti-toggle" class="w-4 h-4 accent-[#FF6B6B]"><span class="text-xs font-bold">🎯 Saya juga menggantikan guru lain</span></label>
-      <div id="modal-pengganti-fields" class="is-hidden mt-2 space-y-2 pl-6"><select id="modal-pengganti-guru" class="field text-xs p-2"></select><select id="modal-pengganti-peran" class="field text-xs p-2"></select></div>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" id="modal-pengganti-toggle" class="w-4 h-4 accent-[#FF6B6B]">
+        <span class="text-xs font-bold">🎯 Saya juga menggantikan guru lain</span>
+      </label>
+      <div id="modal-pengganti-fields" class="is-hidden mt-2 space-y-2 pl-6">
+        <select id="modal-pengganti-guru" class="field text-xs p-2"></select>
+        <select id="modal-pengganti-peran" class="field text-xs p-2"></select>
+      </div>
     </div>
     <div class="p-3 rounded-xl mb-4 flex justify-between items-center" style="background:linear-gradient(135deg,#FFF3CE,#FFE599)">
       <span class="text-xs font-bold text-[#916912]">💰 Total Fee Sesi Ini:</span>
@@ -177,35 +196,61 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </div>
 
-<div id="modal-kalender-detail" class="fixed inset-0 z-50 is-hidden" style="background:rgba(13,85,99,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
-  <div class="rounded-3xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" style="background:var(--card)">
-    <div class="flex justify-between items-center mb-3"><h3 class="font-extrabold text-lg">📅 <span id="kal-detail-date"></span></h3><button onclick="closeKalenderDetail()" class="text-gray-400 text-2xl leading-none">✕</button></div>
+<div id="modal-kalender-detail" class="modal-scroll is-hidden">
+  <div class="modal-card">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-extrabold text-lg">📅 <span id="kal-detail-date"></span></h3>
+      <button onclick="closeKalenderDetail()" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
     <div id="kal-detail-list" class="space-y-2 mb-3"></div>
     <button onclick="openEditAbsen(null)" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-xl py-2 text-xs font-bold shadow-lg">➕ Tambah Manual</button>
   </div>
 </div>
 
-<div id="modal-edit-absen" class="fixed inset-0 z-[60] is-hidden" style="background:rgba(13,85,99,.9);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
-  <div class="rounded-3xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" style="background:var(--card)">
-    <div class="flex justify-between items-center mb-3"><h3 class="font-extrabold text-lg" id="edit-absen-title">✏️ Edit Absen</h3><button onclick="closeEditAbsen()" class="text-gray-400 text-2xl leading-none">✕</button></div>
+<div id="modal-edit-absen" class="modal-scroll is-hidden" style="z-index:60">
+  <div class="modal-card">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-extrabold text-lg" id="edit-absen-title">✏️ Edit Absen</h3>
+      <button onclick="closeEditAbsen()" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
     <input type="hidden" id="edit-absen-recordid">
     <div class="space-y-3">
       <div><label class="block font-bold text-xs mb-1">📅 Tanggal</label><input type="date" id="edit-absen-date" class="field text-sm"></div>
       <div><label class="block font-bold text-xs mb-1">👨‍🏫 Guru</label><select id="edit-absen-guru" class="field text-sm"></select></div>
-      <div><label class="block font-bold text-xs mb-1">🕐 Sesi</label><select id="edit-absen-sesi" class="field text-sm"><option value="Sesi 1">Sesi 1 (07.30-10.00)</option><option value="Sesi 2">Sesi 2 (10.30-12.00)</option><option value="Sesi 3">Sesi 3 (15.30-17.00)</option><option value="Manual">Manual / Luar Jam</option></select></div>
+      <div><label class="block font-bold text-xs mb-1">🕐 Sesi</label>
+        <select id="edit-absen-sesi" class="field text-sm">
+          <option value="Sesi 1">Sesi 1 (07.30-10.00)</option>
+          <option value="Sesi 2">Sesi 2 (10.30-12.00)</option>
+          <option value="Sesi 3">Sesi 3 (15.30-17.00)</option>
+          <option value="Manual">Manual / Luar Jam</option>
+        </select>
+      </div>
       <div class="p-3 rounded-xl border" style="background:var(--bg);border-color:var(--border)">
         <p class="text-xs font-bold mb-2">📌 Posisi 1</p>
-        <div class="grid grid-cols-2 gap-2 mb-2"><select id="edit-p1-peran" class="field text-xs p-2"></select><input type="text" id="edit-p1-kelas" class="field text-xs p-2" placeholder="Kelas"></div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <select id="edit-p1-peran" class="field text-xs p-2"></select>
+          <input type="text" id="edit-p1-kelas" class="field text-xs p-2" placeholder="Kelas">
+        </div>
         <input type="number" id="edit-p1-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000">
       </div>
       <div class="p-3 rounded-xl border" style="background:var(--bg);border-color:var(--border)">
         <p class="text-xs font-bold mb-2">📌 Posisi 2 (opsional)</p>
-        <div class="grid grid-cols-2 gap-2 mb-2"><select id="edit-p2-peran" class="field text-xs p-2"></select><input type="text" id="edit-p2-kelas" class="field text-xs p-2" placeholder="Kelas"></div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <select id="edit-p2-peran" class="field text-xs p-2"></select>
+          <input type="text" id="edit-p2-kelas" class="field text-xs p-2" placeholder="Kelas">
+        </div>
         <input type="number" id="edit-p2-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000">
       </div>
       <div class="p-3 rounded-xl border" style="background:var(--bg);border-color:var(--border)">
-        <label class="flex items-center gap-2 mb-2 cursor-pointer"><input type="checkbox" id="edit-pg-toggle" class="w-4 h-4 accent-[#FF6B6B]"><span class="text-xs font-bold">🎯 Menggantikan guru lain</span></label>
-        <div id="edit-pg-fields" class="is-hidden space-y-2"><input type="text" id="edit-pg-untuk" class="field text-xs p-2" placeholder="Nama guru yang digantikan"><select id="edit-pg-peran" class="field text-xs p-2"></select><input type="number" id="edit-pg-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000"></div>
+        <label class="flex items-center gap-2 mb-2 cursor-pointer">
+          <input type="checkbox" id="edit-pg-toggle" class="w-4 h-4 accent-[#FF6B6B]">
+          <span class="text-xs font-bold">🎯 Menggantikan guru lain</span>
+        </label>
+        <div id="edit-pg-fields" class="is-hidden space-y-2">
+          <input type="text" id="edit-pg-untuk" class="field text-xs p-2" placeholder="Nama guru yang digantikan">
+          <select id="edit-pg-peran" class="field text-xs p-2"></select>
+          <input type="number" id="edit-pg-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000">
+        </div>
       </div>
       <div><label class="block font-bold text-xs mb-1">📝 Catatan</label><input type="text" id="edit-absen-catatan" class="field text-sm" placeholder="Opsional" maxlength="200"></div>
       <p id="edit-absen-status" class="text-xs font-bold text-center min-h-[18px]"></p>
@@ -217,50 +262,41 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </div>
 
-<!-- FAB POINT -->
 <button id="fab-point" class="fixed z-40 rounded-full shadow-2xl flex items-center justify-center" style="display:none;bottom:90px;right:20px;width:60px;height:60px;background:linear-gradient(135deg,#FFD166,#FF6B6B);color:white;font-size:1.8rem;border:3px solid rgba(255,255,255,.3);cursor:pointer" title="⚡ Poin Cepat">⚡</button>
 
-<!-- MODAL QUICK POINT -->
-<div id="modal-quickpoint" class="fixed inset-0 z-[70] is-hidden" style="background:rgba(13,85,99,.9);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">
-  <div class="rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl flex flex-col" style="background:var(--card)">
-    <!-- HEADER -->
+<div id="modal-quickpoint" class="modal-scroll is-hidden" style="z-index:70">
+  <div class="modal-card" style="padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 32px)">
     <div class="p-4 flex justify-between items-center border-b" style="border-color:var(--border)">
       <h3 class="font-extrabold text-lg">⚡ Poin Cepat</h3>
       <button onclick="closeQuickPoint()" class="text-gray-400 text-2xl leading-none">✕</button>
     </div>
-
-    <!-- PRESET SECTION -->
     <div class="p-3 border-b" style="border-color:var(--border);background:var(--bg)">
       <p class="text-[10px] font-bold mb-2" style="color:var(--text-muted)">Pilih Preset Poin:</p>
-      <div id="qp-presets" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
+      <div id="qp-presets" class="flex flex-wrap gap-1.5" style="max-height:140px;overflow-y:auto"></div>
       <div class="flex gap-1.5 mt-2">
         <input type="text" id="qp-custom-name" class="field text-xs p-2 flex-1" placeholder="Custom (mis: Bantu Teman)">
         <input type="number" id="qp-custom-amount" class="field text-xs p-2 w-20" placeholder="+/-" min="-100" max="100">
         <button onclick="applyCustomPoint()" class="bg-emerald-500 text-white font-bold px-3 rounded-lg text-xs">OK</button>
       </div>
     </div>
-
-    <!-- MURID SECTION -->
-    <div class="p-3 flex-1 overflow-y-auto">
-      <div id="qp-active-info" class="text-[10px] font-bold mb-2 hidden">
+    <div class="p-3 flex-1" style="overflow-y:auto">
+      <div id="qp-active-info" class="text-[10px] font-bold mb-2 is-hidden">
         Pilih murid untuk: <span id="qp-active-preset" class="text-amber-700"></span>
       </div>
       <input type="text" id="qp-search" class="field text-sm mb-2" placeholder="🔍 Cari nama murid...">
       <div class="grid grid-cols-2 gap-1.5 mb-3">
-        <button type="button" id="qp-tab-hadir" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2 transition active:scale-95" onclick="switchQpTab('hadir')">✅ Hadir Hari Ini (<span id="qp-hadir-count">0</span>)</button>
-        <button type="button" id="qp-tab-semua" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2 transition active:scale-95" onclick="switchQpTab('semua')">📋 Semua (<span id="qp-semua-count">0</span>)</button>
+        <button type="button" id="qp-tab-hadir" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2" onclick="switchQpTab('hadir')">✅ Hadir Hari Ini (<span id="qp-hadir-count">0</span>)</button>
+        <button type="button" id="qp-tab-semua" class="qp-tab px-3 py-2 rounded-xl text-xs font-extrabold border-2" onclick="switchQpTab('semua')">📋 Semua (<span id="qp-semua-count">0</span>)</button>
       </div>
-      <div id="qp-recent-wrap" class="mb-3 hidden">
+      <div id="qp-recent-wrap" class="mb-3 is-hidden">
         <p class="text-[10px] font-bold mb-1" style="color:var(--text-muted)">🕐 Baru saja:</p>
         <div id="qp-recent" class="flex flex-wrap gap-1.5"></div>
       </div>
       <p id="qp-list-label" class="text-[10px] font-bold mb-1" style="color:var(--text-muted)">📋 Semua Murid:</p>
       <div id="qp-murid-list" class="grid grid-cols-2 gap-2"></div>
     </div>
-
-    <!-- FOOTER -->
     <div class="p-3 border-t" style="border-color:var(--border);background:var(--bg)">
-      <p id="qp-status" class="text-[10px] font-bold text-center mb-2 min-h-[14px]"></p>
+      <p id="qp-status" class="text-[10px] font-bold text-center mb-2" style="min-height:14px"></p>
       <button id="qp-save-btn" onclick="saveQuickPoint()" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white rounded-xl py-3 text-sm font-extrabold shadow-lg" disabled>💾 Simpan</button>
     </div>
   </div>
@@ -269,12 +305,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <main class="app-shell">
 <section class="phone-frame">
 
-<!-- LOGIN -->
 <section id="login-screen" class="screen active relative overflow-hidden justify-center items-center">
   <span class="bubble w-48 h-48 bg-[#FFD166] -top-10 -right-10"></span>
   <span class="bubble w-32 h-32 bg-[#FF6B6B] bottom-10 -left-10"></span>
   <div class="w-full z-10">
-    <div class="flex flex-col items-center mb-6"><div class="mascot">🦉</div><h1 class="mt-3 text-2xl font-extrabold text-center" style="font-family:Quicksand,sans-serif">Mutaba'ah</h1><p class="text-sm font-bold text-[#06d6a0]">RQ An-Nuur</p></div>
+    <div class="flex flex-col items-center mb-6">
+      <div class="mascot">🦉</div>
+      <h1 class="mt-3 text-2xl font-extrabold text-center" style="font-family:Quicksand,sans-serif">Mutaba'ah</h1>
+      <p class="text-sm font-bold text-[#06d6a0]">RQ An-Nuur</p>
+    </div>
     <div class="bg-white/85 backdrop-blur-md p-6 rounded-3xl soft-card">
       <p class="text-sm text-center text-[#5a8c9a] mb-5 font-bold">Selamat datang! Silakan masuk 🎉</p>
       <form id="form-login" class="space-y-4">
@@ -288,62 +327,153 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </section>
 
-<!-- DASHBOARD -->
 <section id="dashboard-screen" class="screen relative overflow-y-auto">
   <div class="flex justify-between items-start gap-3">
-    <div class="flex items-center gap-3"><div class="mascot mascot-sm">🦉</div><div><p class="font-bold text-xs text-[#06d6a0]">Assalamu'alaikum,</p><h1 id="user-greeting" class="mt-0.5 font-extrabold text-lg"></h1><p id="today-date" class="mt-0.5 text-[10px] font-bold" style="color:var(--text-muted)"></p></div></div>
-    <div class="flex gap-2"><button id="theme-toggle" class="icon-btn"><i data-lucide="moon" width="18"></i></button><button id="sound-toggle" class="icon-btn"><i data-lucide="volume-2" width="18"></i></button><button onclick="logout()" class="icon-btn text-red-500"><i data-lucide="log-out" width="18"></i></button></div>
+    <div class="flex items-center gap-3">
+      <div class="mascot mascot-sm">🦉</div>
+      <div>
+        <p class="font-bold text-xs text-[#06d6a0]">Assalamu'alaikum,</p>
+        <h1 id="user-greeting" class="mt-0.5 font-extrabold text-lg"></h1>
+        <p id="today-date" class="mt-0.5 text-[10px] font-bold" style="color:var(--text-muted)"></p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button id="theme-toggle" class="icon-btn"><i data-lucide="moon" width="18"></i></button>
+      <button id="sound-toggle" class="icon-btn"><i data-lucide="volume-2" width="18"></i></button>
+      <button onclick="logout()" class="icon-btn text-red-500"><i data-lucide="log-out" width="18"></i></button>
+    </div>
   </div>
   <div class="mt-6 rounded-[25px] p-4 flex items-center gap-4 soft-card" style="background:linear-gradient(135deg,#FFD166,#FFB085)">
-    <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center bg-white/90 text-[#0d5563] flex-shrink-0 shadow-inner"><span id="cal-month" class="text-[10px] font-bold uppercase tracking-widest text-[#FF6B6B] mt-1"></span><span id="cal-day" class="text-2xl font-extrabold leading-none mb-1"></span></div>
-    <div><p class="font-extrabold text-sm text-[#0d5563]">Semangat Hari Ini! 🌟</p><p class="text-xs mt-1 text-[#0d5563]/70 font-bold">Catat progres ananda.</p></div>
+    <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center bg-white/90 text-[#0d5563] flex-shrink-0 shadow-inner">
+      <span id="cal-month" class="text-[10px] font-bold uppercase tracking-widest text-[#FF6B6B] mt-1"></span>
+      <span id="cal-day" class="text-2xl font-extrabold leading-none mb-1"></span>
+    </div>
+    <div>
+      <p class="font-extrabold text-sm text-[#0d5563]">Semangat Hari Ini! 🌟</p>
+      <p class="text-xs mt-1 text-[#0d5563]/70 font-bold">Catat progres ananda.</p>
+    </div>
   </div>
   <div id="wali-dashboard" class="mt-6 rounded-[25px] p-5 text-white shadow-xl is-hidden" style="background:linear-gradient(135deg,#0f7fa1,#0d5563)">
-    <div class="flex items-center gap-3 mb-3"><div id="wali-child-avatar" class="avatar" style="width:48px;height:48px;font-size:20px;background:linear-gradient(135deg,#FFD166,#FF6B6B)">?</div><div class="flex-1 min-w-0"><h3 class="font-bold text-sm text-[#FFD166]">Dasbor Wali Murid</h3><p class="text-[11px] text-white/80 truncate">Ananda: <span id="wali-child-name" class="font-bold text-white uppercase"></span></p></div></div>
+    <div class="flex items-center gap-3 mb-3">
+      <div id="wali-child-avatar" class="avatar" style="width:48px;height:48px;font-size:20px;background:linear-gradient(135deg,#FFD166,#FF6B6B)">?</div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-sm text-[#FFD166]">Dasbor Wali Murid</h3>
+        <p class="text-[11px] text-white/80 truncate">Ananda: <span id="wali-child-name" class="font-bold text-white uppercase"></span></p>
+      </div>
+    </div>
     <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="bg-white/10 rounded-xl p-3 border border-white/20"><p class="text-[10px] uppercase tracking-wider text-[#FFD166] font-bold">⭐ Total Poin</p><p class="text-3xl font-extrabold mt-1" id="wali-poin">0</p><div class="progress-track mt-2"><div class="progress-fill" id="wali-poin-bar" style="width:0%"></div></div></div>
-      <div class="bg-white/10 rounded-xl p-3 border border-white/20"><p class="text-[10px] uppercase tracking-wider text-[#A8E06E] font-bold">✅ Hadir Bulan Ini</p><p class="text-3xl font-extrabold mt-1" id="wali-hadir">0</p><div class="progress-track mt-2"><div class="progress-fill" id="wali-hadir-bar" style="width:0%;background:linear-gradient(90deg,#A8E06E,#06d6a0)"></div></div></div>
+      <div class="bg-white/10 rounded-xl p-3 border border-white/20">
+        <p class="text-[10px] uppercase tracking-wider text-[#FFD166] font-bold">⭐ Total Poin</p>
+        <p class="text-3xl font-extrabold mt-1" id="wali-poin">0</p>
+        <div class="progress-track mt-2"><div class="progress-fill" id="wali-poin-bar" style="width:0%"></div></div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-3 border border-white/20">
+        <p class="text-[10px] uppercase tracking-wider text-[#A8E06E] font-bold">✅ Hadir Bulan Ini</p>
+        <p class="text-3xl font-extrabold mt-1" id="wali-hadir">0</p>
+        <div class="progress-track mt-2"><div class="progress-fill" id="wali-hadir-bar" style="width:0%;background:linear-gradient(90deg,#A8E06E,#06d6a0)"></div></div>
+      </div>
     </div>
     <div id="wali-badges" class="mb-4 flex flex-wrap gap-2"></div>
-    <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4"><div class="flex justify-between items-center mb-1"><h4 class="font-bold text-[11px] text-[#FFD166]">🔥 Kalender Kehadiran</h4><span id="streak-count" class="text-[10px] font-extrabold text-[#A8E06E]">0 hari</span></div><div id="streak-calendar" class="streak-grid"></div></div>
-    <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4"><h4 class="font-bold text-[11px] text-[#FFD166] mb-2">📊 Grafik Progres</h4><div class="chart-container"><canvas id="wali-chart"></canvas></div></div>
+    <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4">
+      <div class="flex justify-between items-center mb-1">
+        <h4 class="font-bold text-[11px] text-[#FFD166]">🔥 Kalender Kehadiran</h4>
+        <span id="streak-count" class="text-[10px] font-extrabold text-[#A8E06E]">0 hari</span>
+      </div>
+      <div id="streak-calendar" class="streak-grid"></div>
+    </div>
+    <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4">
+      <h4 class="font-bold text-[11px] text-[#FFD166] mb-2">📊 Grafik Progres</h4>
+      <div class="chart-container"><canvas id="wali-chart"></canvas></div>
+    </div>
     <div id="wali-tagihan-container" class="mb-4"></div>
     <h4 class="font-bold text-xs text-[#FFD166] mb-2 border-t border-white/10 pt-3">💚 Tabungan & Iuran</h4>
     <div id="wali-keuangan-container" class="space-y-3"></div>
   </div>
   <div id="guru-attendance-card" class="mt-6 rounded-[25px] p-5 text-white shadow-xl is-hidden" style="background:linear-gradient(135deg,#06AED5,#0d5563)">
-    <div class="flex items-center gap-2 mb-1"><span class="text-xl">🎯</span><h3 class="font-bold text-sm text-[#FFD166]">Presensi Kehadiran Guru</h3></div>
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-xl">🎯</span>
+      <h3 class="font-bold text-sm text-[#FFD166]">Presensi Kehadiran Guru</h3>
+    </div>
     <p class="text-[10px] text-white/80 mt-1 leading-tight">Sesi 1: 07.30-10.00 | Sesi 2: 10.30-12.00 | Sesi 3: 15.30-17.00 WIB</p>
     <button id="btn-absen-masuk-guru" class="w-full mt-4 bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-extrabold shadow-md">📍 Absen Kehadiran</button>
     <p id="guru-live-status-absen" class="text-[11px] font-bold mt-2 text-center text-white"></p>
   </div>
   <div id="menu-container" class="grid grid-cols-2 gap-3 mt-6">
-    <button id="open-mutabaah" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFEFC5);border-color:#FFE8A1"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">📖</span><div class="text-left"><span class="font-extrabold text-sm block">Catat Mutaba'ah</span><span class="text-[10px] font-bold" style="color:var(--text-muted)">Jilid, Surah, Buku, Doa, Hadits</span></div></div><i data-lucide="chevron-right" class="mt-2"></i></button>
+    <button id="open-mutabaah" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
+      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📖</span>
+        <div class="text-left"><span class="font-extrabold text-sm block">Catat Mutaba'ah</span><span class="text-[10px] font-bold" style="color:var(--text-muted)">Jilid, Surah, Buku, Doa, Hadits</span></div>
+      </div>
+      <i data-lucide="chevron-right" class="mt-2"></i>
+    </button>
     <button id="open-bimbel" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">🎓</span><span class="block font-extrabold mt-2 text-sm">Bimbel</span></button>
     <button id="open-absen" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">✅</span><span class="block font-extrabold mt-2 text-sm">Absensi Murid</span></button>
     <button id="open-points" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">⭐</span><span class="block font-extrabold mt-2 text-sm">Beri Poin</span></button>
     <button id="open-manage" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">👥</span><span class="block font-extrabold mt-2 text-sm">Data Master</span></button>
-    <button id="open-kalender-guru" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">📅</span><span class="font-extrabold text-sm">Kalender Kehadiran</span></div><i data-lucide="chevron-right"></i></button>
-    <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFE8A1);border-color:#FFD166"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏆</span><span class="font-extrabold text-sm text-amber-800">Leaderboard</span></div><i data-lucide="chevron-right" class="text-amber-800"></i></button>
-    <button id="open-hall" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FDF3FF,#EFE0FF);border-color:#D2A3F3"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">🌟</span><span class="font-extrabold text-sm text-purple-900">Hall of Fame</span></div><i data-lucide="chevron-right" class="text-purple-800"></i></button>
+    <button id="open-kalender-guru" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between">
+      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📅</span><span class="font-extrabold text-sm">Kalender Kehadiran</span></div>
+      <i data-lucide="chevron-right"></i>
+    </button>
+    <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFE8A1);border-color:#FFD166">
+      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏆</span><span class="font-extrabold text-sm text-amber-800">Leaderboard</span></div>
+      <i data-lucide="chevron-right" class="text-amber-800"></i>
+    </button>
+    <button id="open-hall" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FDF3FF,#EFE0FF);border-color:#D2A3F3">
+      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🌟</span><span class="font-extrabold text-sm text-purple-900">Hall of Fame</span></div>
+      <i data-lucide="chevron-right" class="text-purple-800"></i>
+    </button>
   </div>
-  <button id="open-report" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">📊</span><span class="font-extrabold text-sm">Laporan & Raport</span></div><i data-lucide="chevron-right"></i></button>
-  <button id="open-kas" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#E0F7F3;border-color:#A7E8D9"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏦</span><span class="font-extrabold text-sm text-teal-900">Buku Kas Umum</span></div><i data-lucide="chevron-right" class="text-teal-800"></i></button>
-  <button id="open-keu-santri" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#EEF2FF;border-color:#B0BFFF"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">🪙</span><span class="font-extrabold text-sm text-indigo-900">Keuangan Santri</span></div><i data-lucide="chevron-right" class="text-indigo-800"></i></button>
-  <button id="open-penagihan" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:linear-gradient(to right,#FFE8E8,#FFD0D0);border-color:#FFA0A0"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">📢</span><span class="font-extrabold text-sm text-red-900">Dashboard Penagihan</span></div><i data-lucide="chevron-right" class="text-red-800"></i></button>
-  <button id="open-bendahara" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FFF9E6;border-color:#FFE8A1"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">💰</span><span class="font-extrabold text-sm text-amber-900">Penggajian Guru</span></div><i data-lucide="chevron-right" class="text-amber-800"></i></button>
-  <button id="open-fotoupload" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FCE4EC;border-color:#F8BBD0"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">📸</span><span class="font-extrabold text-sm text-pink-900">Foto & Pencapaian</span></div><i data-lucide="chevron-right" class="text-pink-800"></i></button>
-  <button id="open-audit" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#F0F0F0;border-color:#CCC"><div class="flex items-center gap-3"><span class="text-3xl menu-icon">🔍</span><span class="font-extrabold text-sm text-gray-700">Audit Keuangan</span></div><i data-lucide="chevron-right" class="text-gray-600"></i></button>
-  <section id="history-section" class="mt-8 pb-5"><h2 class="font-bold text-lg mb-3 flex items-center gap-2">📅 <span>Riwayat Terakhir</span></h2><div id="history-list" class="space-y-3"></div></section>
+  <button id="open-report" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📊</span><span class="font-extrabold text-sm">Laporan & Raport</span></div>
+    <i data-lucide="chevron-right"></i>
+  </button>
+  <button id="open-kas" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#E0F7F3;border-color:#A7E8D9">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏦</span><span class="font-extrabold text-sm text-teal-900">Buku Kas Umum</span></div>
+    <i data-lucide="chevron-right" class="text-teal-800"></i>
+  </button>
+  <button id="open-keu-santri" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#EEF2FF;border-color:#B0BFFF">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🪙</span><span class="font-extrabold text-sm text-indigo-900">Keuangan Santri</span></div>
+    <i data-lucide="chevron-right" class="text-indigo-800"></i>
+  </button>
+  <button id="open-penagihan" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:linear-gradient(to right,#FFE8E8,#FFD0D0);border-color:#FFA0A0">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📢</span><span class="font-extrabold text-sm text-red-900">Dashboard Penagihan</span></div>
+    <i data-lucide="chevron-right" class="text-red-800"></i>
+  </button>
+  <button id="open-bendahara" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FFF9E6;border-color:#FFE8A1">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">💰</span><span class="font-extrabold text-sm text-amber-900">Penggajian Guru</span></div>
+    <i data-lucide="chevron-right" class="text-amber-800"></i>
+  </button>
+  <button id="open-fotoupload" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FCE4EC;border-color:#F8BBD0">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📸</span><span class="font-extrabold text-sm text-pink-900">Foto & Pencapaian</span></div>
+    <i data-lucide="chevron-right" class="text-pink-800"></i>
+  </button>
+  <button id="open-audit" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#F0F0F0;border-color:#CCC">
+    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🔍</span><span class="font-extrabold text-sm text-gray-700">Audit Keuangan</span></div>
+    <i data-lucide="chevron-right" class="text-gray-600"></i>
+  </button>
+  <section id="history-section" class="mt-8 pb-5">
+    <h2 class="font-bold text-lg mb-3 flex items-center gap-2">📅 <span>Riwayat Terakhir</span></h2>
+    <div id="history-list" class="space-y-3"></div>
+  </section>
 </section>
 
-<!-- MUTABA'AH -->
 <section id="mutabaah-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📖 <span>Setoran Mutaba'ah</span></h1>
-  <div class="grid grid-cols-2 gap-3 mt-4"><div><label class="block font-bold text-xs mb-1">Lembaga</label><select id="mutabaah-unit" class="field text-sm" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-xs mb-1">Kelas</label><select id="mutabaah-kelas" class="field text-sm" required></select></div></div>
-  <div class="grid grid-cols-2 gap-3 mt-3"><div><label class="block font-bold text-xs mb-1">Guru</label><select id="mutabaah-guru-select" class="field text-sm" required></select></div><div><label class="block font-bold text-xs mb-1">Murid</label><select id="mutabaah-child-select" class="field text-sm" required></select></div></div>
-  <div id="riwayat-card" class="riwayat-card mt-4 is-hidden"><div class="flex justify-between items-center mb-2"><span class="font-extrabold text-sm">📋 Riwayat Terakhir</span><span id="riwayat-warning" class="text-[10px] font-bold px-2 py-0.5 rounded-full is-hidden"></span></div><div id="riwayat-content" class="space-y-1 text-xs"></div></div>
+  <div class="grid grid-cols-2 gap-3 mt-4">
+    <div><label class="block font-bold text-xs mb-1">Lembaga</label><select id="mutabaah-unit" class="field text-sm" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+    <div><label class="block font-bold text-xs mb-1">Kelas</label><select id="mutabaah-kelas" class="field text-sm" required></select></div>
+  </div>
+  <div class="grid grid-cols-2 gap-3 mt-3">
+    <div><label class="block font-bold text-xs mb-1">Guru</label><select id="mutabaah-guru-select" class="field text-sm" required></select></div>
+    <div><label class="block font-bold text-xs mb-1">Murid</label><select id="mutabaah-child-select" class="field text-sm" required></select></div>
+  </div>
+  <div id="riwayat-card" class="riwayat-card mt-4 is-hidden">
+    <div class="flex justify-between items-center mb-2">
+      <span class="font-extrabold text-sm">📋 Riwayat Terakhir</span>
+      <span id="riwayat-warning" class="text-[10px] font-bold px-2 py-0.5 rounded-full is-hidden"></span>
+    </div>
+    <div id="riwayat-content" class="space-y-1 text-xs"></div>
+  </div>
   <div id="anomali-alert" class="anomali-alert is-hidden mt-3"></div>
   <form id="mutabaah-form" class="mt-4 space-y-4">
     <div class="mutabaah-tabs flex overflow-x-auto gap-2 border-b pb-2 mt-2" style="border-color:var(--border)">
@@ -354,38 +484,98 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button type="button" class="tab-btn px-3 py-1.5 rounded-full text-xs font-bold transition flex-shrink-0" style="background:var(--bg);color:var(--text-muted)" data-target="hadits">📜 Hadits</button>
     </div>
     <div id="panel-jilid" class="mutabaah-panel space-y-3">
-      <div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-xs mb-1">Jilid</label><select id="mutabaah-jilid-number" class="field text-sm"></select></div><div><label class="block font-bold text-xs mb-1">Halaman</label><select id="mutabaah-page-from" class="field text-sm"></select></div></div>
-      <div class="p-3 rounded-2xl border space-y-3" style="background:var(--card);border-color:var(--border)"><div class="flex items-center gap-2"><input id="jilid-tilawah-toggle" type="checkbox" class="w-4 h-4 accent-[#ef476f]"><label for="jilid-tilawah-toggle" class="text-sm font-bold">Tambah Tilawah Al-Qur'an?</label></div><div id="tilawah-fields" class="grid grid-cols-[1fr_2fr_1fr] gap-2 is-hidden"><div><select id="jilid-juz" class="field text-[11px] p-2"></select></div><div><select id="jilid-tilawah-surah" class="field text-[11px] p-2"></select></div><div><select id="jilid-tilawah-ayat" class="field text-[11px] p-2"></select></div></div></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="block font-bold text-xs mb-1">Jilid</label><select id="mutabaah-jilid-number" class="field text-sm"></select></div>
+        <div><label class="block font-bold text-xs mb-1">Halaman</label><select id="mutabaah-page-from" class="field text-sm"></select></div>
+      </div>
+      <div class="p-3 rounded-2xl border space-y-3" style="background:var(--card);border-color:var(--border)">
+        <div class="flex items-center gap-2">
+          <input id="jilid-tilawah-toggle" type="checkbox" class="w-4 h-4 accent-[#ef476f]">
+          <label for="jilid-tilawah-toggle" class="text-sm font-bold">Tambah Tilawah Al-Qur'an?</label>
+        </div>
+        <div id="tilawah-fields" class="grid grid-cols-[1fr_2fr_1fr] gap-2 is-hidden">
+          <div><select id="jilid-juz" class="field text-[11px] p-2"></select></div>
+          <div><select id="jilid-tilawah-surah" class="field text-[11px] p-2"></select></div>
+          <div><select id="jilid-tilawah-ayat" class="field text-[11px] p-2"></select></div>
+        </div>
+      </div>
     </div>
-    <div id="panel-surah" class="mutabaah-panel space-y-3 is-hidden"><div class="grid grid-cols-[1fr_2fr_1fr] gap-2"><div><label class="block font-bold text-[11px] mb-1">Juz</label><select id="mutabaah-surah-juz" class="field text-[11px] p-2"></select></div><div><label class="block font-bold text-[11px] mb-1">Surat</label><select id="mutabaah-surah-number" class="field text-[11px] p-2"></select></div><div><label class="block font-bold text-[11px] mb-1">Ayat</label><select id="mutabaah-ayat-count" class="field text-[11px] p-2"></select></div></div></div>
-    <div id="panel-buku" class="mutabaah-panel space-y-3 is-hidden"><div><label class="block font-bold text-xs mb-1">Sampai Halaman Berapa?</label><input id="mutabaah-buku-page" class="field text-sm" type="number" min="1" placeholder="Cth: 15"></div></div>
-    <div id="panel-doa" class="mutabaah-panel space-y-3 is-hidden"><div class="flex justify-between items-end mb-1"><label class="block font-bold text-xs">Pilih Doa</label><button type="button" onclick="toggleMasterManage('Doa')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola</button></div><select id="mutabaah-doa-select" class="field text-sm"><option value="">Pilih doa harian...</option></select></div>
-    <div id="panel-hadits" class="mutabaah-panel space-y-3 is-hidden"><div class="flex justify-between items-end mb-1"><label class="block font-bold text-xs">Pilih Hadits</label><button type="button" onclick="toggleMasterManage('Hadits')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola</button></div><select id="mutabaah-hadits-select" class="field text-sm"><option value="">Pilih hafalan hadits...</option></select></div>
-    <div id="master-manage-box" class="is-hidden p-3 rounded-2xl border mt-2" style="background:var(--bg);border-color:var(--border)"><div class="flex justify-between mb-2"><h4 id="master-manage-title" class="font-extrabold text-sm">Kelola</h4><button type="button" onclick="closeMasterManage()" class="text-red-500 font-bold text-xs">Tutup</button></div><div id="master-manage-list" class="space-y-1 mb-3 max-h-32 overflow-y-auto p-2 rounded-xl border" style="background:var(--card);border-color:var(--border)"></div><div class="flex gap-2"><input id="master-new-input" type="text" class="field text-xs p-2 flex-1" placeholder="Ketik nama baru..."><button type="button" id="btn-save-master" class="bg-[#06d6a0] text-white font-bold px-3 rounded-xl text-xs">Simpan</button></div><p id="master-manage-status" class="text-[10px] font-bold text-center mt-1"></p></div>
-    <div class="mt-3 pt-3 border-t" style="border-color:var(--border)"><label class="block font-bold text-sm mb-2 text-[#ef476f]">Status Setoran</label><select id="mutabaah-status-select" class="field font-bold" required><option value="Lanjut">🟢 Lanjut (Lulus / Lancar)</option><option value="Ulang">🔴 Ulang (Belum Lancar)</option></select></div>
+    <div id="panel-surah" class="mutabaah-panel space-y-3 is-hidden">
+      <div class="grid grid-cols-[1fr_2fr_1fr] gap-2">
+        <div><label class="block font-bold text-[11px] mb-1">Juz</label><select id="mutabaah-surah-juz" class="field text-[11px] p-2"></select></div>
+        <div><label class="block font-bold text-[11px] mb-1">Surat</label><select id="mutabaah-surah-number" class="field text-[11px] p-2"></select></div>
+        <div><label class="block font-bold text-[11px] mb-1">Ayat</label><select id="mutabaah-ayat-count" class="field text-[11px] p-2"></select></div>
+      </div>
+    </div>
+    <div id="panel-buku" class="mutabaah-panel space-y-3 is-hidden">
+      <div><label class="block font-bold text-xs mb-1">Sampai Halaman Berapa?</label><input id="mutabaah-buku-page" class="field text-sm" type="number" min="1" placeholder="Cth: 15"></div>
+    </div>
+    <div id="panel-doa" class="mutabaah-panel space-y-3 is-hidden">
+      <div class="flex justify-between items-end mb-1">
+        <label class="block font-bold text-xs">Pilih Doa</label>
+        <button type="button" onclick="toggleMasterManage('Doa')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola</button>
+      </div>
+      <select id="mutabaah-doa-select" class="field text-sm"><option value="">Pilih doa harian...</option></select>
+    </div>
+    <div id="panel-hadits" class="mutabaah-panel space-y-3 is-hidden">
+      <div class="flex justify-between items-end mb-1">
+        <label class="block font-bold text-xs">Pilih Hadits</label>
+        <button type="button" onclick="toggleMasterManage('Hadits')" class="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-2 py-1 rounded">⚙️ Kelola</button>
+      </div>
+      <select id="mutabaah-hadits-select" class="field text-sm"><option value="">Pilih hafalan hadits...</option></select>
+    </div>
+    <div id="master-manage-box" class="is-hidden p-3 rounded-2xl border mt-2" style="background:var(--bg);border-color:var(--border)">
+      <div class="flex justify-between mb-2">
+        <h4 id="master-manage-title" class="font-extrabold text-sm">Kelola</h4>
+        <button type="button" onclick="closeMasterManage()" class="text-red-500 font-bold text-xs">Tutup</button>
+      </div>
+      <div id="master-manage-list" class="space-y-1 mb-3 max-h-32 overflow-y-auto p-2 rounded-xl border" style="background:var(--card);border-color:var(--border)"></div>
+      <div class="flex gap-2">
+        <input id="master-new-input" type="text" class="field text-xs p-2 flex-1" placeholder="Ketik nama baru...">
+        <button type="button" id="btn-save-master" class="bg-[#06d6a0] text-white font-bold px-3 rounded-xl text-xs">Simpan</button>
+      </div>
+      <p id="master-manage-status" class="text-[10px] font-bold text-center mt-1"></p>
+    </div>
+    <div class="mt-3 pt-3 border-t" style="border-color:var(--border)">
+      <label class="block font-bold text-sm mb-2 text-[#ef476f]">Status Setoran</label>
+      <select id="mutabaah-status-select" class="field font-bold" required>
+        <option value="Lanjut">🟢 Lanjut (Lulus / Lancar)</option>
+        <option value="Ulang">🔴 Ulang (Belum Lancar)</option>
+      </select>
+    </div>
     <p id="mutabaah-status" class="toast text-sm font-bold text-center"></p>
     <button id="mutabaah-save" type="submit" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-full py-4 font-extrabold shadow-lg">💾 Simpan Setoran</button>
   </form>
 </section>
 
-<!-- KALENDER GURU -->
 <section id="kalender-guru-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📅 <span>Kalender Kehadiran</span></h1>
-  <div id="kalender-guru-selector" class="mt-3"><select id="kalender-guru-select" class="field text-sm is-hidden"></select></div>
+  <div id="kalender-guru-selector" class="mt-3">
+    <select id="kalender-guru-select" class="field text-sm is-hidden"></select>
+  </div>
   <div class="mt-4 p-4 rounded-2xl" style="background:var(--card);border:2px solid var(--border)">
-    <div class="flex justify-between items-center mb-3"><button onclick="kalenderPrevMonth()" class="icon-btn">◀</button><div class="text-center"><h2 id="kalender-guru-title" class="font-extrabold text-base"></h2><p id="kalender-guru-month" class="text-xs font-bold" style="color:var(--text-muted)"></p></div><button onclick="kalenderNextMonth()" class="icon-btn">▶</button></div>
+    <div class="flex justify-between items-center mb-3">
+      <button onclick="kalenderPrevMonth()" class="icon-btn">◀</button>
+      <div class="text-center">
+        <h2 id="kalender-guru-title" class="font-extrabold text-base"></h2>
+        <p id="kalender-guru-month" class="text-xs font-bold" style="color:var(--text-muted)"></p>
+      </div>
+      <button onclick="kalenderNextMonth()" class="icon-btn">▶</button>
+    </div>
     <div id="kalender-guru-grid"></div>
   </div>
   <p class="text-[10px] text-center mt-3 italic" style="color:var(--text-muted)">Klik tanggal untuk lihat detail & edit</p>
 </section>
 
-<!-- LEADERBOARD -->
 <section id="leaderboard-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-amber-700 flex items-center gap-2">🏆 <span>Leaderboard</span></h1>
   <p class="text-xs mb-5 font-bold" style="color:var(--text-muted)">Peringkat santri terbaik! 🌟</p>
-  <div class="grid grid-cols-2 gap-3 mb-5"><div><label class="block text-xs font-bold mb-1">Lembaga</label><select id="lb-unit" class="field text-sm"><option value="">Semua...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block text-xs font-bold mb-1">Kelas</label><select id="lb-kelas" class="field text-sm"><option value="">Semua...</option></select></div></div>
+  <div class="grid grid-cols-2 gap-3 mb-5">
+    <div><label class="block text-xs font-bold mb-1">Lembaga</label><select id="lb-unit" class="field text-sm"><option value="">Semua...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+    <div><label class="block text-xs font-bold mb-1">Kelas</label><select id="lb-kelas" class="field text-sm"><option value="">Semua...</option></select></div>
+  </div>
   <div class="space-y-6">
     <div class="bg-gradient-to-br from-[#FFF3CE] to-[#FFE599] p-4 rounded-3xl shadow-sm border border-[#FFE8A1]"><h3 class="font-extrabold text-[#916912] mb-1 text-sm">📚 Capaian Jilid</h3><div id="lb-jilid"></div></div>
     <div class="bg-gradient-to-br from-[#E2F4E8] to-[#C1EBD1] p-4 rounded-3xl shadow-sm border border-[#B2E3C5]"><h3 class="font-extrabold text-[#267152] mb-1 text-sm">🕌 Setoran Hafalan</h3><div id="lb-hafalan"></div></div>
@@ -394,37 +584,59 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </section>
 
-<!-- HALL -->
 <section id="hall-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-purple-700 flex items-center gap-2">🌟 <span>Hall of Fame</span></h1>
   <p class="text-xs mb-5 font-bold" style="color:var(--text-muted)">Galeri pencapaian terbaik santri.</p>
-  <div class="bg-gradient-to-br from-[#FFF9E6] to-[#FFE8A1] p-4 rounded-3xl mb-4 border border-[#FFD166]"><h3 class="font-extrabold text-amber-900 text-sm mb-3">🎓 Baru Naik Jilid</h3><div id="hall-naikjilid" class="grid grid-cols-2 gap-2"></div></div>
-  <div class="p-4 rounded-3xl mb-4 border" style="background:var(--card);border-color:var(--border)"><h3 class="font-extrabold text-sm mb-3">📸 Galeri</h3><div id="hall-galeri" class="grid grid-cols-3 gap-2"></div></div>
-  <div class="bg-gradient-to-br from-[#E2F4E8] to-[#C1EBD1] p-4 rounded-3xl border border-[#B2E3C5]"><h3 class="font-extrabold text-[#267152] text-sm mb-3">🔥 Streak Terpanjang</h3><div id="hall-streak"></div></div>
+  <div class="bg-gradient-to-br from-[#FFF9E6] to-[#FFE8A1] p-4 rounded-3xl mb-4 border border-[#FFD166]">
+    <h3 class="font-extrabold text-amber-900 text-sm mb-3">🎓 Baru Naik Jilid</h3>
+    <div id="hall-naikjilid" class="grid grid-cols-2 gap-2"></div>
+  </div>
+  <div class="p-4 rounded-3xl mb-4 border" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-extrabold text-sm mb-3">📸 Galeri</h3>
+    <div id="hall-galeri" class="grid grid-cols-3 gap-2"></div>
+  </div>
+  <div class="bg-gradient-to-br from-[#E2F4E8] to-[#C1EBD1] p-4 rounded-3xl border border-[#B2E3C5]">
+    <h3 class="font-extrabold text-[#267152] text-sm mb-3">🔥 Streak Terpanjang</h3>
+    <div id="hall-streak"></div>
+  </div>
 </section>
 
-<!-- BIMBEL -->
 <section id="bimbel-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">🎓 <span>Bimbel</span></h1>
   <form id="bimbel-form" class="mt-5 space-y-4">
-    <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="bimbel-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="bimbel-kelas" class="field" required></select></div></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="bimbel-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+      <div><label class="block font-bold text-sm mb-2">Kelas</label><select id="bimbel-kelas" class="field" required></select></div>
+    </div>
     <div><label class="block font-bold text-sm mb-2">Guru</label><select id="bimbel-guru-select" class="field" required></select></div>
     <div><label class="block font-bold text-sm mb-2">Murid</label><select id="bimbel-child-select" class="field" required></select></div>
-    <div><label class="block font-bold text-sm mb-2">Mata Pelajaran</label><select id="bimbel-subject" class="field" required><option value="">Pilih...</option><option value="Calistung">Calistung</option><option value="B. Inggris">B. Inggris</option><option value="Matematika">Matematika</option></select></div>
-    <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Materi/Hal.</label><input id="bimbel-material" class="field" type="text" required></div><div><label class="block font-bold text-sm mb-2">Status</label><select id="bimbel-status-select" class="field" required><option value="Lanjut">Lanjut</option><option value="Ulang">Ulang</option></select></div></div>
+    <div><label class="block font-bold text-sm mb-2">Mata Pelajaran</label>
+      <select id="bimbel-subject" class="field" required>
+        <option value="">Pilih...</option>
+        <option value="Calistung">Calistung</option>
+        <option value="B. Inggris">B. Inggris</option>
+        <option value="Matematika">Matematika</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block font-bold text-sm mb-2">Materi/Hal.</label><input id="bimbel-material" class="field" type="text" required></div>
+      <div><label class="block font-bold text-sm mb-2">Status</label><select id="bimbel-status-select" class="field" required><option value="Lanjut">Lanjut</option><option value="Ulang">Ulang</option></select></div>
+    </div>
     <p id="bimbel-status" class="toast text-sm font-bold"></p>
     <button id="bimbel-save" type="submit" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-full py-4 font-extrabold shadow-lg">💾 Simpan</button>
   </form>
 </section>
 
-<!-- ABSEN MURID -->
 <section id="absen-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">✅ <span>Absensi Murid</span></h1>
   <div class="mt-5 space-y-4">
-    <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="absen-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="absen-kelas" class="field" required></select></div></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="absen-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+      <div><label class="block font-bold text-sm mb-2">Kelas</label><select id="absen-kelas" class="field" required></select></div>
+    </div>
     <div><label class="block font-bold text-sm mb-2">Tanggal</label><input id="absen-date" type="date" class="field" required></div>
     <div><h3 class="font-bold text-sm mb-2">Daftar Murid</h3><div id="absen-murid-list" class="space-y-1"></div></div>
     <p id="absen-status" class="toast text-sm font-bold"></p>
@@ -432,7 +644,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
 </section>
 
-<!-- POIN -->
 <section id="points-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">⭐ <span>Beri Poin</span></h1>
@@ -440,108 +651,314 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <p class="text-xs font-bold text-[#916912]">⚡ Mau lebih cepat? Pakai tombol ⚡ di pojok kanan bawah!</p>
   </div>
   <form id="points-form" class="mt-5 space-y-4">
-    <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="points-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block font-bold text-sm mb-2">Kelas</label><select id="points-kelas" class="field" required></select></div></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="points-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+      <div><label class="block font-bold text-sm mb-2">Kelas</label><select id="points-kelas" class="field" required></select></div>
+    </div>
     <div id="points-single-child-container"><label class="block font-bold text-sm mb-2">Pilih Murid</label><select id="points-child-select" class="field" required></select></div>
     <div><label class="block font-bold text-sm mb-2">Aturan Poin</label><select id="points-rule" class="field"><option value="">Pilih...</option><option value="custom">Custom</option></select></div>
-    <div id="custom-points-fields" class="grid grid-cols-2 gap-3 is-hidden"><div><input id="points-amount" type="number" class="field" placeholder="+5 / -3" min="-100" max="100"></div><div><input id="points-note" type="text" class="field" placeholder="Keterangan"></div></div>
-    <div id="bulk-points-fields" class="space-y-2 rounded-2xl p-3 border" style="background:var(--card);border-color:var(--border)"><label class="block font-bold text-sm">Aksi Poin Bulk</label><select id="bulk-points" class="field"><option value="">Satu murid saja</option><option value="selected">Pilih beberapa murid...</option><option value="present">Beri ke Semua Murid yang Hadir Hari Ini</option></select><div id="selected-points-children" class="is-hidden space-y-1 max-h-32 overflow-y-auto mt-2 p-2 rounded-lg border" style="border-color:var(--border)"></div></div>
-    <div class="space-y-2 rounded-2xl p-3 border" style="background:var(--card);border-color:var(--border)"><p class="block font-bold text-sm">Aturan Custom</p><div id="custom-rules-list" class="space-y-1"></div><div class="grid grid-cols-[1fr_80px] gap-2 mt-2"><input id="new-rule-name" class="field" type="text" placeholder="Nama aturan"><input id="new-rule-amount" class="field" type="number" placeholder="+5" min="-100" max="100"></div><p id="rule-save-status" class="text-xs font-bold text-[#087a61]"></p><button id="add-rule-button" type="button" class="w-full bg-[#FFD166] text-[#0d5563] rounded-xl py-2 font-bold">➕ Tambah Aturan</button></div>
+    <div id="custom-points-fields" class="grid grid-cols-2 gap-3 is-hidden">
+      <div><input id="points-amount" type="number" class="field" placeholder="+5 / -3" min="-100" max="100"></div>
+      <div><input id="points-note" type="text" class="field" placeholder="Keterangan"></div>
+    </div>
+    <div id="bulk-points-fields" class="space-y-2 rounded-2xl p-3 border" style="background:var(--card);border-color:var(--border)">
+      <label class="block font-bold text-sm">Aksi Poin Bulk</label>
+      <select id="bulk-points" class="field">
+        <option value="">Satu murid saja</option>
+        <option value="selected">Pilih beberapa murid...</option>
+        <option value="present">Beri ke Semua Murid yang Hadir Hari Ini</option>
+      </select>
+      <div id="selected-points-children" class="is-hidden space-y-1 max-h-32 overflow-y-auto mt-2 p-2 rounded-lg border" style="border-color:var(--border)"></div>
+    </div>
+    <div class="space-y-2 rounded-2xl p-3 border" style="background:var(--card);border-color:var(--border)">
+      <p class="block font-bold text-sm">Aturan Custom</p>
+      <div id="custom-rules-list" class="space-y-1"></div>
+      <div class="grid grid-cols-[1fr_80px] gap-2 mt-2">
+        <input id="new-rule-name" class="field" type="text" placeholder="Nama aturan">
+        <input id="new-rule-amount" class="field" type="number" placeholder="+5" min="-100" max="100">
+      </div>
+      <p id="rule-save-status" class="text-xs font-bold text-[#087a61]"></p>
+      <button id="add-rule-button" type="button" class="w-full bg-[#FFD166] text-[#0d5563] rounded-xl py-2 font-bold">➕ Tambah Aturan</button>
+    </div>
     <p id="points-status" class="toast text-sm font-bold text-center"></p>
     <button id="points-save" type="submit" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white rounded-full py-4 font-extrabold shadow-lg">⭐ Simpan Poin</button>
   </form>
 </section>
 
-<!-- MANAGE -->
 <section id="manage-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">👥 <span>Kelola Data</span></h1>
   <div class="mt-5 space-y-4">
     <div><label class="block font-bold text-sm mb-2">Lembaga</label><select id="manage-unit" class="field" required><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
     <div><label class="block font-bold text-sm mb-2">Kelas</label><select id="manage-kelas" class="field" required></select></div>
-    <div><label class="block font-bold text-sm mb-3">👨‍🏫 Daftar Guru</label><div id="guru-list" class="space-y-2 mb-4 p-3 rounded-lg border" style="background:var(--card);border-color:var(--border)"></div><form id="add-guru-form" class="flex gap-2"><input id="add-guru-input" class="field flex-1" placeholder="Nama guru baru" required><button type="submit" class="rounded-full bg-[#06d6a0] text-white font-bold px-4 py-2">Tambah</button></form><p id="guru-status" class="toast text-xs mt-2"></p></div>
-    <div><label class="block font-bold text-sm mb-3">👦 Daftar Murid</label><div id="murid-list" class="space-y-2 mb-4 p-3 rounded-lg border" style="background:var(--card);border-color:var(--border)"></div><form id="add-murid-form" class="flex gap-2"><input id="add-murid-input" class="field flex-1" placeholder="Nama murid baru" required><button type="submit" class="rounded-full bg-[#06d6a0] text-white font-bold px-4 py-2">Tambah</button></form><p id="murid-status" class="toast text-xs mt-2"></p></div>
-    <div class="pt-4 border-t" style="border-color:var(--border)"><h3 class="font-bold text-sm mb-3">⚙️ Master Kategori</h3><div id="kategori-list-pemasukan" class="space-y-1 mb-3"></div><div id="kategori-list-pengeluaran" class="space-y-1 mb-3"></div><div class="flex gap-2"><select id="new-kat-jenis" class="field text-xs w-32"><option value="Pemasukan">Pemasukan</option><option value="Pengeluaran">Pengeluaran</option></select><input id="new-kat-nama" class="field text-xs flex-1" placeholder="Nama kategori baru"><button id="btn-add-kat" type="button" class="bg-[#06d6a0] text-white font-bold px-3 rounded-xl text-xs">+</button></div><p id="kat-status" class="text-xs font-bold text-center mt-2"></p></div>
+    <div>
+      <label class="block font-bold text-sm mb-3">👨‍🏫 Daftar Guru</label>
+      <div id="guru-list" class="space-y-2 mb-4 p-3 rounded-lg border" style="background:var(--card);border-color:var(--border)"></div>
+      <form id="add-guru-form" class="flex gap-2">
+        <input id="add-guru-input" class="field flex-1" placeholder="Nama guru baru" required>
+        <button type="submit" class="rounded-full bg-[#06d6a0] text-white font-bold px-4 py-2">Tambah</button>
+      </form>
+      <p id="guru-status" class="toast text-xs mt-2"></p>
+    </div>
+    <div>
+      <label class="block font-bold text-sm mb-3">👦 Daftar Murid</label>
+      <div id="murid-list" class="space-y-2 mb-4 p-3 rounded-lg border" style="background:var(--card);border-color:var(--border)"></div>
+      <form id="add-murid-form" class="flex gap-2">
+        <input id="add-murid-input" class="field flex-1" placeholder="Nama murid baru" required>
+        <button type="submit" class="rounded-full bg-[#06d6a0] text-white font-bold px-4 py-2">Tambah</button>
+      </form>
+      <p id="murid-status" class="toast text-xs mt-2"></p>
+    </div>
+    <div class="pt-4 border-t" style="border-color:var(--border)">
+      <h3 class="font-bold text-sm mb-3">⚙️ Master Kategori</h3>
+      <div id="kategori-list-pemasukan" class="space-y-1 mb-3"></div>
+      <div id="kategori-list-pengeluaran" class="space-y-1 mb-3"></div>
+      <div class="flex gap-2">
+        <select id="new-kat-jenis" class="field text-xs w-32"><option value="Pemasukan">Pemasukan</option><option value="Pengeluaran">Pengeluaran</option></select>
+        <input id="new-kat-nama" class="field text-xs flex-1" placeholder="Nama kategori baru">
+        <button id="btn-add-kat" type="button" class="bg-[#06d6a0] text-white font-bold px-3 rounded-xl text-xs">+</button>
+      </div>
+      <p id="kat-status" class="text-xs font-bold text-center mt-2"></p>
+    </div>
   </div>
 </section>
 
-<!-- REPORT -->
 <section id="report-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl flex items-center gap-2">📊 <span>Laporan & Raport</span></h1>
   <div class="mt-5 space-y-3">
-    <div id="report-filters" class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold mb-1">Lembaga</label><select id="report-unit" class="field text-sm"><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div><div><label class="block text-xs font-bold mb-1">Kelas</label><select id="report-kelas" class="field text-sm"></select></div></div>
+    <div id="report-filters" class="grid grid-cols-2 gap-3">
+      <div><label class="block text-xs font-bold mb-1">Lembaga</label><select id="report-unit" class="field text-sm"><option value="">Pilih...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select></div>
+      <div><label class="block text-xs font-bold mb-1">Kelas</label><select id="report-kelas" class="field text-sm"></select></div>
+    </div>
     <div><label class="block text-xs font-bold mb-1">Pilih Anak</label><select id="report-child" class="field text-sm"><option value="">Pilih murid...</option></select></div>
-    <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold mb-1">Dari</label><input id="report-start" type="date" class="field text-sm"></div><div><label class="block text-xs font-bold mb-1">Sampai</label><input id="report-end" type="date" class="field text-sm"></div></div>
-    <div class="grid grid-cols-2 gap-2"><button id="generate-report-btn" type="button" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📈 Tampilkan</button><button id="btn-print-raport" type="button" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#087a61] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">🖨️ Cetak</button></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block text-xs font-bold mb-1">Dari</label><input id="report-start" type="date" class="field text-sm"></div>
+      <div><label class="block text-xs font-bold mb-1">Sampai</label><input id="report-end" type="date" class="field text-sm"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="generate-report-btn" type="button" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📈 Tampilkan</button>
+      <button id="btn-print-raport" type="button" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#087a61] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">🖨️ Cetak</button>
+    </div>
   </div>
   <div id="report-output" class="mt-5 is-hidden">
     <div id="raport-cetak" class="rounded-3xl overflow-hidden shadow-xl" style="background:#fff">
-      <div class="raport-header"><div style="position:relative;z-index:2"><div class="raport-mascot">🦉</div><h1 style="font-family:Quicksand,sans-serif;font-weight:800;font-size:22px;margin:6px 0 2px">RAPORT MUTABA'AH</h1><p style="font-size:13px;font-weight:700;opacity:.95">RQ An-Nuur</p><p id="raport-periode" style="font-size:11px;margin-top:4px;opacity:.9"></p></div></div>
+      <div class="raport-header">
+        <div style="position:relative;z-index:2">
+          <div class="raport-mascot">🦉</div>
+          <h1 style="font-family:Quicksand,sans-serif;font-weight:800;font-size:22px;margin:6px 0 2px">RAPORT MUTABA'AH</h1>
+          <p style="font-size:13px;font-weight:700;opacity:.95">RQ An-Nuur</p>
+          <p id="raport-periode" style="font-size:11px;margin-top:4px;opacity:.9"></p>
+        </div>
+      </div>
       <div class="raport-body">
-        <div class="raport-avatar-wrap"><div id="raport-avatar" class="raport-avatar-big">👦</div><h2 id="report-child-name" class="raport-name"></h2><p id="report-meta" class="raport-class"></p></div>
+        <div class="raport-avatar-wrap">
+          <div id="raport-avatar" class="raport-avatar-big">👦</div>
+          <h2 id="report-child-name" class="raport-name"></h2>
+          <p id="report-meta" class="raport-class"></p>
+        </div>
         <div class="raport-stars" id="raport-stars">⭐⭐⭐⭐⭐</div>
         <p style="text-align:center;font-size:11px;font-weight:800;color:#06d6a0;margin-top:-8px;margin-bottom:12px" id="raport-stars-label">MasyaAllah, luar biasa!</p>
         <div class="raport-grid">
-          <div class="raport-tile" style="background:linear-gradient(135deg,#E2F4E8,#C1EBD1)"><span class="raport-tile-icon">📖</span><p class="raport-tile-label">Total Setoran</p><p class="raport-tile-value" id="rpt-total">0</p><p class="raport-tile-sub">aktivitas</p></div>
-          <div class="raport-tile" style="background:linear-gradient(135deg,#FFF3CE,#FFE599)"><span class="raport-tile-icon">⭐</span><p class="raport-tile-label">Total Poin</p><p class="raport-tile-value" id="rpt-points">0</p><p class="raport-tile-sub">poin</p></div>
-          <div class="raport-tile" style="background:linear-gradient(135deg,#CCE5F0,#A2D4E8)"><span class="raport-tile-icon">📚</span><p class="raport-tile-label">Capaian Jilid</p><p class="raport-tile-value" id="rpt-jilid" style="font-size:12px">—</p></div>
-          <div class="raport-tile" style="background:linear-gradient(135deg,#FCE4EC,#F8BBD0)"><span class="raport-tile-icon">✅</span><p class="raport-tile-label">Kehadiran</p><p class="raport-tile-value" id="rpt-attendance">—</p><p class="raport-tile-sub">dari total hari</p></div>
-          <div class="raport-tile" style="background:linear-gradient(135deg,#EEE1FA,#DCB7F6)"><span class="raport-tile-icon">🕌</span><p class="raport-tile-label">Hafalan Terakhir</p><p class="raport-tile-value" id="rpt-hafalan" style="font-size:12px">—</p></div>
+          <div class="raport-tile" style="background:linear-gradient(135deg,#E2F4E8,#C1EBD1)">
+            <span class="raport-tile-icon">📖</span>
+            <p class="raport-tile-label">Total Setoran</p>
+            <p class="raport-tile-value" id="rpt-total">0</p>
+            <p class="raport-tile-sub">aktivitas</p>
+          </div>
+          <div class="raport-tile" style="background:linear-gradient(135deg,#FFF3CE,#FFE599)">
+            <span class="raport-tile-icon">⭐</span>
+            <p class="raport-tile-label">Total Poin</p>
+            <p class="raport-tile-value" id="rpt-points">0</p>
+            <p class="raport-tile-sub">poin</p>
+          </div>
+          <div class="raport-tile" style="background:linear-gradient(135deg,#CCE5F0,#A2D4E8)">
+            <span class="raport-tile-icon">📚</span>
+            <p class="raport-tile-label">Capaian Jilid</p>
+            <p class="raport-tile-value" id="rpt-jilid" style="font-size:12px">—</p>
+          </div>
+          <div class="raport-tile" style="background:linear-gradient(135deg,#FCE4EC,#F8BBD0)">
+            <span class="raport-tile-icon">✅</span>
+            <p class="raport-tile-label">Kehadiran</p>
+            <p class="raport-tile-value" id="rpt-attendance">—</p>
+            <p class="raport-tile-sub">dari total hari</p>
+          </div>
+          <div class="raport-tile" style="background:linear-gradient(135deg,#EEE1FA,#DCB7F6)">
+            <span class="raport-tile-icon">🕌</span>
+            <p class="raport-tile-label">Hafalan Terakhir</p>
+            <p class="raport-tile-value" id="rpt-hafalan" style="font-size:12px">—</p>
+          </div>
         </div>
-        <div style="margin-top:16px"><p style="text-align:center;font-size:11px;font-weight:800;color:#0d5563;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Badge Bulan Ini</p><div class="raport-badge-row" id="rpt-badges"></div></div>
-        <div class="raport-catatan"><p class="raport-catatan-label">💬 Catatan Guru</p><p class="raport-catatan-text" id="raport-catatan">"MasyaAllah, ananda sangat rajin dan semangat dalam belajar. Pertahankan ya!"</p></div>
+        <div style="margin-top:16px">
+          <p style="text-align:center;font-size:11px;font-weight:800;color:#0d5563;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Badge Bulan Ini</p>
+          <div class="raport-badge-row" id="rpt-badges"></div>
+        </div>
+        <div class="raport-catatan">
+          <p class="raport-catatan-label">💬 Catatan Guru</p>
+          <p class="raport-catatan-text" id="raport-catatan">"MasyaAllah, ananda sangat rajin dan semangat dalam belajar. Pertahankan ya!"</p>
+        </div>
         <p style="font-size:11px;font-weight:800;color:#0d5563;text-transform:uppercase;letter-spacing:.5px;margin-top:16px">📋 Riwayat Detail</p>
-        <div style="overflow-x:auto"><table class="raport-detail-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Detail</th><th>Status</th></tr></thead><tbody id="report-table-body"></tbody></table></div>
-        <div class="raport-ttd"><div class="raport-ttd-box"><p>Guru Pengampu,</p><p class="raport-ttd-line">____________________</p></div><div class="raport-ttd-box"><p>Wali Murid,</p><p class="raport-ttd-line">____________________</p></div></div>
+        <div style="overflow-x:auto">
+          <table class="raport-detail-table">
+            <thead><tr><th>Tanggal</th><th>Tipe</th><th>Detail</th><th>Status</th></tr></thead>
+            <tbody id="report-table-body"></tbody>
+          </table>
+        </div>
+        <div class="raport-ttd">
+          <div class="raport-ttd-box"><p>Guru Pengampu,</p><p class="raport-ttd-line">____________________</p></div>
+          <div class="raport-ttd-box"><p>Wali Murid,</p><p class="raport-ttd-line">____________________</p></div>
+        </div>
         <p class="raport-footer">🌟 Semangat terus belajar! 🌟<br>Barakallahu fiik 🤲</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- KEUANGAN SANTRI -->
 <section id="keu-santri-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-indigo-900 flex items-center gap-2">🪙 <span>Keuangan Santri</span></h1>
   <p class="text-xs mb-4 font-bold" style="color:var(--text-muted)">Iuran, Tabungan, & Tagihan.</p>
   <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border-color:#B0BFFF">
     <h3 class="font-bold text-sm text-indigo-900 mb-3">💵 Catat Transaksi</h3>
-    <div class="grid grid-cols-2 gap-2 mb-2"><select id="keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="keu-kelas" class="field text-sm"><option value="">Kelas...</option></select></div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="keu-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
     <select id="keu-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
-    <div class="grid grid-cols-2 gap-2 mb-2"><input type="date" id="keu-tanggal" class="field text-sm"><select id="keu-kategori" class="field text-sm"><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Tabungan Masuk">Tabungan Masuk</option><option value="Tarik Tabungan">Tarik Tabungan</option><option value="Pelunasan Tagihan Tambahan">Pelunasan Tagihan</option><option value="Lainnya">Lainnya</option></select></div>
-    <div id="iuran-range-container" class="grid grid-cols-2 gap-2 mb-2"><div><label class="text-[10px] font-bold text-indigo-700">Dari</label><input type="month" id="keu-iuran-start" class="field text-sm"></div><div><label class="text-[10px] font-bold text-indigo-700">Sampai</label><input type="month" id="keu-iuran-end" class="field text-sm"></div></div>
-    <div class="grid grid-cols-2 gap-2 mb-3"><input type="number" id="keu-nominal" class="field text-sm" placeholder="Nominal Rp" min="0" max="100000000"><input type="text" id="keu-ket" class="field text-sm" placeholder="Keterangan"></div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <input type="date" id="keu-tanggal" class="field text-sm">
+      <select id="keu-kategori" class="field text-sm">
+        <option value="Iuran Bulanan">Iuran Bulanan</option>
+        <option value="Tabungan Masuk">Tabungan Masuk</option>
+        <option value="Tarik Tabungan">Tarik Tabungan</option>
+        <option value="Pelunasan Tagihan Tambahan">Pelunasan Tagihan</option>
+        <option value="Lainnya">Lainnya</option>
+      </select>
+    </div>
+    <div id="iuran-range-container" class="grid grid-cols-2 gap-2 mb-2">
+      <div><label class="text-[10px] font-bold text-indigo-700">Dari</label><input type="month" id="keu-iuran-start" class="field text-sm"></div>
+      <div><label class="text-[10px] font-bold text-indigo-700">Sampai</label><input type="month" id="keu-iuran-end" class="field text-sm"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <input type="number" id="keu-nominal" class="field text-sm" placeholder="Nominal Rp" min="0" max="100000000">
+      <input type="text" id="keu-ket" class="field text-sm" placeholder="Keterangan">
+    </div>
     <p id="keu-status" class="text-xs font-bold text-center mb-2"></p>
     <button id="btn-simpan-keu" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button>
   </div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1"><h3 class="font-bold text-sm text-amber-900 mb-2">📌 Set Tarif SPP Khusus</h3><div class="grid grid-cols-2 gap-2 mb-2"><select id="tarif-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="tarif-kelas" class="field text-sm"><option value="">Kelas...</option></select></div><select id="tarif-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select><input type="number" id="tarif-nominal" class="field text-sm mb-2" placeholder="Nominal SPP (Rp)" min="0" max="100000000"><p id="tarif-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-simpan-tarif" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FAF5FF,#EEE1FA);border-color:#D2A3F3"><h3 class="font-bold text-sm text-purple-900 mb-2">📝 Catat Tagihan Tambahan</h3><div class="grid grid-cols-2 gap-2 mb-2"><select id="tagihan-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="tagihan-kelas" class="field text-sm"><option value="">Kelas...</option></select></div><select id="tagihan-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select><div class="grid grid-cols-2 gap-2 mb-2"><input type="number" id="tagihan-nominal" class="field text-sm" placeholder="Nominal" min="0"><input type="text" id="tagihan-ket" class="field text-sm" placeholder="Cth: Seragam"></div><p id="tagihan-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-simpan-tagihan" class="w-full bg-purple-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-3">🔎 Cek Riwayat</h3><div class="grid grid-cols-2 gap-2 mb-2"><select id="cek-keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="cek-keu-kelas" class="field text-sm"><option value="">Kelas...</option></select></div><select id="cek-keu-child-select" class="field text-sm mb-3"><option value="">Pilih Murid...</option></select><button id="btn-cek-keu" class="w-full bg-[#0d5563] text-white py-2 rounded-xl text-xs font-bold mb-3">📋 Tampilkan</button><div class="is-hidden mb-3 space-y-2" id="info-keuangan-panel"><div class="bg-green-50 text-green-800 p-3 rounded-lg border border-green-200 text-center"><p class="text-[10px] font-bold uppercase">💰 Saldo Tabungan</p><p class="text-lg font-extrabold mt-1" id="saldo-tabungan">Rp 0</p></div><div class="bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200"><p class="text-[10px] font-bold uppercase mb-1 text-center">📅 Status Iuran</p><div id="status-iuran-text" class="w-full"></div></div></div><div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Kategori</th><th>Nominal</th><th>Info</th></tr></thead><tbody id="tbody-keu-santri"></tbody></table></div></div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
+    <h3 class="font-bold text-sm text-amber-900 mb-2">📌 Set Tarif SPP Khusus</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="tarif-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="tarif-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
+    <select id="tarif-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+    <input type="number" id="tarif-nominal" class="field text-sm mb-2" placeholder="Nominal SPP (Rp)" min="0" max="100000000">
+    <p id="tarif-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-simpan-tarif" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FAF5FF,#EEE1FA);border-color:#D2A3F3">
+    <h3 class="font-bold text-sm text-purple-900 mb-2">📝 Catat Tagihan Tambahan</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="tagihan-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="tagihan-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
+    <select id="tagihan-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <input type="number" id="tagihan-nominal" class="field text-sm" placeholder="Nominal" min="0">
+      <input type="text" id="tagihan-ket" class="field text-sm" placeholder="Cth: Seragam">
+    </div>
+    <p id="tagihan-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-simpan-tagihan" class="w-full bg-purple-600 text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-3">🔎 Cek Riwayat</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="cek-keu-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="cek-keu-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
+    <select id="cek-keu-child-select" class="field text-sm mb-3"><option value="">Pilih Murid...</option></select>
+    <button id="btn-cek-keu" class="w-full bg-[#0d5563] text-white py-2 rounded-xl text-xs font-bold mb-3">📋 Tampilkan</button>
+    <div class="is-hidden mb-3 space-y-2" id="info-keuangan-panel">
+      <div class="bg-green-50 text-green-800 p-3 rounded-lg border border-green-200 text-center">
+        <p class="text-[10px] font-bold uppercase">💰 Saldo Tabungan</p>
+        <p class="text-lg font-extrabold mt-1" id="saldo-tabungan">Rp 0</p>
+      </div>
+      <div class="bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200">
+        <p class="text-[10px] font-bold uppercase mb-1 text-center">📅 Status Iuran</p>
+        <div id="status-iuran-text" class="w-full"></div>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="report-table"><thead><tr><th>Tgl</th><th>Kategori</th><th>Nominal</th><th>Info</th></tr></thead><tbody id="tbody-keu-santri"></tbody></table>
+    </div>
+  </div>
 </section>
 
-<!-- PENAGIHAN -->
 <section id="penagihan-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-red-700 flex items-center gap-2">📢 <span>Penagihan</span></h1>
   <p class="text-xs mb-4 font-bold" style="color:var(--text-muted)">Rekap & WA pengingat.</p>
-  <div class="grid grid-cols-2 gap-3 mb-4"><div class="p-4 rounded-2xl text-white text-center" style="background:linear-gradient(135deg,#FF6B6B,#c83252)"><p class="text-[10px] font-bold uppercase opacity-80">Tunggakan</p><p id="penagihan-total-hutang" class="text-xl font-extrabold mt-1">Rp 0</p></div><div class="p-4 rounded-2xl text-white text-center" style="background:linear-gradient(135deg,#06d6a0,#0f7fa1)"><p class="text-[10px] font-bold uppercase opacity-80">Lunas Bulan Ini</p><p id="penagihan-total-lunas" class="text-xl font-extrabold mt-1">Rp 0</p></div></div>
-  <div class="p-4 rounded-2xl mb-4 border-2" style="background:var(--card);border-color:var(--border)"><div class="flex justify-between items-center mb-2"><span class="font-bold text-xs">Progress</span><span id="penagihan-progress-label" class="text-xs font-extrabold">0%</span></div><div class="progress-track" style="background:var(--border)"><div id="penagihan-progress-bar" style="height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#06d6a0,#0f7fa1);transition:width .6s"></div></div></div>
-  <div class="grid grid-cols-2 gap-2 mb-4"><button id="penagihan-blast" class="bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-xl py-3 text-xs font-bold shadow-lg">📤 Preview Blast WA</button><button id="penagihan-export" class="bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-bold shadow-lg">📥 Export CSV</button></div>
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="p-4 rounded-2xl text-white text-center" style="background:linear-gradient(135deg,#FF6B6B,#c83252)">
+      <p class="text-[10px] font-bold uppercase opacity-80">Tunggakan</p>
+      <p id="penagihan-total-hutang" class="text-xl font-extrabold mt-1">Rp 0</p>
+    </div>
+    <div class="p-4 rounded-2xl text-white text-center" style="background:linear-gradient(135deg,#06d6a0,#0f7fa1)">
+      <p class="text-[10px] font-bold uppercase opacity-80">Lunas Bulan Ini</p>
+      <p id="penagihan-total-lunas" class="text-xl font-extrabold mt-1">Rp 0</p>
+    </div>
+  </div>
+  <div class="p-4 rounded-2xl mb-4 border-2" style="background:var(--card);border-color:var(--border)">
+    <div class="flex justify-between items-center mb-2">
+      <span class="font-bold text-xs">Progress</span>
+      <span id="penagihan-progress-label" class="text-xs font-extrabold">0%</span>
+    </div>
+    <div class="progress-track" style="background:var(--border)">
+      <div id="penagihan-progress-bar" style="height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#06d6a0,#0f7fa1);transition:width .6s"></div>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2 mb-4">
+    <button id="penagihan-blast" class="bg-gradient-to-r from-[#06d6a0] to-[#0f7fa1] text-white rounded-xl py-3 text-xs font-bold shadow-lg">📤 Preview Blast WA</button>
+    <button id="penagihan-export" class="bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-bold shadow-lg">📥 Export CSV</button>
+  </div>
   <div id="penagihan-list" class="space-y-2"></div>
 </section>
 
-<!-- BUKU KAS -->
 <section id="kas-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-teal-900 flex items-center gap-2">🏦 <span>Buku Kas Umum</span></h1>
   <p class="text-xs mb-4 font-bold" style="color:var(--text-muted)">Pemasukan & Pengeluaran.</p>
-  <div class="text-white p-5 rounded-3xl shadow-xl text-center mb-5" style="background:linear-gradient(135deg,#06d6a0,#0f7fa1)"><p class="text-[10px] font-bold uppercase tracking-wider text-white/80">Total Saldo Kas</p><p class="text-3xl font-extrabold mt-1" id="kas-saldo-total">Rp 0</p></div>
-  <div class="p-4 border rounded-2xl mb-4" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-2">📊 Ringkasan Bulan Ini</h3><div class="chart-container" style="height:180px"><canvas id="kas-chart"></canvas></div></div>
-  <div class="p-4 border rounded-2xl" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-3">📝 Input Transaksi</h3><div class="grid grid-cols-2 gap-2 mb-2"><input type="date" id="kas-tanggal" class="field text-sm"><select id="kas-jenis" class="field text-sm"><option value="Pemasukan">⬆️ Pemasukan (+)</option><option value="Pengeluaran">⬇️ Pengeluaran (-)</option></select></div><div class="grid grid-cols-2 gap-2 mb-2"><select id="kas-kategori" class="field text-sm"></select><input type="number" id="kas-nominal" class="field text-sm" placeholder="Nominal Rp" min="0" max="1000000000"></div><input type="text" id="kas-ket" class="field text-sm mb-3" placeholder="Keterangan Rinci"><p id="kas-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-simpan-kas" class="w-full bg-teal-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-3">📋 Transaksi (10 Terakhir)</h3><div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table></div></div>
+  <div class="text-white p-5 rounded-3xl shadow-xl text-center mb-5" style="background:linear-gradient(135deg,#06d6a0,#0f7fa1)">
+    <p class="text-[10px] font-bold uppercase tracking-wider text-white/80">Total Saldo Kas</p>
+    <p class="text-3xl font-extrabold mt-1" id="kas-saldo-total">Rp 0</p>
+  </div>
+  <div class="p-4 border rounded-2xl mb-4" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-2">📊 Ringkasan Bulan Ini</h3>
+    <div class="chart-container" style="height:180px"><canvas id="kas-chart"></canvas></div>
+  </div>
+  <div class="p-4 border rounded-2xl" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-3">📝 Input Transaksi</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <input type="date" id="kas-tanggal" class="field text-sm">
+      <select id="kas-jenis" class="field text-sm"><option value="Pemasukan">⬆️ Pemasukan (+)</option><option value="Pengeluaran">⬇️ Pengeluaran (-)</option></select>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="kas-kategori" class="field text-sm"></select>
+      <input type="number" id="kas-nominal" class="field text-sm" placeholder="Nominal Rp" min="0" max="1000000000">
+    </div>
+    <input type="text" id="kas-ket" class="field text-sm mb-3" placeholder="Keterangan Rinci">
+    <p id="kas-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-simpan-kas" class="w-full bg-teal-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-3">📋 Transaksi (10 Terakhir)</h3>
+    <div class="overflow-x-auto">
+      <table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table>
+    </div>
+  </div>
 </section>
 
-<!-- AUDIT -->
 <section id="audit-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-gray-800 flex items-center gap-2">🔍 <span>Audit Keuangan</span></h1>
@@ -550,36 +967,141 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div id="audit-list" class="space-y-2"></div>
 </section>
 
-<!-- BENDAHARA -->
 <section id="bendahara-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-amber-900 flex items-center gap-2">💰 <span>Penggajian Guru</span></h1>
   <p class="text-xs mb-4 font-bold" style="color:var(--text-muted)">Rekap otomatis dari absen guru multi-posisi.</p>
-  <div class="p-4 border rounded-2xl mb-4" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-2">📈 Distribusi Fee per Posisi</h3><div class="chart-container" style="height:200px"><canvas id="gaji-chart"></canvas></div></div>
-  <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#E8F4FF,#D5EAFF);border-color:#B0D0FF"><h3 class="font-bold text-sm mb-3">📝 Izin / Absen Manual</h3><select id="izin-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru...</option></select><div class="grid grid-cols-2 gap-2 mb-2"><input type="date" id="izin-guru-tanggal" class="field text-sm"><select id="izin-guru-status" class="field text-sm"><option value="Sakit (Dengan Surat)">Sakit (Surat)</option><option value="Sakit (Tanpa Surat)">Sakit (Tanpa)</option><option value="Izin">Izin</option><option value="Alpha">Alpha</option></select></div><input type="text" id="izin-guru-ket" class="field text-sm mb-3" placeholder="Keterangan (Opsional)"><p id="izin-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-simpan-izin" class="w-full bg-[#0f7fa1] text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#E8FBF2,#D5F5E3);border-color:#A8E0C0"><h3 class="font-bold text-sm mb-3">🎯 Guru Pengganti (Manual)</h3><select id="gp-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru Pengganti...</option></select><input type="date" id="gp-tanggal" class="field text-sm mb-2"><div class="grid grid-cols-2 gap-2 mb-2"><select id="gp-unit" class="field text-sm"><option value="">Posisi...</option><option value="Wali PAUDQU">Wali PAUDQU (30k)</option><option value="Pendamping PAUDQU">Pendamping (20k)</option><option value="TKQ">TKQ (20k)</option><option value="TPQ">TPQ (20k)</option><option value="RTQ">RTQ (20k)</option><option value="Bimbel">Bimbel (10k/Siswa)</option></select><select id="gp-kelas" class="field text-sm"><option value="">Kelas...</option><option>A</option><option>B</option><option>C</option><option>Calistung</option><option>B. Inggris</option><option>Matematika</option></select></div><input type="number" id="gp-nominal" class="field text-sm mb-3" placeholder="Nominal Fee (Rp)" min="0"><p id="gp-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-simpan-gp" class="w-full bg-[#087a61] text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button></div>
-  <div class="mt-5 space-y-3"><div><label class="block text-sm font-bold mb-1">👨‍🏫 Pilih Guru</label><select id="salary-teacher-select" class="field text-sm"><option value="">-- Pilih Guru --</option></select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[11px] font-bold block mb-1">Dari</label><input type="date" id="salary-start" class="field text-xs"></div><div><label class="text-[11px] font-bold block mb-1">Sampai</label><input type="date" id="salary-end" class="field text-xs"></div></div></div>
-  <div class="p-3 rounded-2xl mt-3 border-2 text-center" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1"><p class="text-[10px] font-bold text-amber-800">Total Sesi</p><p id="info-sistem-hadir" class="text-2xl font-extrabold text-[#0d5563] mt-1">0 Sesi</p></div>
+  <div class="p-4 border rounded-2xl mb-4" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-2">📈 Distribusi Fee per Posisi</h3>
+    <div class="chart-container" style="height:200px"><canvas id="gaji-chart"></canvas></div>
+  </div>
+  <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#E8F4FF,#D5EAFF);border-color:#B0D0FF">
+    <h3 class="font-bold text-sm mb-3">📝 Izin / Absen Manual</h3>
+    <select id="izin-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru...</option></select>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <input type="date" id="izin-guru-tanggal" class="field text-sm">
+      <select id="izin-guru-status" class="field text-sm">
+        <option value="Sakit (Dengan Surat)">Sakit (Surat)</option>
+        <option value="Sakit (Tanpa Surat)">Sakit (Tanpa)</option>
+        <option value="Izin">Izin</option>
+        <option value="Alpha">Alpha</option>
+      </select>
+    </div>
+    <input type="text" id="izin-guru-ket" class="field text-sm mb-3" placeholder="Keterangan (Opsional)">
+    <p id="izin-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-simpan-izin" class="w-full bg-[#0f7fa1] text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#E8FBF2,#D5F5E3);border-color:#A8E0C0">
+    <h3 class="font-bold text-sm mb-3">🎯 Guru Pengganti (Manual)</h3>
+    <select id="gp-guru-nama" class="field text-sm mb-2"><option value="">Pilih Guru Pengganti...</option></select>
+    <input type="date" id="gp-tanggal" class="field text-sm mb-2">
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="gp-unit" class="field text-sm">
+        <option value="">Posisi...</option>
+        <option value="Wali PAUDQU">Wali PAUDQU (30k)</option>
+        <option value="Pendamping PAUDQU">Pendamping (20k)</option>
+        <option value="TKQ">TKQ (20k)</option>
+        <option value="TPQ">TPQ (20k)</option>
+        <option value="RTQ">RTQ (20k)</option>
+        <option value="Bimbel">Bimbel (10k/Siswa)</option>
+      </select>
+      <select id="gp-kelas" class="field text-sm">
+        <option value="">Kelas...</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+        <option>Calistung</option>
+        <option>B. Inggris</option>
+        <option>Matematika</option>
+      </select>
+    </div>
+    <input type="number" id="gp-nominal" class="field text-sm mb-3" placeholder="Nominal Fee (Rp)" min="0">
+    <p id="gp-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-simpan-gp" class="w-full bg-[#087a61] text-white py-2 rounded-xl text-xs font-bold">💾 Simpan</button>
+  </div>
+  <div class="mt-5 space-y-3">
+    <div><label class="block text-sm font-bold mb-1">👨‍🏫 Pilih Guru</label><select id="salary-teacher-select" class="field text-sm"><option value="">-- Pilih Guru --</option></select></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="text-[11px] font-bold block mb-1">Dari</label><input type="date" id="salary-start" class="field text-xs"></div>
+      <div><label class="text-[11px] font-bold block mb-1">Sampai</label><input type="date" id="salary-end" class="field text-xs"></div>
+    </div>
+  </div>
+  <div class="p-3 rounded-2xl mt-3 border-2 text-center" style="background:linear-gradient(135deg,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
+    <p class="text-[10px] font-bold text-amber-800">Total Sesi</p>
+    <p id="info-sistem-hadir" class="text-2xl font-extrabold text-[#0d5563] mt-1">0 Sesi</p>
+  </div>
   <button id="btn-calculate-salary" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white font-extrabold rounded-xl py-3 text-sm mt-4 shadow-lg">🧮 Hitung & Rekap Otomatis</button>
   <div id="salary-output-box" class="mt-5 p-5 rounded-3xl is-hidden border-2" style="background:var(--card);border-color:#06d6a0">
     <div id="slip-gaji-printout" class="space-y-4">
-      <div class="text-center border-b pb-3" style="border-color:var(--border)"><h2 class="font-extrabold text-lg uppercase">SLIP GAJI GURU</h2><p id="slip-periode" class="text-[11px] mt-1 text-[#0f7fa1] font-mono"></p></div>
-      <div class="text-xs space-y-2"><p class="text-sm"><strong>Nama:</strong> <span id="slip-nama-guru" class="uppercase"></span></p><div class="flex justify-between font-bold text-[10px] text-[#0f7fa1]"><span>Total Sesi:</span><span id="sv-hadir"></span></div><div class="mt-3 border-t border-b py-2 space-y-1" style="border-color:var(--border)"><p class="font-bold mb-1">PENDAPATAN PER POSISI</p><div id="dynamic-insentif-container"></div></div><div class="flex justify-between text-base font-extrabold text-emerald-700 pt-2 pb-2 bg-emerald-50 p-2 rounded-lg border border-emerald-200 mt-2"><span>TAKE HOME PAY:</span><span id="sv-bersih"></span></div></div>
+      <div class="text-center border-b pb-3" style="border-color:var(--border)">
+        <h2 class="font-extrabold text-lg uppercase">SLIP GAJI GURU</h2>
+        <p id="slip-periode" class="text-[11px] mt-1 text-[#0f7fa1] font-mono"></p>
+      </div>
+      <div class="text-xs space-y-2">
+        <p class="text-sm"><strong>Nama:</strong> <span id="slip-nama-guru" class="uppercase"></span></p>
+        <div class="flex justify-between font-bold text-[10px] text-[#0f7fa1]"><span>Total Sesi:</span><span id="sv-hadir"></span></div>
+        <div class="mt-3 border-t border-b py-2 space-y-1" style="border-color:var(--border)">
+          <p class="font-bold mb-1">PENDAPATAN PER POSISI</p>
+          <div id="dynamic-insentif-container"></div>
+        </div>
+        <div class="flex justify-between text-base font-extrabold text-emerald-700 pt-2 pb-2 bg-emerald-50 p-2 rounded-lg border border-emerald-200 mt-2">
+          <span>TAKE HOME PAY:</span><span id="sv-bersih"></span>
+        </div>
+      </div>
       <div id="slip-detail-sesi" class="text-[10px] mt-3"></div>
     </div>
-    <div class="grid grid-cols-2 gap-2 mt-5 print:hidden"><button id="btn-simpan-slip" class="w-full bg-emerald-600 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1 shadow-lg"><i data-lucide="save" width="16"></i> Simpan DB</button><button onclick="window.print()" class="w-full bg-gray-800 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1"><i data-lucide="printer" width="16"></i> Cetak</button></div>
+    <div class="grid grid-cols-2 gap-2 mt-5 print:hidden">
+      <button id="btn-simpan-slip" class="w-full bg-emerald-600 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1 shadow-lg"><i data-lucide="save" width="16"></i> Simpan DB</button>
+      <button onclick="window.print()" class="w-full bg-gray-800 text-white rounded-xl py-2 text-[11px] font-bold flex flex-col items-center justify-center gap-1"><i data-lucide="printer" width="16"></i> Cetak</button>
+    </div>
     <p id="slip-save-status" class="text-[10px] font-bold text-center mt-2 print:hidden"></p>
   </div>
 </section>
 
-<!-- FOTO -->
 <section id="fotoupload-screen" class="screen overflow-y-auto">
   <button type="button" class="back-button self-start rounded-full icon-btn"><i data-lucide="arrow-left"></i></button>
   <h1 class="mt-5 font-extrabold text-2xl text-pink-700 flex items-center gap-2">📸 <span>Foto & Pencapaian</span></h1>
   <p class="text-xs mb-4 font-bold" style="color:var(--text-muted)">Upload foto santri & momen pencapaian.</p>
-  <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border-color:#F48FB1"><h3 class="font-bold text-sm mb-3">👦 Foto Santri</h3><div class="grid grid-cols-2 gap-2 mb-2"><select id="foto-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="foto-kelas" class="field text-sm"><option value="">Kelas...</option></select></div><select id="foto-child-select" class="field text-sm mb-3"><option value="">Pilih Murid...</option></select><div class="flex items-center gap-3 mb-3"><div id="foto-preview" class="avatar" style="width:80px;height:80px;font-size:32px;background:linear-gradient(135deg,#FFD166,#FF6B6B)">?</div><div class="flex-1"><input type="file" id="foto-file" accept="image/*" capture="environment" class="hidden"><label for="foto-file" class="block w-full text-center bg-pink-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer shadow">📷 Pilih Foto</label><p class="text-[10px] text-center mt-1" style="color:var(--text-muted)">Maks 2MB</p></div></div><p id="foto-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-upload-foto" class="w-full bg-pink-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Foto</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFE8A1);border-color:#FFD166"><h3 class="font-bold text-sm mb-3">🏆 Upload Pencapaian</h3><div class="grid grid-cols-2 gap-2 mb-2"><select id="cap-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select><select id="cap-kelas" class="field text-sm"><option value="">Kelas...</option></select></div><select id="cap-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select><input id="cap-caption" type="text" class="field text-sm mb-2" placeholder="Cth: Naik ke Jilid 3! 🎉" maxlength="100"><div class="flex items-center gap-3 mb-3"><div id="cap-preview" class="avatar" style="width:60px;height:60px;font-size:24px;background:linear-gradient(135deg,#FFD166,#FFB085);color:#0d5563">📸</div><div class="flex-1"><input type="file" id="cap-file" accept="image/*" capture="environment" class="hidden"><label for="cap-file" class="block w-full text-center bg-amber-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer shadow">📷 Pilih Foto</label></div></div><p id="cap-status" class="text-xs font-bold text-center mb-2"></p><button id="btn-upload-cap" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Pencapaian</button></div>
-  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)"><h3 class="font-bold text-sm mb-3">📋 Pencapaian Terbaru</h3><div id="cap-list" class="space-y-2 max-h-72 overflow-y-auto"></div></div>
+  <div class="p-4 border rounded-2xl" style="background:linear-gradient(135deg,#FCE4EC,#F8BBD0);border-color:#F48FB1">
+    <h3 class="font-bold text-sm mb-3">👦 Foto Santri</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="foto-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="foto-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
+    <select id="foto-child-select" class="field text-sm mb-3"><option value="">Pilih Murid...</option></select>
+    <div class="flex items-center gap-3 mb-3">
+      <div id="foto-preview" class="avatar" style="width:80px;height:80px;font-size:32px;background:linear-gradient(135deg,#FFD166,#FF6B6B)">?</div>
+      <div class="flex-1">
+        <input type="file" id="foto-file" accept="image/*" capture="environment" class="hidden">
+        <label for="foto-file" class="block w-full text-center bg-pink-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer shadow">📷 Pilih Foto</label>
+        <p class="text-[10px] text-center mt-1" style="color:var(--text-muted)">Maks 2MB</p>
+      </div>
+    </div>
+    <p id="foto-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-upload-foto" class="w-full bg-pink-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Foto</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:linear-gradient(135deg,#FFF9E6,#FFE8A1);border-color:#FFD166">
+    <h3 class="font-bold text-sm mb-3">🏆 Upload Pencapaian</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <select id="cap-unit" class="field text-sm"><option value="">Lembaga...</option><option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option></select>
+      <select id="cap-kelas" class="field text-sm"><option value="">Kelas...</option></select>
+    </div>
+    <select id="cap-child-select" class="field text-sm mb-2"><option value="">Pilih Murid...</option></select>
+    <input id="cap-caption" type="text" class="field text-sm mb-2" placeholder="Cth: Naik ke Jilid 3! 🎉" maxlength="100">
+    <div class="flex items-center gap-3 mb-3">
+      <div id="cap-preview" class="avatar" style="width:60px;height:60px;font-size:24px;background:linear-gradient(135deg,#FFD166,#FFB085);color:#0d5563">📸</div>
+      <div class="flex-1">
+        <input type="file" id="cap-file" accept="image/*" capture="environment" class="hidden">
+        <label for="cap-file" class="block w-full text-center bg-amber-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer shadow">📷 Pilih Foto</label>
+      </div>
+    </div>
+    <p id="cap-status" class="text-xs font-bold text-center mb-2"></p>
+    <button id="btn-upload-cap" class="w-full bg-amber-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">⬆️ Upload Pencapaian</button>
+  </div>
+  <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)">
+    <h3 class="font-bold text-sm mb-3">📋 Pencapaian Terbaru</h3>
+    <div id="cap-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
+  </div>
 </section>
 
 </section>
@@ -597,7 +1119,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <template id="history-template">
   <article class="history-item rounded-2xl p-4 mb-3 shadow-sm border" style="background:var(--card);border-color:var(--border-soft)">
     <div class="flex justify-between items-center gap-2">
-      <div class="flex items-center gap-3 flex-1 min-w-0"><div class="avatar history-avatar" style="background:#FFD166"></div><div class="min-w-0 flex-1"><h3 class="history-name font-extrabold text-sm truncate"></h3><p class="history-detail mt-0.5 text-xs truncate" style="color:var(--text-muted)"></p><p class="history-date mt-1 text-[10px] text-[#0f7fa1] font-bold"></p></div></div>
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <div class="avatar history-avatar" style="background:#FFD166"></div>
+        <div class="min-w-0 flex-1">
+          <h3 class="history-name font-extrabold text-sm truncate"></h3>
+          <p class="history-detail mt-0.5 text-xs truncate" style="color:var(--text-muted)"></p>
+          <p class="history-date mt-1 text-[10px] text-[#0f7fa1] font-bold"></p>
+        </div>
+      </div>
       <div class="action-buttons flex gap-2 flex-shrink-0"></div>
     </div>
   </article>
@@ -605,6 +1134,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 <script src="api.js"></script>
 <script src="app.js"></script>
-<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }</script>
+<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('sw.js').catch(function() {}); }); }</script>
 </body>
 </html>

@@ -1,13 +1,14 @@
 /* ==========================================================
-   API LAYER v5.1
+   API LAYER v5.3
    ========================================================== */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec';
 
-async function gasCall(action, payload = {}) {
+async function gasCall(action, payload) {
+  payload = payload || {};
   const res = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, ...payload }),
+    body: JSON.stringify(Object.assign({ action: action }, payload)),
     redirect: 'follow'
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -33,7 +34,10 @@ window.showLoading = function(text, percent) {
   const txt = document.getElementById('loading-text');
   const bar = document.getElementById('loading-bar');
   const pct = document.getElementById('loading-percent');
-  if (el) { el.classList.remove('is-hidden'); if (txt) txt.textContent = text || 'Memuat...'; }
+  if (el) {
+    el.classList.remove('is-hidden');
+    if (txt) txt.textContent = text || 'Memuat...';
+  }
   if (typeof percent === 'number') {
     if (bar) bar.style.width = percent + '%';
     if (pct) pct.textContent = percent + '%';
@@ -42,6 +46,7 @@ window.showLoading = function(text, percent) {
     if (pct) pct.textContent = '';
   }
 };
+
 window.updateLoading = function(percent, text) {
   const bar = document.getElementById('loading-bar');
   const pct = document.getElementById('loading-percent');
@@ -50,6 +55,7 @@ window.updateLoading = function(percent, text) {
   if (pct) pct.textContent = percent + '%';
   if (txt && text) txt.textContent = text;
 };
+
 window.hideLoading = function() {
   const el = document.getElementById('loading-overlay');
   if (el) el.classList.add('is-hidden');
@@ -57,47 +63,72 @@ window.hideLoading = function() {
   if (bar) bar.style.width = '0%';
 };
 
-window.showToast = (msg, type = 'success', dur = 2500) => {
+window.showToast = function(msg, type, dur) {
+  type = type || 'success';
+  dur = dur || 2500;
   const c = document.getElementById('toast-container');
   if (!c) return;
   const icons = { success: '✅', error: '⚠️', info: 'ℹ️' };
   const el = document.createElement('div');
-  el.className = `toast-item ${type}`;
-  el.innerHTML = `<span style="font-size:1.2rem">${icons[type]||'💬'}</span><span>${msg}</span>`;
+  el.className = 'toast-item ' + type;
+  el.innerHTML = '<span style="font-size:1.2rem">' + (icons[type] || '💬') + '</span><span>' + msg + '</span>';
   c.appendChild(el);
-  setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 300); }, dur);
+  setTimeout(function() {
+    el.classList.add('hide');
+    setTimeout(function() { el.remove(); }, 300);
+  }, dur);
 };
 
-window.fireConfetti = (big = false) => {
+window.fireConfetti = function(big) {
   if (typeof confetti === 'undefined') return;
   const colors = ['#FFD166', '#06d6a0', '#06AED5', '#FF6B6B', '#A8E06E', '#B794F6'];
-  confetti({ particleCount: big ? 120 : 60, spread: big ? 100 : 70, origin: { y: 0.7 }, colors });
+  confetti({ particleCount: big ? 120 : 60, spread: big ? 100 : 70, origin: { y: 0.7 }, colors: colors });
+  if (big) {
+    setTimeout(function() {
+      confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: colors });
+    }, 200);
+    setTimeout(function() {
+      confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: colors });
+    }, 200);
+  }
 };
 
 window.SOUND_ENABLED = localStorage.getItem('sound_enabled') !== 'false';
-window.playSound = (type = 'success') => {
+
+window.playSound = function(type) {
+  type = type || 'success';
   if (!window.SOUND_ENABLED) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const notes = type === 'success' ? [523.25, 659.25, 783.99] : type === 'error' ? [392.00, 329.63] : [523.25, 659.25];
-    notes.forEach((f, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = f; o.type = 'sine';
+    notes.forEach(function(f, i) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.frequency.value = f;
+      o.type = 'sine';
       const t = ctx.currentTime + i * 0.09;
       g.gain.setValueAtTime(0.12, t);
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-      o.start(t); o.stop(t + 0.35);
+      o.start(t);
+      o.stop(t + 0.35);
     });
   } catch (e) {}
 };
 
-window.vibrate = (p) => { if (navigator.vibrate) navigator.vibrate(p || [30, 20, 30]); };
+window.vibrate = function(p) {
+  if (navigator.vibrate) navigator.vibrate(p || [30, 20, 30]);
+};
 
-window.celebrate = (msg, opts = {}) => {
-  const { confetti: c = true, sound = true, vibrate: v = true, big = false } = opts;
+window.celebrate = function(msg, opts) {
+  opts = opts || {};
+  const c = opts.confetti !== false;
+  const s = opts.sound !== false;
+  const v = opts.vibrate !== false;
+  const big = opts.big === true;
   if (msg) window.showToast(msg, 'success');
   if (c) window.fireConfetti(big);
-  if (sound) window.playSound('success');
+  if (s) window.playSound('success');
   if (v) window.vibrate();
 };
