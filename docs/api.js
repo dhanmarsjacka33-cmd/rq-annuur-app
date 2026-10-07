@@ -1,5 +1,5 @@
 /* ==========================================================
-   API LAYER v5.3
+   API LAYER v5.4 — dengan saveBatch
    ========================================================== */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec';
 
@@ -16,17 +16,18 @@ async function gasCall(action, payload) {
 }
 
 window.gas = {
-  login: (u, p) => gasCall('login', { username: u, password: p }),
-  getAllAppState: (p) => gasCall('getAllAppState', p),
-  saveSheetData: (s, r) => gasCall('saveSheetData', { sheetName: s, record: r }),
-  updateSheetData: (s, r) => gasCall('updateSheetData', { sheetName: s, record: r }),
-  deleteSheetData: (s, r) => gasCall('deleteSheetData', { sheetName: s, record: r }),
-  uploadFoto: (p) => gasCall('uploadFoto', p),
-  logAktivitas: (p) => gasCall('logAktivitas', p),
-  simpanAbsenGuru: (p) => gasCall('simpanAbsenGuru', p),
-  getKalenderGuru: (p) => gasCall('getKalenderGuru', p),
-  getRekapGaji: (p) => gasCall('getRekapGaji', p),
-  getAuditKeuangan: (p) => gasCall('getAuditKeuangan', p)
+  login: function(u, p) { return gasCall('login', { username: u, password: p }); },
+  getAllAppState: function(p) { return gasCall('getAllAppState', p); },
+  saveSheetData: function(s, r) { return gasCall('saveSheetData', { sheetName: s, record: r }); },
+  saveBatch: function(s, r) { return gasCall('saveBatch', { sheetName: s, records: r }); },
+  updateSheetData: function(s, r) { return gasCall('updateSheetData', { sheetName: s, record: r }); },
+  deleteSheetData: function(s, r) { return gasCall('deleteSheetData', { sheetName: s, record: r }); },
+  uploadFoto: function(p) { return gasCall('uploadFoto', p); },
+  logAktivitas: function(p) { return gasCall('logAktivitas', p); },
+  simpanAbsenGuru: function(p) { return gasCall('simpanAbsenGuru', p); },
+  getKalenderGuru: function(p) { return gasCall('getKalenderGuru', p); },
+  getRekapGaji: function(p) { return gasCall('getRekapGaji', p); },
+  getAuditKeuangan: function(p) { return gasCall('getAuditKeuangan', p); }
 };
 
 window.showLoading = function(text, percent) {

@@ -1,5 +1,5 @@
 /* ==========================================================
-   MUTABA'AH RQ AN-NUUR — APP LOGIC v5.3
+   MUTABA'AH RQ AN-NUUR — APP LOGIC v5.4
    ========================================================== */
 
 let activeUser = {};
@@ -46,7 +46,7 @@ const BADGE_LIST = [
 
 const ONBOARD_STEPS = [
   { icon: '🎉', title: 'Selamat Datang!', desc: "Aplikasi untuk mencatat mutaba'ah santri, absensi guru, dan keuangan RQ An-Nuur." },
-  { icon: '📖', title: 'Catat Setoran', desc: 'Klik menu "Catat Mutaba\'ah" untuk input setoran Jilid, Surah, Doa, atau Hadits.' },
+  { icon: '📖', title: 'Catat Setoran', desc: "Klik menu Catat Mutaba'ah untuk input setoran Jilid, Surah, Doa, atau Hadits." },
   { icon: '⚡', title: 'Poin Cepat', desc: 'Klik tombol ⚡ melayang untuk beri poin instan ke banyak murid sekaligus.' },
   { icon: '📍', title: 'Absen Multi-Posisi', desc: 'Guru bisa absen hingga 2 posisi per sesi, plus catat penggantian.' },
   { icon: '📅', title: 'Kalender & Edit', desc: 'Klik tanggal di kalender untuk lihat detail dan edit absen.' },
@@ -155,7 +155,7 @@ function applyTheme() {
 }
 
 function showOnboarding() {
-  if (localStorage.getItem('onboarded_v53') === 'true') return;
+  if (localStorage.getItem('onboarded_v54') === 'true') return;
   onboardIdx = 0;
   document.getElementById('onboarding-overlay').classList.remove('is-hidden');
   updateOnboardingUI();
@@ -173,7 +173,7 @@ function updateOnboardingUI() {
 window.nextOnboarding = function() {
   onboardIdx++;
   if (onboardIdx >= ONBOARD_STEPS.length) {
-    localStorage.setItem('onboarded_v53', 'true');
+    localStorage.setItem('onboarded_v54', 'true');
     document.getElementById('onboarding-overlay').classList.add('is-hidden');
     return;
   }
@@ -181,7 +181,7 @@ window.nextOnboarding = function() {
 };
 
 window.skipOnboarding = function() {
-  localStorage.setItem('onboarded_v53', 'true');
+  localStorage.setItem('onboarded_v54', 'true');
   document.getElementById('onboarding-overlay').classList.add('is-hidden');
 };
 
@@ -307,7 +307,7 @@ function computeStatsForChild(childName) {
   const cMon = getLocalDateString().slice(0, 7);
   const poin = cRec.filter(function(r) { return r.type === 'Poin'; }).reduce(function(s, r) { return s + (+r.points || 0); }, 0);
   const hadirBulanIni = cRec.filter(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(cMon); }).length;
-  const totalSetoran = cRec.filter(function(r) { return ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Buku','Setoran Doa','Setoran Hadits'].includes(r.type); }).length;
+  const totalSetoran = cRec.filter(function(r) { return ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Buku','Setoran Doa','Setoran Hadits'].indexOf(r.type) > -1; }).length;
   let jilidMax = 0;
   cRec.forEach(function(r) { if (r.jilid_number) jilidMax = Math.max(jilidMax, +r.jilid_number || 0); });
   return { poin: poin, hadirBulanIni: hadirBulanIni, totalSetoran: totalSetoran, jilidMax: jilidMax };
@@ -345,7 +345,7 @@ function updateFabVisibility() {
   const fab = document.getElementById('fab-point');
   if (!fab) return;
   const role = (activeUser.role || '').toLowerCase();
-  const allowed = ['guru', 'bendahara', 'admin'].includes(role);
+  const allowed = ['guru', 'bendahara', 'admin'].indexOf(role) > -1;
   const loginActive = document.getElementById('login-screen').classList.contains('active');
   fab.style.display = (allowed && !loginActive) ? 'flex' : 'none';
 }
@@ -356,7 +356,7 @@ function setupBottomNav(role) {
   const r = (role || '').toLowerCase();
   nav.querySelectorAll('.nav-item').forEach(function(item) {
     const roles = (item.dataset.roles || '').split(',').map(function(x) { return x.trim(); }).filter(function(x) { return x; });
-    const allowed = roles.length === 0 || roles.includes(r);
+    const allowed = roles.length === 0 || roles.indexOf(r) > -1;
     item.style.display = allowed ? 'flex' : 'none';
   });
   nav.classList.add('visible');
@@ -423,6 +423,7 @@ window.appSdk = {
     try {
       const res = await window.gas.saveSheetData(sheetName, record);
       if (res && res.error === 'VALIDASI') return { isOk: false, validasi: res.messages };
+      if (res && res.error === 'DUPLIKAT_ABSENSI') return { isOk: false, dupAbsen: true, validasi: { messages: ['DUPLIKAT: ' + res.message] } };
       window.gas.logAktivitas({ user: activeUser.username || '', aksi: 'CREATE', sheet: sheetName, detail: JSON.stringify(record).substring(0, 200) }).catch(function() {});
       return { isOk: !!res };
     } catch (e) {
@@ -525,7 +526,9 @@ window.addEventListener('DOMContentLoaded', function() {
           document.querySelector('.tab-btn[data-target="jilid"]').click();
           closeMasterManage();
         }
-        if (target === 'absen-screen') document.getElementById('absen-date').value = getLocalDateString();
+        if (target === 'absen-screen') { document.getElementById('absen-date').value = getLocalDateString(); setTimeout(updateAbsenLists, 100); }
+        if (target === 'points-screen') setTimeout(updatePointsChildList, 100);
+        if (target === 'manage-screen') setTimeout(updateManageListsAndDropdowns, 100);
         if (target === 'report-screen') updateReportChildList();
         if (target === 'kas-screen') { renderKasDashboard(); populateKasKategori(); renderKasChart(); }
         if (target === 'keu-santri-screen') document.getElementById('keu-kategori').dispatchEvent(new Event('change'));
@@ -689,7 +692,7 @@ function renderWaliDashboard() {
   const children = (activeUser.nama_terkait || '').split(',').map(function(s) { return normalizeName(s); });
   let wPts = 0, wHadir = 0;
   const cMon = getLocalDateString().slice(0, 7);
-  const childRecords = records.filter(function(r) { return children.includes(r.child_name); });
+  const childRecords = records.filter(function(r) { return children.indexOf(r.child_name) > -1; });
   childRecords.forEach(function(r) {
     wPts += (+r.points || 0);
     if (r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(cMon)) wHadir++;
@@ -732,7 +735,7 @@ function renderWaliDashboard() {
   });
   document.getElementById('wali-tagihan-container').innerHTML = pengingatHtml;
   document.getElementById('wali-keuangan-container').innerHTML = keuHtml || '<p class="text-xs text-white/50 italic">Belum ada data anak.</p>';
-  const myCaps = recordsPencapaian.filter(function(p) { return children.includes(p.child_name); }).sort(function(a, b) { return new Date(b.tanggal) - new Date(a.tanggal); }).slice(0, 3);
+  const myCaps = recordsPencapaian.filter(function(p) { return children.indexOf(p.child_name) > -1; }).sort(function(a, b) { return new Date(b.tanggal) - new Date(a.tanggal); }).slice(0, 3);
   if (myCaps.length > 0) {
     const capsHtml = '<h4 class="font-bold text-xs text-[#FFD166] mb-2 border-t border-white/10 pt-3">📸 Pencapaian Terbaru</h4><div class="grid grid-cols-3 gap-2">' + myCaps.map(function(p) {
       return '<div class="text-center"><div style="width:100%;aspect-ratio:1;background:url(\'' + p.url + '\') center/cover;border-radius:10px;border:2px solid #FFD166"></div><p class="text-[9px] font-bold mt-1 text-white/90 line-clamp-2">' + escapeHtml(p.keterangan || '') + '</p></div>';
@@ -751,7 +754,7 @@ function renderStreakCalendar(children, childRecords) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const hadir = childRecords.some(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(ds) && children.includes(r.child_name); });
+    const hadir = childRecords.some(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(ds) && children.indexOf(r.child_name) > -1; });
     if (hadir) hadirCount++;
     days.push({ date: ds, dayNum: d.getDate(), hadir: hadir, isToday: i === 0 });
   }
@@ -770,7 +773,7 @@ function renderWaliChart(children) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     months.push(d.toLocaleString('id-ID', { month: 'short' }));
-    const recs = records.filter(function(r) { return children.includes(r.child_name) && r.date.startsWith(ym); });
+    const recs = records.filter(function(r) { return children.indexOf(r.child_name) > -1 && r.date.startsWith(ym); });
     poinData.push(recs.filter(function(r) { return r.type === 'Poin'; }).reduce(function(s, r) { return s + (+r.points || 0); }, 0));
     hadirData.push(recs.filter(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir'; }).length);
   }
@@ -918,7 +921,7 @@ function renderRiwayatCard() {
     warnEl.style.background = '#FFB0B0';
     warnEl.style.color = '#7a1010';
   } else warnEl.classList.add('is-hidden');
-  const getLast = function(types) { return cRec.find(function(r) { return types.some(function(t) { return r.type.includes(t); }); }); };
+  const getLast = function(types) { return cRec.find(function(r) { return types.some(function(t) { return r.type.indexOf(t) > -1; }); }); };
   const lastJilid = getLast(['Setoran Jilid']);
   const lastHafalan = getLast(['Setoran Hafalan']);
   const lastDoa = getLast(['Setoran Doa']);
@@ -1185,21 +1188,24 @@ document.getElementById('points-form').addEventListener('submit', async function
   if (!u || !k || !chList[0] || isNaN(amt)) return setStatus('points-status', 'Lengkapi data!', true);
   const btn = document.getElementById('points-save');
   setSaving(btn, true);
-  let ok = 0;
-  for (const c of chList) {
-    const res = await window.appSdk.create('Data', {
+  const recordsToSend = chList.map(function(c) {
+    return {
       child_name: c, unit: u, kelas: k, guru: '', type: 'Poin',
       jilid_number: '', page_from: '', surah_number: '', ayat_count: '', fluency_stars: 0,
       date: getWIBISOString(), status: '', juz: '', tilawah_surah: '', tilawah_ayat: '',
       attendance_type: '', attendance_status: '', subject: '',
       points: amt, points_note: nte, points_rule_name: nte, points_rule_active: true
-    });
-    if (res.isOk) ok++;
-  }
+    };
+  });
+  const res = await window.gas.saveBatch('Data', recordsToSend);
   setSaving(btn, false);
   document.getElementById('points-amount').value = '';
   document.getElementById('points-note').value = '';
-  window.celebrate(ok + ' poin tersimpan! ⭐');
+  if (res && res.sukses) {
+    window.celebrate(res.saved + ' poin tersimpan! ⭐');
+  } else {
+    window.showToast('Gagal menyimpan.', 'error');
+  }
   window.appSdk.init(handler, false);
 });
 
@@ -1222,21 +1228,65 @@ document.getElementById('absen-save').addEventListener('click', async function()
   if (!u || !k || !d) return setStatus('absen-status', 'Lengkapi data', true);
   const btn = document.getElementById('absen-save');
   setSaving(btn, true);
-  let ok = 0;
-  for (const sel of document.querySelectorAll('#absen-screen .att-select')) {
-    const res = await window.appSdk.create('Data', {
+  setStatus('absen-status', 'Menyimpan...');
+  const recordsToSend = [];
+  document.querySelectorAll('#absen-screen .att-select').forEach(function(sel) {
+    recordsToSend.push({
       child_name: sel.dataset.type === 'murid' ? sel.dataset.name : '',
-      unit: u, kelas: k, guru: sel.dataset.type === 'guru' ? sel.dataset.name : '',
-      type: 'Absensi', jilid_number: '', page_from: '', surah_number: '', ayat_count: '', fluency_stars: 0,
+      unit: u, kelas: k,
+      guru: sel.dataset.type === 'guru' ? sel.dataset.name : '',
+      type: 'Absensi',
+      jilid_number: '', page_from: '', surah_number: '', ayat_count: '', fluency_stars: 0,
       date: d + 'T12:00:00+07:00', status: '', juz: '', tilawah_surah: '', tilawah_ayat: '',
-      attendance_type: sel.dataset.type, attendance_status: sel.value,
+      attendance_type: sel.dataset.type,
+      attendance_status: sel.value,
       subject: '', points: 0, points_note: '', points_rule_name: '', points_rule_active: true
     });
-    if (res.isOk) ok++;
+  });
+  if (recordsToSend.length === 0) {
+    setSaving(btn, false);
+    return setStatus('absen-status', 'Tidak ada murid', true);
   }
-  setSaving(btn, false);
-  window.celebrate(ok + ' murid tercatat! ✅');
-  window.appSdk.init(handler, false);
+  const stamp = Date.now();
+  const tempRecords = recordsToSend.map(function(r, idx) {
+    return Object.assign({}, r, {
+      record_id: 'TEMP_' + stamp + '_' + idx,
+      __backendId: 'TEMP_' + stamp + '_' + idx,
+      __optimistic: true
+    });
+  });
+  tempRecords.forEach(function(r) { records.push(r); });
+  handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+  if (window.vibrate) window.vibrate(20);
+  setStatus('absen-status', '⚡ Tersimpan (syncing...)');
+  try {
+    const res = await window.gas.saveBatch('Data', recordsToSend);
+    setSaving(btn, false);
+    records = records.filter(function(r) { return !r.__optimistic; });
+    if (!res || !res.sukses) {
+      handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+      setStatus('absen-status', 'Gagal: ' + (res && res.error ? res.error : 'Unknown'), true);
+      return;
+    }
+    const okList = res.results.filter(function(r) { return r.ok; });
+    const dupList = res.results.filter(function(r) { return r.error === 'DUPLIKAT_ABSENSI'; });
+    const failList = res.results.filter(function(r) { return !r.ok && r.error !== 'DUPLIKAT_ABSENSI'; });
+    if (dupList.length > 0) {
+      const dupNames = dupList.slice(0, 3).map(function(r) { return r.name; }).join(', ');
+      window.showToast(okList.length + ' tersimpan · ' + dupList.length + ' duplikat: ' + dupNames, 'info', 4000);
+      setStatus('absen-status', '');
+    } else if (failList.length > 0) {
+      setStatus('absen-status', okList.length + ' tersimpan, ' + failList.length + ' gagal', true);
+    } else {
+      window.celebrate(okList.length + ' murid tercatat! ✅');
+    }
+    window.appSdk.init(handler, false);
+  } catch (e) {
+    setSaving(btn, false);
+    records = records.filter(function(r) { return !r.__optimistic; });
+    handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+    setStatus('absen-status', 'Error: ' + e.message, true);
+  }
 });
 
 function updateBendaharaTeacherDropdown() {
@@ -1628,8 +1678,13 @@ window.saveEditAbsen = async function() {
       window.celebrate(recordId ? 'Absen diperbarui! ✏️' : 'Absen ditambahkan! ➕');
       closeEditAbsen();
       closeKalenderDetail();
+      kalenderState.guru = guru;
+      kalenderState.month = dateVal.slice(0, 7);
+      const sel = document.getElementById('kalender-guru-select');
+      if (sel) sel.value = guru;
       await window.appSdk.init(handler, false);
       renderKalenderGuru();
+      window.showToast('Data tersimpan. Kalender diarahkan ke: ' + guru, 'info', 3500);
     } else {
       statusEl.textContent = 'Gagal menyimpan.';
       statusEl.style.color = '#c83252';
@@ -1745,7 +1800,7 @@ document.getElementById('btn-simpan-slip').addEventListener('click', async funct
   const arr = [];
   document.querySelectorAll('#slip-gaji-printout .flex.justify-between').forEach(function(el) {
     const txt = el.innerText.replace(/\n/g, ' ').trim();
-    if (txt && !txt.includes('TAKE HOME PAY') && !txt.includes('Total Sesi')) arr.push(txt);
+    if (txt && txt.indexOf('TAKE HOME PAY') === -1 && txt.indexOf('Total Sesi') === -1) arr.push(txt);
   });
   const res = await window.appSdk.create('RekapGaji', {
     date: getWIBISOString(),
@@ -1887,7 +1942,7 @@ if (gpUnit) {
     const unit = e.target.value;
     let fee = 0;
     if (unit === 'Wali PAUDQU') fee = 30000;
-    else if (['Pendamping PAUDQU', 'TKQ', 'TPQ', 'RTQ'].includes(unit)) fee = 20000;
+    else if (['Pendamping PAUDQU', 'TKQ', 'TPQ', 'RTQ'].indexOf(unit) > -1) fee = 20000;
     else if (unit === 'Bimbel') fee = 10000;
     const inp = document.getElementById('gp-nominal');
     if (inp) inp.value = fee > 0 ? fee : '';
@@ -2135,7 +2190,7 @@ function renderPenagihanDashboard() {
     const tung = window.getTunggakan(s.name, s.unit);
     const cKeu = recordsKeu.filter(function(r) { return r.child_name === s.name; });
     const lunasBulanIni = cKeu.find(function(r) {
-      return (r.kategori || '').trim() === 'Iuran Bulanan' && r.iuran_range && r.iuran_range.toLowerCase().includes(months[cMon].toLowerCase()) && r.iuran_range.includes(String(cYear));
+      return (r.kategori || '').trim() === 'Iuran Bulanan' && r.iuran_range && r.iuran_range.toLowerCase().indexOf(months[cMon].toLowerCase()) > -1 && r.iuran_range.indexOf(String(cYear)) > -1;
     });
     if (lunasBulanIni) totalLunas += parseFloat(lunasBulanIni.nominal) || 0;
     if (tung.total > 0 || tung.missing.length > 0) {
@@ -2357,7 +2412,7 @@ window.delPencapaian = async function(id) {
 };
 
 function renderHallOfFame() {
-  const jilidNaik = recordsPencapaian.filter(function(p) { return p.keterangan && p.keterangan.toLowerCase().includes('jilid'); }).slice(0, 6);
+  const jilidNaik = recordsPencapaian.filter(function(p) { return p.keterangan && p.keterangan.toLowerCase().indexOf('jilid') > -1; }).slice(0, 6);
   const njEl = document.getElementById('hall-naikjilid');
   if (njEl) {
     if (jilidNaik.length === 0) njEl.innerHTML = '<p class="text-[10px] italic text-center py-3" style="color:var(--text-muted)">Belum ada. Upload pencapaian naik jilid nanti.</p>';
@@ -2450,11 +2505,11 @@ function updateLeaderboard() {
 
 function updateHistory(data) {
   let histData = data.filter(function(r) {
-    return r.type && ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Doa','Setoran Hadits','Absensi Guru Mandiri','Absensi Guru Manual','Poin'].includes(r.type);
+    return r.type && ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Doa','Setoran Hadits','Absensi Guru Mandiri','Absensi Guru Manual','Poin'].indexOf(r.type) > -1;
   }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
   if (activeUser.role && activeUser.role.toLowerCase() === 'wali') {
     const children = (activeUser.nama_terkait || '').split(',').map(function(s) { return normalizeName(s); });
-    histData = histData.filter(function(r) { return children.includes(r.child_name); });
+    histData = histData.filter(function(r) { return children.indexOf(r.child_name) > -1; });
   }
   const l = document.getElementById('history-list');
   l.innerHTML = '';
@@ -2486,7 +2541,7 @@ function updateHistory(data) {
       i.querySelector('.action-buttons').innerHTML = '<button type="button" class="edit-btn text-blue-500"><i data-lucide="edit" width="16"></i></button><button type="button" class="delete-btn text-red-500"><i data-lucide="trash-2" width="16"></i></button>';
       i.querySelector('.edit-btn').onclick = function() {
         editingRecord = r;
-        const targetId = r.type.includes('Setoran') ? 'open-mutabaah' : 'open-points';
+        const targetId = r.type.indexOf('Setoran') > -1 ? 'open-mutabaah' : 'open-points';
         document.getElementById(targetId).click();
       };
       i.querySelector('.delete-btn').onclick = async function() {
@@ -2525,14 +2580,14 @@ document.getElementById('generate-report-btn').addEventListener('click', functio
   const f = records.filter(function(r) { return r.child_name === c && r.type; }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
   document.getElementById('report-child-name').textContent = c;
   document.getElementById('rpt-total').textContent = f.filter(function(r) {
-    return ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Buku','Setoran Doa','Setoran Hadits','Bimbel'].includes(r.type);
+    return ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Buku','Setoran Doa','Setoran Hadits','Bimbel'].indexOf(r.type) > -1;
   }).length;
   const totalPoin = f.filter(function(r) { return r.type === 'Poin'; }).reduce(function(s, r) { return s + (+r.points || 0); }, 0);
   document.getElementById('rpt-points').textContent = totalPoin;
   const att = f.filter(function(r) { return r.type === 'Absensi' && r.attendance_type === 'murid'; });
   const hadirPersen = att.length ? Math.round((att.filter(function(r) { return r.attendance_status === 'Hadir'; }).length / att.length) * 100) : 0;
   document.getElementById('rpt-attendance').textContent = att.length ? hadirPersen + '%' : '—';
-  const jRec = f.find(function(r) { return r.type && r.type.includes('Setoran Jilid'); });
+  const jRec = f.find(function(r) { return r.type && r.type.indexOf('Setoran Jilid') > -1; });
   let labelJilid = '—';
   if (jRec) {
     if (jRec.type === 'Setoran Jilid & Tilawah') labelJilid = 'Jld ' + (jRec.jilid_number || '-') + ' & Jz ' + (jRec.juz || '-');
@@ -2721,7 +2776,7 @@ async function loadAuditKeuangan() {
 document.getElementById('btn-refresh-audit').addEventListener('click', loadAuditKeuangan);
 
 /* ==========================================================
-   ⚡ POIN CEPAT (FAB) v5.3
+   ⚡ POIN CEPAT (FAB) v5.4
    ========================================================== */
 
 const QP_PRESETS_DEFAULT = [
@@ -2841,7 +2896,7 @@ function renderQpPresets() {
   const container = document.getElementById('qp-presets');
   const presets = getQpPresets();
   if (presets.length === 0) {
-    container.innerHTML = '<p class="text-[10px] italic w-full text-center py-2" style="color:var(--text-muted)">Belum ada aturan. Tambah di menu "Beri Poin".</p>';
+    container.innerHTML = '<p class="text-[10px] italic w-full text-center py-2" style="color:var(--text-muted)">Belum ada aturan. Tambah di menu Beri Poin.</p>';
     return;
   }
   container.innerHTML = presets.map(function(p, i) {
@@ -2893,7 +2948,7 @@ function updateQpActiveInfo() {
 function renderQpRecent() {
   const wrap = document.getElementById('qp-recent-wrap');
   const container = document.getElementById('qp-recent');
-  qpRecentMurid = qpRecentMurid.filter(function(n) { return qpAllMurid.includes(n); }).slice(0, 6);
+  qpRecentMurid = qpRecentMurid.filter(function(n) { return qpAllMurid.indexOf(n) > -1; }).slice(0, 6);
   if (qpRecentMurid.length === 0) {
     wrap.classList.add('is-hidden');
     return;
@@ -2907,10 +2962,10 @@ function renderQpMuridList(filter) {
   const f = (filter || '').toLowerCase();
   const source = qpActiveTab === 'hadir' ? getQpHadirList() : qpAllMurid;
   if (qpActiveTab === 'hadir' && source.length === 0) {
-    container.innerHTML = '<div class="col-span-2 text-center py-6"><div class="text-4xl mb-2">🤔</div><p class="text-xs font-bold" style="color:var(--text-muted)">Belum ada murid yang diabsensi hari ini</p><p class="text-[10px] mt-1" style="color:var(--text-muted)">Coba tab "Semua" atau absensi dulu</p></div>';
+    container.innerHTML = '<div class="col-span-2 text-center py-6"><div class="text-4xl mb-2">🤔</div><p class="text-xs font-bold" style="color:var(--text-muted)">Belum ada murid yang diabsensi hari ini</p><p class="text-[10px] mt-1" style="color:var(--text-muted)">Coba tab Semua atau absensi dulu</p></div>';
     return;
   }
-  const list = f ? source.filter(function(n) { return n.toLowerCase().includes(f); }) : source;
+  const list = f ? source.filter(function(n) { return n.toLowerCase().indexOf(f) > -1; }) : source;
   if (list.length === 0) {
     container.innerHTML = '<p class="text-xs italic text-center py-3 col-span-2" style="color:var(--text-muted)">Tidak ada murid</p>';
     return;
@@ -2958,14 +3013,15 @@ async function saveQuickPoint() {
   const btn = document.getElementById('qp-save-btn');
   const statusEl = document.getElementById('qp-status');
   btn.disabled = true;
-  statusEl.textContent = 'Menyimpan...';
+  statusEl.textContent = '⚡ Menyimpan...';
   statusEl.style.color = '#087a61';
-  const muridArr = Array.from(qpSelectedMurid);
-  let ok = 0, fail = 0;
+
   const presetSnapshot = qpActivePreset;
-  for (const name of muridArr) {
+  const muridArr = Array.from(qpSelectedMurid);
+
+  const recordsToSend = muridArr.map(function(name) {
     const info = window.qpMuridMap[name] || { unit: '', kelas: '' };
-    const res = await window.appSdk.create('Data', {
+    return {
       child_name: name,
       unit: info.unit,
       kelas: info.kelas,
@@ -2979,37 +3035,77 @@ async function saveQuickPoint() {
       points_note: presetSnapshot.name,
       points_rule_name: presetSnapshot.name,
       points_rule_active: true
+    };
+  });
+
+  const stamp = Date.now();
+  const tempRecords = recordsToSend.map(function(r, idx) {
+    return Object.assign({}, r, {
+      record_id: 'TEMP_QP_' + stamp + '_' + idx,
+      __backendId: 'TEMP_QP_' + stamp + '_' + idx,
+      __optimistic: true
     });
-    if (res.isOk) ok++;
-    else fail++;
-  }
+  });
+  tempRecords.forEach(function(r) { records.push(r); });
+  handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+  if (window.vibrate) window.vibrate([20, 10, 20]);
+  statusEl.textContent = '⚡ Tersimpan (syncing...)';
+
   muridArr.forEach(function(n) {
     qpRecentMurid = [n].concat(qpRecentMurid.filter(function(x) { return x !== n; })).slice(0, 6);
   });
   localStorage.setItem('qp_recent', JSON.stringify(qpRecentMurid));
-  statusEl.textContent = '✅ ' + ok + ' murid tersimpan' + (fail > 0 ? ' (' + fail + ' gagal)' : '');
-  const sign = presetSnapshot.amount > 0 ? '+' : '';
-  if (presetSnapshot.amount > 0) {
-    window.celebrate(ok + ' murid dapat ' + sign + presetSnapshot.amount + ' poin! ⭐');
-  } else {
-    window.showToast(ok + ' murid: ' + sign + presetSnapshot.amount + ' ' + presetSnapshot.name, 'info', 2500);
-    if (window.playSound) window.playSound('info');
-    if (window.vibrate) window.vibrate([40, 30, 40]);
-  }
-  qpSelectedMurid.clear();
-  qpActivePreset = null;
-  setTimeout(function() {
-    renderQpPresets();
-    renderQpRecent();
-    renderQpTabs();
-    const f = document.getElementById('qp-search').value;
-    renderQpMuridList(f);
-    updateQpActiveInfo();
-    updateQpSaveBtn();
-    statusEl.textContent = '';
+
+  try {
+    const res = await window.gas.saveBatch('Data', recordsToSend);
+
+    records = records.filter(function(r) { return !r.__optimistic; });
+
+    if (!res || !res.sukses) {
+      handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+      statusEl.textContent = '❌ Gagal: ' + (res && res.error ? res.error : 'Unknown');
+      statusEl.style.color = '#c83252';
+      btn.disabled = false;
+      return;
+    }
+
+    const okList = res.results.filter(function(r) { return r.ok; });
+    const failList = res.results.filter(function(r) { return !r.ok; });
+
+    statusEl.textContent = '✅ ' + okList.length + ' murid tersimpan' + (failList.length > 0 ? ' (' + failList.length + ' gagal)' : '');
+
+    const sign = presetSnapshot.amount > 0 ? '+' : '';
+    if (presetSnapshot.amount > 0) {
+      window.celebrate(okList.length + ' murid dapat ' + sign + presetSnapshot.amount + ' poin! ⭐');
+    } else {
+      window.showToast(okList.length + ' murid: ' + sign + presetSnapshot.amount + ' ' + presetSnapshot.name, 'info', 2500);
+      if (window.playSound) window.playSound('info');
+      if (window.vibrate) window.vibrate([40, 30, 40]);
+    }
+
+    qpSelectedMurid.clear();
+    qpActivePreset = null;
+    setTimeout(function() {
+      renderQpPresets();
+      renderQpRecent();
+      renderQpTabs();
+      const f = document.getElementById('qp-search').value;
+      renderQpMuridList(f);
+      updateQpActiveInfo();
+      updateQpSaveBtn();
+      statusEl.textContent = '';
+      btn.disabled = false;
+    }, 500);
+
+    window.appSdk.init(handler, false);
+
+  } catch (e) {
+    records = records.filter(function(r) { return !r.__optimistic; });
+    handler.onDataChanged({ data: records, keuSantri: recordsKeu, bukuKas: recordsKas, kontakWali: appKontakWali, masterKategori: recordsKategori, fotoSantri: recordsFoto, pencapaian: recordsPencapaian, absensiGuru: recordsAbsensiGuru });
+    statusEl.textContent = '❌ Error: ' + e.message;
+    statusEl.style.color = '#c83252';
     btn.disabled = false;
-  }, 500);
-  window.appSdk.init(handler, false);
+  }
 }
 
 /* ---------- SURAH DROPDOWN SETUP ---------- */
@@ -3068,14 +3164,14 @@ function updateKelasOptions(prefix) {
   const opts = unit ? kelasOptions[unit] || [] : [];
   const kEl = document.getElementById(prefix + '-kelas');
   if (kEl) kEl.innerHTML = opts.length ? opts.map(function(k) { return '<option value="' + k + '">' + k + '</option>'; }).join('') : '<option value="">Pilih kelas...</option>';
-  if (!['manage','report','absen','points','lb','hall','keu','cek-keu','tarif','tagihan','foto','cap'].includes(prefix)) refreshNames(prefix);
+  if (['manage','report','absen','points','lb','hall','keu','cek-keu','tarif','tagihan','foto','cap'].indexOf(prefix) === -1) refreshNames(prefix);
   if (prefix === 'manage') updateManageListsAndDropdowns();
   if (prefix === 'report') updateReportChildList();
   if (prefix === 'absen') updateAbsenLists();
   if (prefix === 'points') updatePointsChildList();
   if (prefix === 'lb') updateLeaderboard();
   if (prefix === 'hall') renderHallOfFame();
-  if (['keu','cek-keu','tarif','tagihan','foto','cap'].includes(prefix)) updateNameDropdown(prefix, 'child');
+  if (['keu','cek-keu','tarif','tagihan','foto','cap'].indexOf(prefix) > -1) updateNameDropdown(prefix, 'child');
 }
 
 ['mutabaah','bimbel','manage','report','absen','points','lb','hall','keu','cek-keu','tarif','tagihan','foto','cap'].forEach(function(p) {
@@ -3083,14 +3179,14 @@ function updateKelasOptions(prefix) {
   if (uEl) uEl.addEventListener('change', function() { updateKelasOptions(p); });
   const kEl = document.getElementById(p + '-kelas');
   if (kEl) kEl.addEventListener('change', function() {
-    if (!['manage','report','absen','points','lb','hall','keu','cek-keu','tarif','tagihan','foto','cap'].includes(p)) refreshNames(p);
+    if (['manage','report','absen','points','lb','hall','keu','cek-keu','tarif','tagihan','foto','cap'].indexOf(p) === -1) refreshNames(p);
     if (p === 'manage') updateManageListsAndDropdowns();
     if (p === 'report') updateReportChildList();
     if (p === 'absen') updateAbsenLists();
     if (p === 'points') updatePointsChildList();
     if (p === 'lb') updateLeaderboard();
     if (p === 'hall') renderHallOfFame();
-    if (['keu','cek-keu','tarif','tagihan','foto','cap'].includes(p)) updateNameDropdown(p, 'child');
+    if (['keu','cek-keu','tarif','tagihan','foto','cap'].indexOf(p) > -1) updateNameDropdown(p, 'child');
   });
 });
 
