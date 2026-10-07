@@ -25,6 +25,7 @@ window.gas = {
   uploadFoto: function(p) { return gasCall('uploadFoto', p); },
   logAktivitas: function(p) { return gasCall('logAktivitas', p); },
   simpanAbsenGuru: function(p) { return gasCall('simpanAbsenGuru', p); },
+  updateAbsenGuru: function(p) { return gasCall('updateAbsenGuru', p); },
   getKalenderGuru: function(p) { return gasCall('getKalenderGuru', p); },
   getRekapGaji: function(p) { return gasCall('getRekapGaji', p); },
   getAuditKeuangan: function(p) { return gasCall('getAuditKeuangan', p); }

@@ -1637,7 +1637,11 @@ window.saveEditAbsen = async function() {
   const dateVal = document.getElementById('edit-absen-date').value;
   const guru = document.getElementById('edit-absen-guru').value;
   const sesi = document.getElementById('edit-absen-sesi').value;
-  if (!dateVal || !guru) { statusEl.textContent = 'Lengkapi tanggal & guru!'; statusEl.style.color = '#c83252'; return; }
+  if (!dateVal || !guru) {
+    statusEl.textContent = 'Lengkapi tanggal & guru!';
+    statusEl.style.color = '#c83252';
+    return;
+  }
   const p1p = document.getElementById('edit-p1-peran').value;
   const p1k = document.getElementById('edit-p1-kelas').value;
   const p1t = parseInt(document.getElementById('edit-p1-tarif').value) || 0;
@@ -1648,51 +1652,78 @@ window.saveEditAbsen = async function() {
   const pgUntuk = pgOn ? document.getElementById('edit-pg-untuk').value : '';
   const pgPeran = pgOn ? document.getElementById('edit-pg-peran').value : '';
   const pgTarif = pgOn ? (parseInt(document.getElementById('edit-pg-tarif').value) || 0) : 0;
-  if (!p1p && !pgPeran) { statusEl.textContent = 'Isi minimal 1 posisi!'; statusEl.style.color = '#c83252'; return; }
+
+  if (!p1p && !pgPeran) {
+    statusEl.textContent = 'Isi minimal 1 posisi!';
+    statusEl.style.color = '#c83252';
+    return;
+  }
+
   const totalFee = p1t + p2t + pgTarif;
   const record = {
-    record_id: recordId || ('AG_' + Date.now() + '_' + Math.floor(Math.random() * 1000)),
-    date: dateVal + 'T12:00:00+07:00', guru: guru, sesi: sesi,
-    posisi_1_peran: p1p, posisi_1_kelas: p1k, posisi_1_tarif: p1t,
-    posisi_2_peran: p2p, posisi_2_kelas: p2k, posisi_2_tarif: p2t,
-    pengganti_untuk: pgUntuk, pengganti_peran: pgPeran, pengganti_kelas: '', pengganti_tarif: pgTarif,
-    total_fee: totalFee, latitude: '', longitude: '', status_geofence: 'Edit Manual',
-    input_by: activeUser.username, catatan: document.getElementById('edit-absen-catatan').value || ''
+    record_id: recordId || '',
+    date: dateVal + 'T12:00:00+07:00',
+    guru: guru,
+    sesi: sesi,
+    posisi_1_peran: p1p,
+    posisi_1_kelas: p1k,
+    posisi_1_tarif: p1t,
+    posisi_2_peran: p2p,
+    posisi_2_kelas: p2k,
+    posisi_2_tarif: p2t,
+    pengganti_untuk: pgUntuk,
+    pengganti_peran: pgPeran,
+    pengganti_kelas: '',
+    pengganti_tarif: pgTarif,
+    total_fee: totalFee,
+    latitude: '',
+    longitude: '',
+    status_geofence: 'Edit Manual',
+    input_by: activeUser.username,
+    catatan: document.getElementById('edit-absen-catatan').value || ''
   };
+
   setSaving(btn, true);
   statusEl.textContent = 'Menyimpan...';
   statusEl.style.color = '#087a61';
+
   try {
-    let ok = false;
+    let res;
     if (recordId) {
-      record.__backendId = recordId;
-      const r = await window.gas.updateSheetData('AbsensiGuru', record);
-      ok = r === true || r === 'true';
+      // Mode edit
+      res = await window.gas.updateAbsenGuru({ record: record });
     } else {
-      const r = await window.gas.simpanAbsenGuru({ record: record, force_override: true });
-      ok = r && (r.sukses === true || r === true);
+      // Mode tambah baru
+      res = await window.gas.simpanAbsenGuru({ record: record, force_override: true });
     }
+
     setSaving(btn, false);
-    if (ok) {
+
+    if (res && res.sukses) {
       statusEl.textContent = '';
       window.celebrate(recordId ? 'Absen diperbarui! ✏️' : 'Absen ditambahkan! ➕');
       closeEditAbsen();
       closeKalenderDetail();
+
+      // Auto-arahkan filter ke guru & bulan yang baru saja di-edit
       kalenderState.guru = guru;
       kalenderState.month = dateVal.slice(0, 7);
       const sel = document.getElementById('kalender-guru-select');
       if (sel) sel.value = guru;
+
       await window.appSdk.init(handler, false);
       renderKalenderGuru();
-      window.showToast('Data tersimpan. Kalender diarahkan ke: ' + guru, 'info', 3500);
     } else {
-      statusEl.textContent = 'Gagal menyimpan.';
+      const msg = res && res.message ? res.message : 'Gagal menyimpan.';
+      statusEl.textContent = msg;
       statusEl.style.color = '#c83252';
+      window.showToast(msg, 'error', 4000);
     }
   } catch (e) {
     setSaving(btn, false);
     statusEl.textContent = 'Error: ' + e.message;
     statusEl.style.color = '#c83252';
+    console.error('saveEditAbsen error:', e);
   }
 };
 
