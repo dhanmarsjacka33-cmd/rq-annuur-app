@@ -685,6 +685,7 @@ const handler = {
     if (document.getElementById('manage-screen').classList.contains('active')) updateManageListsAndDropdowns();
     if (activeUser.role && activeUser.role.toLowerCase() === 'wali') renderWaliDashboard();
     try { updateFabVisibility(); } catch (e) {}
+    try { renderGuruDashboard(); } catch (e) {}
   }
 };
 
@@ -754,25 +755,49 @@ function renderStreakCalendar(children, childRecords) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const hadir = childRecords.some(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(ds) && children.indexOf(r.child_name) > -1; });
+    const recs = childRecords.filter(function(r) {
+      return r.type === 'Absensi' && r.attendance_status === 'Hadir' && r.date.startsWith(ds) && children.indexOf(r.child_name) > -1;
+    });
+    const hadir = recs.length > 0;
     if (hadir) hadirCount++;
     days.push({ date: ds, dayNum: d.getDate(), hadir: hadir, isToday: i === 0 });
   }
   document.getElementById('streak-count').textContent = hadirCount + ' hari';
   container.innerHTML = days.map(function(d) {
-    return '<div class="streak-cell ' + (d.hadir ? 'hadir' : '') + ' ' + (d.isToday ? 'today' : '') + '" title="' + d.date + '">' + d.dayNum + '</div>';
+    const cls = 'streak-cell ' + (d.hadir ? 'hadir' : '') + ' ' + (d.isToday ? 'today' : '');
+    return '<div class="' + cls + ' cursor-pointer" title="' + d.date + '" onclick="showStreakDetail(\'' + d.date + '\')">' + d.dayNum + '</div>';
   }).join('');
 }
+
+window.showStreakDetail = function(dateStr) {
+  const children = (activeUser.nama_terkait || '').split(',').map(function(s) { return normalizeName(s); });
+  const recs = records.filter(function(r) {
+    return children.indexOf(r.child_name) > -1 && r.date.startsWith(dateStr);
+  });
+  if (recs.length === 0) {
+    window.showToast('Tidak ada aktivitas di ' + formatDate(dateStr), 'info', 2500);
+    return;
+  }
+  const summary = recs.map(function(r) {
+    if (r.type === 'Absensi') return '✅ ' + r.child_name + ': ' + r.attendance_status;
+    if (r.type === 'Poin') return '⭐ ' + r.child_name + ': ' + (r.points > 0 ? '+' : '') + r.points + ' ' + (r.points_note || '');
+    if (r.type && r.type.indexOf('Setoran') > -1) return '📖 ' + r.child_name + ': ' + r.type;
+    return '• ' + r.child_name + ': ' + r.type;
+  }).join('\n');
+  alert('📅 ' + formatDate(dateStr) + '\n\n' + summary);
+};
 
 function renderWaliChart(children) {
   const canvas = document.getElementById('wali-chart');
   if (!canvas || typeof Chart === 'undefined') return;
+  const periodeEl = document.getElementById('wali-chart-periode');
+  const numMonths = periodeEl ? parseInt(periodeEl.value) : 6;
   const months = [], poinData = [], hadirData = [];
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
+  for (let i = numMonths - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-    months.push(d.toLocaleString('id-ID', { month: 'short' }));
+    months.push(d.toLocaleString('id-ID', { month: 'short', year: '2-digit' }));
     const recs = records.filter(function(r) { return children.indexOf(r.child_name) > -1 && r.date.startsWith(ym); });
     poinData.push(recs.filter(function(r) { return r.type === 'Poin'; }).reduce(function(s, r) { return s + (+r.points || 0); }, 0));
     hadirData.push(recs.filter(function(r) { return r.type === 'Absensi' && r.attendance_status === 'Hadir'; }).length);
@@ -1288,6 +1313,84 @@ document.getElementById('absen-save').addEventListener('click', async function()
     setStatus('absen-status', 'Error: ' + e.message, true);
   }
 });
+
+function renderGuruSesiStatus() {
+  const container = document.getElementById('guru-sesi-status');
+  if (!container) return;
+  const guruName = normalizeName(activeUser.nama_terkait || activeUser.username);
+  const today = getLocalDateString();
+  const sesiList = ['Sesi 1', 'Sesi 2', 'Sesi 3'];
+  const now = new Date();
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
+
+  container.innerHTML = sesiList.map(function(sesi) {
+    let startMin, endMin;
+    if (sesi === 'Sesi 1') { startMin = 450; endMin = 600; }
+    else if (sesi === 'Sesi 2') { startMin = 630; endMin = 720; }
+    else { startMin = 930; endMin = 1020; }
+
+    const record = recordsAbsensiGuru.find(function(a) {
+      return a.guru === guruName && a.date.startsWith(today) && a.sesi === sesi;
+    });
+
+    let bg, icon, text;
+    if (record) {
+      bg = 'linear-gradient(135deg,#A8E06E,#06d6a0)';
+      icon = '✓';
+      text = 'Hadir';
+    } else if (totalMinutes > endMin) {
+      bg = 'linear-gradient(135deg,#FF6B6B,#c83252)';
+      icon = '✕';
+      text = 'Lewat';
+    } else if (totalMinutes >= startMin && totalMinutes <= endMin) {
+      bg = 'linear-gradient(135deg,#FFD166,#FFB085)';
+      icon = '⏰';
+      text = 'Sekarang';
+    } else {
+      bg = 'rgba(255,255,255,.15)';
+      icon = '·';
+      text = sesi.replace('Sesi ', 'S');
+    }
+
+    return '<div class="rounded-xl p-2 text-center" style="background:' + bg + '">' +
+      '<p class="text-xl font-extrabold leading-none">' + icon + '</p>' +
+      '<p class="text-[9px] font-bold mt-1 opacity-90">' + text + '</p></div>';
+  }).join('');
+}
+
+function renderGuruRekapMinggu() {
+  const guruName = normalizeName(activeUser.nama_terkait || activeUser.username);
+  const today = new Date();
+  let hadir = 0, alpha = 0, izin = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const dayRecords = recordsAbsensiGuru.filter(function(a) {
+      return a.guru === guruName && a.date.startsWith(ds);
+    });
+    const manual = records.filter(function(r) {
+      return r.guru === guruName && r.type === 'Absensi Guru Manual' && r.date.startsWith(ds);
+    });
+    if (dayRecords.length > 0) hadir++;
+    else if (manual.length > 0) {
+      const st = (manual[0].attendance_status || '').toLowerCase();
+      if (st.indexOf('alpha') > -1) alpha++;
+      else izin++;
+    }
+  }
+  const elH = document.getElementById('rekap-hadir');
+  const elA = document.getElementById('rekap-alpha');
+  const elI = document.getElementById('rekap-izin');
+  if (elH) elH.textContent = hadir;
+  if (elA) elA.textContent = alpha;
+  if (elI) elI.textContent = izin;
+}
+
+window.renderGuruDashboard = function() {
+  try { renderGuruSesiStatus(); } catch(e) {}
+  try { renderGuruRekapMinggu(); } catch(e) {}
+};
 
 function updateBendaharaTeacherDropdown() {
   const tList = Array.from(new Set(records.filter(function(r) { return r.guru; }).map(function(r) { return r.guru; }))).sort();
@@ -2104,12 +2207,20 @@ function renderKasDashboard() {
     else if (r.jenis === 'Pengeluaran') saldo -= parseInt(r.nominal || 0);
   });
   document.getElementById('kas-saldo-total').textContent = 'Rp ' + saldo.toLocaleString('id-ID');
+
+  const fStart = document.getElementById('kas-filter-start') ? document.getElementById('kas-filter-start').value : '';
+  const fEnd = document.getElementById('kas-filter-end') ? document.getElementById('kas-filter-end').value : '';
+  let filtered = recordsKas.slice();
+  if (fStart) filtered = filtered.filter(function(r) { return r.date.split('T')[0] >= fStart; });
+  if (fEnd) filtered = filtered.filter(function(r) { return r.date.split('T')[0] <= fEnd; });
+  filtered.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
   const tbody = document.getElementById('tbody-kas');
-  const lastRecords = recordsKas.slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); }).slice(0, 10);
-  if (lastRecords.length === 0) {
+  const display = filtered.slice(0, 50);
+  if (display.length === 0) {
     tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="text-3xl mb-2">🏦</div><p class="text-[10px]">Belum ada transaksi</p></td></tr>';
   } else {
-    tbody.innerHTML = lastRecords.map(function(r) {
+    tbody.innerHTML = display.map(function(r) {
       const color = r.jenis === 'Pemasukan' ? 'text-teal-600' : 'text-red-600';
       const sign = r.jenis === 'Pemasukan' ? '+' : '-';
       return '<tr><td class="text-[9px]">' + formatDate(r.date) + '</td><td class="text-[10px] font-bold">' + escapeHtml(r.kategori) + '</td><td class="text-[10px] font-extrabold ' + color + '">' + sign + ' Rp ' + parseInt(r.nominal || 0).toLocaleString('id-ID') + '</td></tr>';
@@ -2313,6 +2424,77 @@ if (penagihanExport) {
   });
 }
 
+let tunggakanChartInstance = null;
+
+window.renderTunggakanChart = function() {
+  const wrap = document.getElementById('tunggakan-chart-wrap');
+  const canvas = document.getElementById('tunggakan-chart');
+  if (!wrap || !canvas || typeof Chart === 'undefined') return;
+  wrap.classList.remove('hidden');
+
+  const students = Array.from(new Set(records.filter(function(r) { return r.child_name && r.unit; }).map(function(r) { return r.child_name; })));
+  const tunggakanArr = students.map(function(name) {
+    const rec = records.find(function(r) { return r.child_name === name; });
+    const unit = rec ? rec.unit : '';
+    const tung = window.getTunggakan(name, unit);
+    return { name: name, total: tung.total };
+  }).filter(function(x) { return x.total > 0; }).sort(function(a, b) { return b.total - a.total; }).slice(0, 10);
+
+  if (tunggakanChartInstance) tunggakanChartInstance.destroy();
+  tunggakanChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: tunggakanArr.map(function(x) { return x.name.length > 12 ? x.name.substring(0, 12) + '…' : x.name; }),
+      datasets: [{
+        label: 'Tunggakan (Rp)',
+        data: tunggakanArr.map(function(x) { return x.total; }),
+        backgroundColor: '#FF6B6B',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#c83252', font: { size: 9 },
+          callback: function(v) { return 'Rp ' + (v / 1000) + 'k'; } } },
+        y: { ticks: { color: '#5a8c9a', font: { size: 9 } } }
+      }
+    }
+  });
+};
+
+const btnExportKeu = document.getElementById('btn-export-keu-santri');
+if (btnExportKeu) {
+  btnExportKeu.addEventListener('click', function() {
+    const students = Array.from(new Set(records.filter(function(r) { return r.child_name && r.unit; }).map(function(r) { return r.child_name; })));
+    let csv = 'Nama,Unit,Kelas,Total Tabungan,SPP Tertunggak,Tagihan Lainnya,Grand Total Tunggakan,No WA\n';
+    students.forEach(function(name) {
+      const rec = records.find(function(r) { return r.child_name === name; }) || { unit: '', kelas: '' };
+      const cKeu = recordsKeu.filter(function(r) { return r.child_name === name; });
+      let tabungan = 0;
+      cKeu.forEach(function(r) {
+        const kat = (r.kategori || '').trim();
+        const nom = parseFloat(r.nominal) || 0;
+        if (kat === 'Tabungan Masuk') tabungan += nom;
+        if (kat === 'Tarik Tabungan') tabungan -= nom;
+      });
+      const tung = window.getTunggakan(name, rec.unit);
+      const wa = appKontakWali[name] || '';
+      csv += '"' + name + '","' + rec.unit + '","' + rec.kelas + '",' + tabungan + ',' + tung.sppTotal + ',' + tung.tambahanTotal + ',' + tung.total + ',"' + wa + '"\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'keuangan_santri_' + getLocalDateString() + '.csv';
+    a.click();
+    window.showToast('CSV terunduh! 📥', 'success');
+  });
+}
+
 function readFileAsBase64(file) {
   return new Promise(function(resolve, reject) {
     const reader = new FileReader();
@@ -2322,17 +2504,72 @@ function readFileAsBase64(file) {
   });
 }
 
+function compressImage(file, maxDim, quality) {
+  maxDim = maxDim || 800;
+  quality = quality || 0.8;
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let w = img.width, h = img.height;
+        if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else if (h > w && h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
+        else if (w === h && w > maxDim) { w = h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64 = dataUrl.split(',')[1];
+        const sizeKB = Math.round(base64.length * 0.75 / 1024);
+        resolve({ base64: base64, width: w, height: h, sizeKB: sizeKB });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function uploadWithProgress(url, payload, onProgress) {
+  return new Promise(function(resolve, reject) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+    xhr.onload = function() {
+      try { resolve(JSON.parse(xhr.responseText)); }
+      catch (err) { reject(new Error('Invalid JSON')); }
+    };
+    xhr.onerror = function() { reject(new Error('Network error')); };
+    xhr.send(JSON.stringify(payload));
+  });
+}
+
 const fotoFile = document.getElementById('foto-file');
 if (fotoFile) {
   fotoFile.addEventListener('change', async function(e) {
     const f = e.target.files[0];
     if (!f) return;
-    if (f.size > 2 * 1024 * 1024) return alert('File >2MB. Kompres dulu.');
-    const base64 = await readFileAsBase64(f);
+    if (f.size > 5 * 1024 * 1024) return alert('File >5MB. Pilih yang lebih kecil.');
     const prev = document.getElementById('foto-preview');
-    prev.style.background = "url('data:image/jpeg;base64," + base64 + "') center/cover";
-    prev.textContent = '';
-    prev.dataset.base64 = base64;
+    prev.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:#fff"></div>';
+    try {
+      const result = await compressImage(f, 800, 0.8);
+      prev.style.background = "url('data:image/jpeg;base64," + result.base64 + "') center/cover";
+      prev.textContent = '';
+      prev.dataset.base64 = result.base64;
+      window.showToast('Foto dikompres: ' + result.sizeKB + ' KB', 'info', 2000);
+    } catch (err) {
+      prev.textContent = '?';
+      alert('Gagal kompres: ' + err.message);
+    }
   });
 }
 
@@ -2344,15 +2581,21 @@ if (btnUploadFoto) {
     if (!child) return setStatus('foto-status', 'Pilih murid!', true);
     if (!prev.dataset.base64) return setStatus('foto-status', 'Pilih foto dulu!', true);
     setSaving(btnUploadFoto, true);
-    setStatus('foto-status', 'Mengupload...');
+    setStatus('foto-status', '⏳ Upload 0%...');
     try {
-      const res = await window.gas.uploadFoto({
+      const payload = {
+        action: 'uploadFoto',
         fileName: child + '_' + Date.now() + '.jpg',
         base64: prev.dataset.base64,
         folderName: 'FotoSantri',
         childName: child,
         jenis: 'foto'
-      });
+      };
+      const res = await uploadWithProgress(
+        'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec',
+        payload,
+        function(pct) { setStatus('foto-status', '⏳ Upload ' + pct + '%...'); }
+      );
       setSaving(btnUploadFoto, false);
       if (res.sukses) {
         setStatus('foto-status', '');
@@ -2363,7 +2606,7 @@ if (btnUploadFoto) {
       }
     } catch (err) {
       setSaving(btnUploadFoto, false);
-      setStatus('foto-status', 'Gagal.', true);
+      setStatus('foto-status', 'Gagal: ' + err.message, true);
     }
   });
 }
@@ -2373,12 +2616,19 @@ if (capFile) {
   capFile.addEventListener('change', async function(e) {
     const f = e.target.files[0];
     if (!f) return;
-    if (f.size > 2 * 1024 * 1024) return alert('File >2MB.');
-    const base64 = await readFileAsBase64(f);
+    if (f.size > 5 * 1024 * 1024) return alert('File >5MB.');
     const prev = document.getElementById('cap-preview');
-    prev.style.background = "url('data:image/jpeg;base64," + base64 + "') center/cover";
-    prev.textContent = '';
-    prev.dataset.base64 = base64;
+    prev.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px"></div>';
+    try {
+      const result = await compressImage(f, 800, 0.8);
+      prev.style.background = "url('data:image/jpeg;base64," + result.base64 + "') center/cover";
+      prev.textContent = '';
+      prev.dataset.base64 = result.base64;
+      window.showToast('Foto dikompres: ' + result.sizeKB + ' KB', 'info', 2000);
+    } catch (err) {
+      prev.textContent = '📸';
+      alert('Gagal kompres: ' + err.message);
+    }
   });
 }
 
@@ -2390,16 +2640,22 @@ if (btnUploadCap) {
     const prev = document.getElementById('cap-preview');
     if (!child || !prev.dataset.base64) return setStatus('cap-status', 'Pilih murid & foto!', true);
     setSaving(btnUploadCap, true);
-    setStatus('cap-status', 'Mengupload...');
+    setStatus('cap-status', '⏳ Upload 0%...');
     try {
-      const res = await window.gas.uploadFoto({
+      const payload = {
+        action: 'uploadFoto',
         fileName: 'pencapaian_' + child + '_' + Date.now() + '.jpg',
         base64: prev.dataset.base64,
         folderName: 'Pencapaian',
         childName: child,
         caption: caption,
         jenis: 'pencapaian'
-      });
+      };
+      const res = await uploadWithProgress(
+        'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec',
+        payload,
+        function(pct) { setStatus('cap-status', '⏳ Upload ' + pct + '%...'); }
+      );
       setSaving(btnUploadCap, false);
       if (res.sukses) {
         document.getElementById('cap-caption').value = '';
@@ -2415,7 +2671,7 @@ if (btnUploadCap) {
       }
     } catch (err) {
       setSaving(btnUploadCap, false);
-      setStatus('cap-status', 'Gagal.', true);
+      setStatus('cap-status', 'Gagal: ' + err.message, true);
     }
   });
 }
@@ -2534,14 +2790,37 @@ function updateLeaderboard() {
   renderPodium(tilMap, 'lb-tilawah');
 }
 
+let allHistoryData = [];
+
 function updateHistory(data) {
-  let histData = data.filter(function(r) {
+  allHistoryData = data.filter(function(r) {
     return r.type && ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Doa','Setoran Hadits','Absensi Guru Mandiri','Absensi Guru Manual','Poin'].indexOf(r.type) > -1;
   }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
   if (activeUser.role && activeUser.role.toLowerCase() === 'wali') {
     const children = (activeUser.nama_terkait || '').split(',').map(function(s) { return normalizeName(s); });
-    histData = histData.filter(function(r) { return children.indexOf(r.child_name) > -1; });
+    allHistoryData = allHistoryData.filter(function(r) { return children.indexOf(r.child_name) > -1; });
   }
+  renderHistoryList(allHistoryData);
+}
+
+function filterHistory() {
+  const fType = document.getElementById('history-filter-type').value;
+  const fSearch = (document.getElementById('history-search').value || '').toLowerCase();
+  let filtered = allHistoryData;
+  if (fType) {
+    filtered = filtered.filter(function(r) { return r.type.indexOf(fType) > -1; });
+  }
+  if (fSearch) {
+    filtered = filtered.filter(function(r) {
+      return (r.child_name || '').toLowerCase().indexOf(fSearch) > -1 ||
+             (r.guru || '').toLowerCase().indexOf(fSearch) > -1;
+    });
+  }
+  renderHistoryList(filtered);
+}
+window.filterHistory = filterHistory;
+
+function renderHistoryList(histData) {
   const l = document.getElementById('history-list');
   l.innerHTML = '';
   if (histData.length === 0) {
@@ -2549,7 +2828,7 @@ function updateHistory(data) {
     return;
   }
   const now = new Date();
-  histData.slice(0, 10).forEach(function(r) {
+  histData.slice(0, 20).forEach(function(r) {
     const i = document.getElementById('history-template').content.firstElementChild.cloneNode(true);
     const nameForAvatar = r.child_name || r.guru || '?';
     setAvatar(i.querySelector('.history-avatar'), nameForAvatar);

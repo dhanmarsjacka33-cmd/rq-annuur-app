@@ -382,7 +382,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div id="streak-calendar" class="streak-grid"></div>
     </div>
     <div class="bg-white/10 rounded-xl p-3 border border-white/20 mb-4">
-      <h4 class="font-bold text-[11px] text-[#FFD166] mb-2">📊 Grafik Progres</h4>
+      <div class="flex justify-between items-center mb-2">
+        <h4 class="font-bold text-[11px] text-[#FFD166]">📊 Grafik Progres</h4>
+        <select id="wali-chart-periode" class="text-[10px] rounded-full px-2 py-1 bg-white/20 text-white border border-white/30" onchange="renderWaliDashboard()">
+          <option value="3">3 Bulan</option>
+          <option value="6" selected>6 Bulan</option>
+          <option value="12">12 Bulan</option>
+        </select>
+      </div>
       <div class="chart-container"><canvas id="wali-chart"></canvas></div>
     </div>
     <div id="wali-tagihan-container" class="mb-4"></div>
@@ -395,6 +402,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <h3 class="font-bold text-sm text-[#FFD166]">Presensi Kehadiran Guru</h3>
     </div>
     <p class="text-[10px] text-white/80 mt-1 leading-tight">Sesi 1: 07.30-10.00 | Sesi 2: 10.30-12.00 | Sesi 3: 15.30-17.00 WIB</p>
+    <div id="guru-sesi-status" class="grid grid-cols-3 gap-2 mt-3"></div>
+    <div id="guru-rekap-minggu" class="mt-3 p-3 rounded-xl" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)">
+      <p class="text-[10px] font-bold text-[#FFD166] mb-2">📊 Rekap 7 Hari Terakhir</p>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div><p class="text-lg font-extrabold" id="rekap-hadir">0</p><p class="text-[9px] text-white/70">Hadir</p></div>
+        <div><p class="text-lg font-extrabold text-red-300" id="rekap-alpha">0</p><p class="text-[9px] text-white/70">Alpha</p></div>
+        <div><p class="text-lg font-extrabold text-yellow-200" id="rekap-izin">0</p><p class="text-[9px] text-white/70">Izin/Sakit</p></div>
+      </div>
+    </div>
     <button id="btn-absen-masuk-guru" class="w-full mt-4 bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-extrabold shadow-md">📍 Absen Kehadiran</button>
     <p id="guru-live-status-absen" class="text-[11px] font-bold mt-2 text-center text-white"></p>
   </div>
@@ -451,7 +467,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <i data-lucide="chevron-right" class="text-gray-600"></i>
   </button>
   <section id="history-section" class="mt-8 pb-5">
-    <h2 class="font-bold text-lg mb-3 flex items-center gap-2">📅 <span>Riwayat Terakhir</span></h2>
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-bold text-lg flex items-center gap-2">📅 <span>Riwayat Terakhir</span></h2>
+      <select id="history-filter-type" class="field text-xs p-1.5 w-auto" onchange="filterHistory()">
+        <option value="">Semua Tipe</option>
+        <option value="Setoran">📖 Setoran</option>
+        <option value="Absensi Guru">👨‍🏫 Absen Guru</option>
+        <option value="Poin">⭐ Poin</option>
+      </select>
+    </div>
+    <input id="history-search" class="field text-sm mb-3" placeholder="🔍 Cari nama..." oninput="filterHistory()">
     <div id="history-list" class="space-y-3"></div>
   </section>
 </section>
@@ -580,7 +605,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="bg-gradient-to-br from-[#FFF3CE] to-[#FFE599] p-4 rounded-3xl shadow-sm border border-[#FFE8A1]"><h3 class="font-extrabold text-[#916912] mb-1 text-sm">📚 Capaian Jilid</h3><div id="lb-jilid"></div></div>
     <div class="bg-gradient-to-br from-[#E2F4E8] to-[#C1EBD1] p-4 rounded-3xl shadow-sm border border-[#B2E3C5]"><h3 class="font-extrabold text-[#267152] mb-1 text-sm">🕌 Setoran Hafalan</h3><div id="lb-hafalan"></div></div>
     <div class="bg-gradient-to-br from-[#EEE1FA] to-[#DCB7F6] p-4 rounded-3xl shadow-sm border border-[#D2A3F3]"><h3 class="font-extrabold text-[#674083] mb-1 text-sm">✨ Tilawah</h3><div id="lb-tilawah"></div></div>
-    <div class="bg-gradient-to-br from-[#CCE5F0] to-[#A2D4E8] p-4 rounded-3xl shadow-sm border border-[#8EC7DF]"><h3 class="font-extrabold text-[#0d5563] mb-1 text-sm">⭐ Sultan Poin</h3><div id="lb-points"></div></div>
+    <div class="bg-gradient-to-br from-[#CCE5F0] to-[#A2D4E8] p-4 rounded-3xl shadow-sm border border-[#8EC7DF]">
+      <h3 class="font-extrabold text-[#0d5563] mb-1 text-sm flex items-center gap-1">⭐ Sultan Poin 
+        <button onclick="alert('Sultan Poin = santri dengan total poin terbanyak.\n\nCara dapat poin:\n• +1 Baca Lancar\n• +3 Setoran Baru\n• +5 Naik Jilid\n• +2 Adab Baik\n\nPoin bisa berkurang jika pelanggaran.')" class="w-4 h-4 rounded-full bg-blue-100 text-blue-600 text-[10px] font-bold">?</button>
+      </h3>
+      <div id="lb-points"></div>
+    </div>
   </div>
 </section>
 
@@ -952,11 +982,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button id="btn-simpan-kas" class="w-full bg-teal-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button>
   </div>
   <div class="p-4 border rounded-2xl mt-4" style="background:var(--card);border-color:var(--border)">
-    <h3 class="font-bold text-sm mb-3">📋 Transaksi (10 Terakhir)</h3>
-    <div class="overflow-x-auto">
-      <table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table>
-    </div>
-  </div>
+        <h3 class="font-bold text-sm mb-3">📋 Riwayat Transaksi</h3>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div><label class="text-[10px] font-bold block mb-1">Dari</label><input type="date" id="kas-filter-start" class="field text-xs p-2" onchange="renderKasDashboard()"></div>
+          <div><label class="text-[10px] font-bold block mb-1">Sampai</label><input type="date" id="kas-filter-end" class="field text-xs p-2" onchange="renderKasDashboard()"></div>
+        </div>
+        <button onclick="document.getElementById('kas-filter-start').value='';document.getElementById('kas-filter-end').value='';renderKasDashboard();" class="w-full text-[10px] text-gray-500 font-bold mb-3">Reset Filter</button>
+        <div class="overflow-x-auto"><table class="report-table"><thead><tr><th>Tgl</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody id="tbody-kas"></tbody></table></div>
+      </div>
 </section>
 
 <section id="audit-screen" class="screen overflow-y-auto">
