@@ -551,8 +551,8 @@ window.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function(e) {
       document.querySelectorAll('.tab-btn').forEach(function(b) {
         b.classList.remove('active', 'bg-[#0d5563]', 'text-white');
-        b.style.background = 'var(--bg)';
-        b.style.color = 'var(--text-muted)';
+        b.style.background = 'var(--card)';
+        b.style.color = 'var(--text)';
       });
       e.target.style.background = '#0d5563';
       e.target.style.color = '#ffffff';
@@ -928,8 +928,62 @@ document.getElementById('btn-save-master').addEventListener('click', async funct
 
 function renderRiwayatCard() {
   const card = document.getElementById('riwayat-card');
-  const warnEl = document.getElementById('riwayat-warning');
   const content = document.getElementById('riwayat-content');
+  const childName = nameValue('mutabaah', 'child');
+  if (!childName) { card.classList.add('is-hidden'); return; }
+  card.classList.remove('is-hidden');
+  
+  const cRec = records.filter(function(r) { return r.child_name === childName && r.type && r.type.startsWith('Setoran'); }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  if (cRec.length === 0) {
+    content.innerHTML = '<p class="text-xs italic" style="color:var(--text-muted)">Belum ada setoran. Ini setoran pertama! 🎉</p>';
+    return;
+  }
+  
+  const getLast = function(types) { return cRec.find(function(r) { return types.some(function(t) { return r.type.indexOf(t) > -1; }); }); };
+  const lastJilid = getLast(['Setoran Jilid']);
+  const lastHafalan = getLast(['Setoran Hafalan']);
+  const lastDoa = getLast(['Setoran Doa']);
+  const lastHadits = getLast(['Setoran Hadits']);
+  const lastBuku = getLast(['Setoran Buku']); // FITUR BARU: Riwayat Buku
+
+  // FITUR BARU: Badge Status
+  const getStatusBadge = (status) => {
+    if (!status) return '';
+    if (status === 'Lanjut') return '<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold ml-1">Lanjut</span>';
+    if (status === 'Ulang') return '<span class="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-bold ml-1">Ulang</span>';
+    return '';
+  };
+
+  let html = '';
+  
+  if (lastJilid) {
+    let text = 'Jilid ' + lastJilid.jilid_number + ', Hal ' + lastJilid.page_from;
+    // FITUR BARU: Tampilkan Tilawah jika ada
+    if (lastJilid.type === 'Setoran Jilid & Tilawah') {
+      text += ' <br><span class="text-[10px] text-blue-600">+ Tilawah: Juz ' + (lastJilid.juz || '-') + ', ' + (lastJilid.tilawah_surah || '') + ' (Ay.' + (lastJilid.tilawah_ayat || '') + ')</span>';
+    }
+    html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">📚 Jilid:</span><span class="flex-1">' + text + getStatusBadge(lastJilid.status) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastJilid.date) + ')</span></span></div>';
+  }
+  
+  if (lastHafalan) {
+    html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">🕌 Hafalan:</span><span class="flex-1">' + escapeHtml(lastHafalan.surah_number) + ' (Ay.' + lastHafalan.ayat_count + ')' + getStatusBadge(lastHafalan.status) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastHafalan.date) + ')</span></span></div>';
+  }
+  
+  // FITUR BARU: Tampilkan Buku
+  if (lastBuku) {
+    html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">📕 Buku:</span><span class="flex-1">Hal. ' + lastBuku.page_from + getStatusBadge(lastBuku.status) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastBuku.date) + ')</span></span></div>';
+  }
+  
+  if (lastDoa) {
+    html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">🤲 Doa:</span><span class="flex-1">' + escapeHtml(lastDoa.subject) + getStatusBadge(lastDoa.status) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastDoa.date) + ')</span></span></div>';
+  }
+  
+  if (lastHadits) {
+    html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">📜 Hadits:</span><span class="flex-1">' + escapeHtml(lastHadits.subject) + getStatusBadge(lastHadits.status) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastHadits.date) + ')</span></span></div>';
+  }
+  
+  content.innerHTML = html;
+}
   const childName = nameValue('mutabaah', 'child');
   if (!childName) { card.classList.add('is-hidden'); return; }
   card.classList.remove('is-hidden');
@@ -2852,7 +2906,7 @@ function renderHistoryList(histData) {
     if (activeUser.role && activeUser.role.toLowerCase() === 'wali') {
       i.querySelector('.action-buttons').innerHTML = '';
     } else if (diff <= 2) {
-      i.querySelector('.action-buttons').innerHTML = '<button type="button" class="edit-btn text-blue-500"><i data-lucide="edit" width="16"></i></button><button type="button" class="delete-btn text-red-500"><i data-lucide="trash-2" width="16"></i></button>';
+      i.querySelector('.action-buttons').innerHTML = '<button type="button" class="edit-btn text-blue-500"><i data-lucide="pencil" width="16"></i></button><button type="button" class="delete-btn text-red-500"><i data-lucide="trash-2" width="16"></i></button>';
       i.querySelector('.edit-btn').onclick = function() {
         editingRecord = r;
         const targetId = r.type.indexOf('Setoran') > -1 ? 'open-mutabaah' : 'open-points';
