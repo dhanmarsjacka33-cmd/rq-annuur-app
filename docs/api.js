@@ -15,6 +15,8 @@ async function gasCall(action, payload) {
   const body = Object.assign({ action: action, token: getToken() }, payload);
   const res = await fetch(GAS_URL, {
     method: 'POST',
+    mode: 'cors',               // <-- Tambahan pengaman
+    credentials: 'omit',        // <-- Tambahan pengaman (jangan kirim cookie)
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(body),
     redirect: 'follow'

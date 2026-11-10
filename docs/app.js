@@ -2538,6 +2538,11 @@ function uploadWithProgress(url, payload, onProgress) {
   return new Promise(function(resolve, reject) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
+    // Tambahkan token dari localStorage ke payload upload
+    try {
+      const s = JSON.parse(localStorage.getItem('mutabaah_session') || 'null');
+      if (s && s.token) payload.token = s.token;
+    } catch(e){}
     xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
     xhr.upload.onprogress = function(e) {
       if (e.lengthComputable && onProgress) {
