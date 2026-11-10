@@ -984,34 +984,54 @@ function renderRiwayatCard() {
   
   content.innerHTML = html;
 }
+
+window.quickFill = function() {
   const childName = nameValue('mutabaah', 'child');
-  if (!childName) { card.classList.add('is-hidden'); return; }
-  card.classList.remove('is-hidden');
-  const cRec = records.filter(function(r) { return r.child_name === childName && r.type && r.type.startsWith('Setoran'); }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
-  if (cRec.length === 0) {
-    content.innerHTML = '<p class="text-xs italic" style="color:var(--text-muted)">Belum ada setoran. Ini setoran pertama! 🎉</p>';
-    warnEl.classList.add('is-hidden');
-    return;
+  if (!childName) return window.showToast('Pilih murid dulu', 'error');
+  
+  let targetType = '';
+  if (activeMutabaahTab === 'jilid') targetType = 'Setoran Jilid';
+  else if (activeMutabaahTab === 'surah') targetType = 'Setoran Hafalan';
+  else if (activeMutabaahTab === 'buku') targetType = 'Setoran Buku';
+  else if (activeMutabaahTab === 'doa') targetType = 'Setoran Doa';
+  else if (activeMutabaahTab === 'hadits') targetType = 'Setoran Hadits';
+  
+  const last = records.filter(r => r.child_name === childName && r.type.includes(targetType)).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+  
+  if (!last) return window.showToast('Belum ada riwayat untuk ' + targetType, 'info');
+  
+  if (activeMutabaahTab === 'jilid') {
+    document.getElementById('mutabaah-jilid-number').value = last.jilid_number || '';
+    document.getElementById('mutabaah-page-from').value = last.page_from || '';
+    if (last.type === 'Setoran Jilid & Tilawah') {
+      document.getElementById('jilid-tilawah-toggle').checked = true;
+      document.getElementById('tilawah-fields').classList.remove('is-hidden');
+      document.getElementById('jilid-juz').value = last.juz || '';
+      document.getElementById('jilid-juz').dispatchEvent(new Event('change'));
+      setTimeout(() => {
+        document.getElementById('jilid-tilawah-surah').value = last.tilawah_surah || '';
+        document.getElementById('jilid-tilawah-surah').dispatchEvent(new Event('change'));
+        setTimeout(() => { document.getElementById('jilid-tilawah-ayat').value = last.tilawah_ayat || ''; }, 100);
+      }, 100);
+    }
+  } else if (activeMutabaahTab === 'surah') {
+    document.getElementById('mutabaah-surah-juz').value = last.juz || '';
+    document.getElementById('mutabaah-surah-juz').dispatchEvent(new Event('change'));
+    setTimeout(() => {
+      document.getElementById('mutabaah-surah-number').value = last.surah_number || '';
+      document.getElementById('mutabaah-surah-number').dispatchEvent(new Event('change'));
+      setTimeout(() => { document.getElementById('mutabaah-ayat-count').value = last.ayat_count || ''; }, 100);
+    }, 100);
+  } else if (activeMutabaahTab === 'buku') {
+    document.getElementById('mutabaah-buku-page').value = last.page_from || '';
+  } else if (activeMutabaahTab === 'doa') {
+    document.getElementById('mutabaah-doa-select').value = last.subject || '';
+  } else if (activeMutabaahTab === 'hadits') {
+    document.getElementById('mutabaah-hadits-select').value = last.subject || '';
   }
-  const last = cRec[0];
-  const diffDays = Math.floor((Date.now() - new Date(last.date).getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays >= 3) {
-    warnEl.classList.remove('is-hidden');
-    warnEl.textContent = '⚠️ ' + diffDays + ' hari tidak setor';
-    warnEl.style.background = '#FFB0B0';
-    warnEl.style.color = '#7a1010';
-  } else warnEl.classList.add('is-hidden');
-  const getLast = function(types) { return cRec.find(function(r) { return types.some(function(t) { return r.type.indexOf(t) > -1; }); }); };
-  const lastJilid = getLast(['Setoran Jilid']);
-  const lastHafalan = getLast(['Setoran Hafalan']);
-  const lastDoa = getLast(['Setoran Doa']);
-  const lastHadits = getLast(['Setoran Hadits']);
-  let html = '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">📚 Jilid:</span><span>' + (lastJilid ? 'Jilid ' + lastJilid.jilid_number + ', Hal ' + lastJilid.page_from + ' <span class="text-[10px] opacity-60">(' + formatDate(lastJilid.date) + ')</span>' : 'Belum ada') + '</span></div>';
-  html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">🕌 Hafalan:</span><span>' + (lastHafalan ? escapeHtml(lastHafalan.surah_number) + ' (Ay.' + lastHafalan.ayat_count + ') <span class="text-[10px] opacity-60">(' + formatDate(lastHafalan.date) + ')</span>' : 'Belum ada') + '</span></div>';
-  if (lastDoa) html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">🤲 Doa:</span><span>' + escapeHtml(lastDoa.subject) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastDoa.date) + ')</span></span></div>';
-  if (lastHadits) html += '<div class="flex items-start gap-2"><span class="font-bold min-w-[60px]">📜 Hadits:</span><span>' + escapeHtml(lastHadits.subject) + ' <span class="text-[10px] opacity-60">(' + formatDate(lastHadits.date) + ')</span></span></div>';
-  content.innerHTML = html;
-}
+  
+  window.showToast('Form diisi dari riwayat terakhir', 'success');
+};
 
 function checkAnomali() {
   const alertEl = document.getElementById('anomali-alert');
