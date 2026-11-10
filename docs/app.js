@@ -641,6 +641,7 @@ document.getElementById('form-login').addEventListener('submit', function(e) {
 
 window.logout = function() {
   if (!confirm('Keluar dari aplikasi?')) return;
+  try { window.gas.logout(); } catch (e) {}
   localStorage.removeItem('mutabaah_session');
   document.getElementById('form-login').reset();
   window.showScreen('login-screen');
@@ -2591,8 +2592,7 @@ if (btnUploadFoto) {
         childName: child,
         jenis: 'foto'
       };
-      const res = await uploadWithProgress(
-        'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec',
+      const res = await window.gas.uploadFoto(
         payload,
         function(pct) { setStatus('foto-status', '⏳ Upload ' + pct + '%...'); }
       );
@@ -2651,8 +2651,7 @@ if (btnUploadCap) {
         caption: caption,
         jenis: 'pencapaian'
       };
-      const res = await uploadWithProgress(
-        'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec',
+      const res = await window.gas.uploadFoto(
         payload,
         function(pct) { setStatus('cap-status', '⏳ Upload ' + pct + '%...'); }
       );

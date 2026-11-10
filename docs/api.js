@@ -3,20 +3,36 @@
    ========================================================== */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfoH9YKufkEz_mbJnI6H-0TTiBCyZS2Ube34UxR_ROHWqyjyXPDKUd6E-Lus-yEzie/exec';
 
+function getToken() {
+  try {
+    const s = JSON.parse(localStorage.getItem('mutabaah_session') || 'null');
+    return s && s.token ? s.token : '';
+  } catch (e) { return ''; }
+}
+
 async function gasCall(action, payload) {
   payload = payload || {};
+  const body = Object.assign({ action: action, token: getToken() }, payload);
   const res = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(Object.assign({ action: action }, payload)),
+    body: JSON.stringify(body),
     redirect: 'follow'
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const json = await res.json();
+  if (json && json.error === 'SESSION_INVALID') {
+    localStorage.removeItem('mutabaah_session');
+    if (window.showToast) window.showToast('Sesi habis, silakan login ulang.', 'error');
+    setTimeout(function() { location.reload(); }, 1500);
+    throw new Error('SESSION_INVALID');
+  }
+  return json;
 }
 
 window.gas = {
   login: function(u, p) { return gasCall('login', { username: u, password: p }); },
+  logout: function() { return gasCall('logout', {}); },
   getAllAppState: function(p) { return gasCall('getAllAppState', p); },
   saveSheetData: function(s, r) { return gasCall('saveSheetData', { sheetName: s, record: r }); },
   saveBatch: function(s, r) { return gasCall('saveBatch', { sheetName: s, records: r }); },
