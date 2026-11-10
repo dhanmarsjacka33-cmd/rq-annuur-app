@@ -17,7 +17,10 @@ async function gasCall(action, payload) {
     method: 'POST',
     mode: 'cors',               // <-- Tambahan pengaman
     credentials: 'omit',        // <-- Tambahan pengaman (jangan kirim cookie)
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    headers: { 
+      'Content-Type': 'text/plain;charset=utf-8',
+      'Origin': 'https://dhanmarsjacka33-cmd.github.io'
+    },
     body: JSON.stringify(body),
     redirect: 'follow'
   });
