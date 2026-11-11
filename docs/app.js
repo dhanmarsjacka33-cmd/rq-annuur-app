@@ -79,10 +79,23 @@ function getLocalDateString() {
 
 function normalizeName(str) {
   if (!str) return '';
-  let s = str.trim().replace(/\s+/g, ' ').toLowerCase();
+  // Hapus karakter tak terlihat & spasi berlebih
+  let s = str.toString().replace(/[^a-zA-Z0-9\s,\.']/g, '').trim().replace(/\s+/g, ' ').toLowerCase();
   if (s.startsWith('m ')) s = 'muhammad ' + s.substring(2);
   else if (s.startsWith('m. ')) s = 'muhammad ' + s.substring(3);
   return s.split(' ').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+}
+
+// Fungsi baru: Hanya ambil guru yang terdaftar aktif (bukan dari riwayat lama)
+function getUniqueActiveGurus() {
+  const map = new Map();
+  records.forEach(function(r) {
+    if (r.guru && (!r.type || r.type.trim() === '')) {
+      const norm = normalizeName(r.guru);
+      map.set(norm.toLowerCase(), norm);
+    }
+  });
+  return Array.from(map.values()).sort();
 }
 
 function formatMonthYear(ym) {
@@ -1468,7 +1481,7 @@ window.renderGuruDashboard = function() {
 };
 
 function updateBendaharaTeacherDropdown() {
-  const tList = Array.from(new Set(records.filter(function(r) { return r.guru; }).map(function(r) { return r.guru; }))).sort();
+  const tList = getUniqueActiveGurus();
   const html = '<option value="">-- Pilih Guru --</option>' + tList.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
   const a = document.getElementById('salary-teacher-select');
   if (a) a.innerHTML = html;
@@ -1520,7 +1533,7 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
   });
   document.getElementById('modal-pengganti-toggle').checked = false;
   document.getElementById('modal-pengganti-fields').classList.add('is-hidden');
-  const guruList = Array.from(new Set(records.filter(function(r) { return r.guru; }).map(function(r) { return r.guru; }))).sort();
+  const guruList = getUniqueActiveGurus();
   document.getElementById('modal-pengganti-guru').innerHTML = '<option value="">Pilih guru yang digantikan...</option>' + guruList.map(function(g) { return '<option value="' + g + '">' + g + '</option>'; }).join('');
   document.getElementById('modal-pengganti-peran').innerHTML = POSISI_OPTIONS.map(function(p) { return '<option value="' + p.peran + '" data-tarif="' + p.tarif + '">' + p.peran + ' (' + (p.tarif / 1000) + 'k)</option>'; }).join('');
   const m = document.getElementById('modal-absen');
@@ -1756,7 +1769,7 @@ window.closeKalenderDetail = function() {
 };
 
 window.openEditAbsen = function(recordId) {
-  const guruList = Array.from(new Set(records.filter(function(r) { return r.guru; }).map(function(r) { return r.guru; }))).sort();
+  const guruList = getUniqueActiveGurus();
   document.getElementById('edit-absen-guru').innerHTML = guruList.map(function(g) { return '<option value="' + g + '">' + g + '</option>'; }).join('');
   const posOpts = POSISI_OPTIONS.map(function(p) { return '<option value="' + p.peran + '" data-tarif="' + p.tarif + '">' + p.peran + ' (' + (p.tarif / 1000) + 'k)</option>'; }).join('');
   document.getElementById('edit-p1-peran').innerHTML = '<option value="">-</option>' + posOpts;
@@ -3115,8 +3128,9 @@ function updateManageListsAndDropdowns() {
   const gMap = new Map();
   const mMap = new Map();
   f.filter(function(r) { return r.guru; }).forEach(function(r) {
-    if (!gMap.has(r.guru)) gMap.set(r.guru, []);
-    gMap.get(r.guru).push(r.__backendId);
+    const norm = normalizeName(r.guru);
+    if (!gMap.has(norm)) gMap.set(norm, []);
+    gMap.get(norm).push(r.__backendId);
   });
   f.filter(function(r) { return r.child_name; }).forEach(function(r) {
     if (!mMap.has(r.child_name)) mMap.set(r.child_name, []);
