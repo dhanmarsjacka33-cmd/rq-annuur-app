@@ -231,7 +231,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
           <select id="edit-p1-peran" class="field text-xs p-2"></select>
           <input type="text" id="edit-p1-kelas" class="field text-xs p-2" placeholder="Kelas">
         </div>
-        <input type="number" id="edit-p1-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" id="edit-p1-tarif" class="field text-xs p-2" placeholder="Tarif Total Rp" min="0" max="1000000">
+          <input type="number" id="edit-p1-murid" class="field text-xs p-2" placeholder="Jml Murid (Bimbel)" min="1" value="1">
+        </div>
       </div>
       <div class="p-3 rounded-xl border" style="background:var(--bg);border-color:var(--border)">
         <p class="text-xs font-bold mb-2">📌 Posisi 2 (opsional)</p>
@@ -239,7 +242,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
           <select id="edit-p2-peran" class="field text-xs p-2"></select>
           <input type="text" id="edit-p2-kelas" class="field text-xs p-2" placeholder="Kelas">
         </div>
-        <input type="number" id="edit-p2-tarif" class="field text-xs p-2" placeholder="Tarif Rp" min="0" max="1000000">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" id="edit-p2-tarif" class="field text-xs p-2" placeholder="Tarif Total Rp" min="0" max="1000000">
+          <input type="number" id="edit-p2-murid" class="field text-xs p-2" placeholder="Jml Murid (Bimbel)" min="1" value="1">
+        </div>
       </div>
       <div class="p-3 rounded-xl border" style="background:var(--bg);border-color:var(--border)">
         <label class="flex items-center gap-2 mb-2 cursor-pointer">

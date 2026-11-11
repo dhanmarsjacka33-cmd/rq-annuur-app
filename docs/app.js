@@ -1500,7 +1500,10 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
   container.innerHTML = POSISI_OPTIONS.map(function(p, idx) {
     const kelasOpts = p.adaKelas ? ['A', 'B', 'C'].map(function(k) { return '<option value="' + k + '">' + k + '</option>'; }).join('') : '';
     const kelasField = p.adaKelas ? '<select class="modal-kelas-select ml-2 border rounded px-1 py-0.5 text-[10px]" data-idx="' + idx + '">' + kelasOpts + '</select>' : '';
-    return '<label class="flex items-center gap-2 p-2 rounded-lg border-2 border-transparent hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="modal-posisi-cb" data-idx="' + idx + '" data-peran="' + p.peran + '" data-tarif="' + p.tarif + '"><span class="flex-1 text-xs font-bold">' + p.peran + '</span>' + kelasField + '<span class="text-[10px] font-extrabold text-[#06d6a0]">' + (p.tarif / 1000) + 'k</span></label>';
+    const isBimbel = p.peran === 'Bimbel';
+    const muridField = isBimbel ? '<input type="number" class="modal-murid-input ml-2 w-12 border rounded px-1 py-0.5 text-[10px]" data-idx="' + idx + '" placeholder="Jml Murid" min="1" value="1" style="display:none">' : '';
+    
+    return '<label class="flex items-center gap-2 p-2 rounded-lg border-2 border-transparent hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="modal-posisi-cb" data-idx="' + idx + '" data-peran="' + p.peran + '" data-tarif="' + p.tarif + '" data-isbimbel="' + isBimbel + '"><span class="flex-1 text-xs font-bold">' + p.peran + '</span>' + kelasField + muridField + '<span class="text-[10px] font-extrabold text-[#06d6a0]">' + (p.tarif / 1000) + 'k</span></label>';
   }).join('');
   container.querySelectorAll('.modal-posisi-cb').forEach(function(cb) {
     cb.addEventListener('change', function(e) {
@@ -1510,6 +1513,8 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
         window.showToast('Maksimal 2 posisi per sesi', 'error');
         return;
       }
+      const input = e.target.closest('label').querySelector('.modal-murid-input');
+      if (input) input.style.display = e.target.checked ? 'inline-block' : 'none';
       updateModalTotal();
     });
   });
@@ -1525,7 +1530,15 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
 
 function updateModalTotal() {
   let total = 0;
-  document.querySelectorAll('.modal-posisi-cb:checked').forEach(function(cb) { total += parseInt(cb.dataset.tarif) || 0; });
+  document.querySelectorAll('.modal-posisi-cb:checked').forEach(function(cb) { 
+    let tarif = parseInt(cb.dataset.tarif) || 0;
+    if (cb.dataset.isbimbel === 'true') {
+      const input = cb.closest('label').querySelector('.modal-murid-input');
+      const jml = parseInt(input ? input.value : 1) || 1;
+      tarif = tarif * jml;
+    }
+    total += tarif; 
+  });
   if (document.getElementById('modal-pengganti-toggle').checked) {
     const sel = document.getElementById('modal-pengganti-peran');
     const opt = sel.selectedOptions[0];
@@ -1572,13 +1585,27 @@ if (modalAbsenKonfirmasi) {
       rec.posisi_1_peran = checked[0].dataset.peran;
       const sel = document.querySelector('.modal-kelas-select[data-idx="' + checked[0].dataset.idx + '"]');
       rec.posisi_1_kelas = sel ? sel.value : '';
-      rec.posisi_1_tarif = checked[0].dataset.tarif;
+      let t1 = parseInt(checked[0].dataset.tarif) || 0;
+      if (checked[0].dataset.isbimbel === 'true') {
+        const inp = checked[0].closest('label').querySelector('.modal-murid-input');
+        const jml = parseInt(inp.value) || 1;
+        t1 = t1 * jml;
+        rec.posisi_1_murid = jml;
+      }
+      rec.posisi_1_tarif = t1;
     }
     if (checked[1]) {
       rec.posisi_2_peran = checked[1].dataset.peran;
       const sel = document.querySelector('.modal-kelas-select[data-idx="' + checked[1].dataset.idx + '"]');
       rec.posisi_2_kelas = sel ? sel.value : '';
-      rec.posisi_2_tarif = checked[1].dataset.tarif;
+      let t2 = parseInt(checked[1].dataset.tarif) || 0;
+      if (checked[1].dataset.isbimbel === 'true') {
+        const inp = checked[1].closest('label').querySelector('.modal-murid-input');
+        const jml = parseInt(inp.value) || 1;
+        t2 = t2 * jml;
+        rec.posisi_2_murid = jml;
+      }
+      rec.posisi_2_tarif = t2;
     }
     if (document.getElementById('modal-pengganti-toggle').checked) {
       const guruTujuan = document.getElementById('modal-pengganti-guru').value;
@@ -1615,11 +1642,12 @@ if (modalAbsenKonfirmasi) {
   });
 }
 
-function afterAbsenSuccess() {
+async function afterAbsenSuccess() {
   document.getElementById('modal-absen').classList.add('is-hidden');
   document.getElementById('guru-live-status-absen').innerHTML = '<span class="text-green-300 font-extrabold">Absen ' + modalAbsenState.sesi + ' berhasil! 🎯</span>';
   window.celebrate('Alhamdulillah, absen ' + modalAbsenState.sesi + '!');
-  window.appSdk.init(handler, false);
+  await window.appSdk.init(handler, false);
+  try { renderGuruDashboard(); } catch(e) {}
 }
 
 function initKalenderGuru() {
@@ -1745,9 +1773,11 @@ window.openEditAbsen = function(recordId) {
     document.getElementById('edit-p1-peran').value = rec.posisi_1_peran || '';
     document.getElementById('edit-p1-kelas').value = rec.posisi_1_kelas || '';
     document.getElementById('edit-p1-tarif').value = rec.posisi_1_tarif || '';
+    document.getElementById('edit-p1-murid').value = rec.posisi_1_murid || 1;
     document.getElementById('edit-p2-peran').value = rec.posisi_2_peran || '';
     document.getElementById('edit-p2-kelas').value = rec.posisi_2_kelas || '';
     document.getElementById('edit-p2-tarif').value = rec.posisi_2_tarif || '';
+    document.getElementById('edit-p2-murid').value = rec.posisi_2_murid || 1;
     const hasPg = !!rec.pengganti_peran;
     document.getElementById('edit-pg-toggle').checked = hasPg;
     document.getElementById('edit-pg-fields').classList.toggle('is-hidden', !hasPg);
@@ -1764,9 +1794,11 @@ window.openEditAbsen = function(recordId) {
     document.getElementById('edit-p1-peran').value = '';
     document.getElementById('edit-p1-kelas').value = '';
     document.getElementById('edit-p1-tarif').value = '';
+    document.getElementById('edit-p1-murid').value = '1';
     document.getElementById('edit-p2-peran').value = '';
     document.getElementById('edit-p2-kelas').value = '';
     document.getElementById('edit-p2-tarif').value = '';
+    document.getElementById('edit-p2-murid').value = '1';
     document.getElementById('edit-pg-toggle').checked = false;
     document.getElementById('edit-pg-fields').classList.add('is-hidden');
     document.getElementById('edit-pg-untuk').value = '';
@@ -1822,10 +1854,15 @@ window.saveEditAbsen = async function() {
   }
   const p1p = document.getElementById('edit-p1-peran').value;
   const p1k = document.getElementById('edit-p1-kelas').value;
-  const p1t = parseInt(document.getElementById('edit-p1-tarif').value) || 0;
+  const p1m = parseInt(document.getElementById('edit-p1-murid').value) || 1;
+  let p1t = parseInt(document.getElementById('edit-p1-tarif').value) || 0;
   const p2p = document.getElementById('edit-p2-peran').value;
   const p2k = document.getElementById('edit-p2-kelas').value;
-  const p2t = parseInt(document.getElementById('edit-p2-tarif').value) || 0;
+  const p2m = parseInt(document.getElementById('edit-p2-murid').value) || 1;
+  let p2t = parseInt(document.getElementById('edit-p2-tarif').value) || 0;
+
+  if (p1p === 'Bimbel') p1t = 10000 * p1m;
+  if (p2p === 'Bimbel') p2t = 10000 * p2m;
   const pgOn = document.getElementById('edit-pg-toggle').checked;
   const pgUntuk = pgOn ? document.getElementById('edit-pg-untuk').value : '';
   const pgPeran = pgOn ? document.getElementById('edit-pg-peran').value : '';
@@ -1846,9 +1883,11 @@ window.saveEditAbsen = async function() {
     posisi_1_peran: p1p,
     posisi_1_kelas: p1k,
     posisi_1_tarif: p1t,
+    posisi_1_murid: p1m,
     posisi_2_peran: p2p,
     posisi_2_kelas: p2k,
     posisi_2_tarif: p2t,
+    posisi_2_murid: p2m,
     pengganti_untuk: pgUntuk,
     pengganti_peran: pgPeran,
     pengganti_kelas: '',
