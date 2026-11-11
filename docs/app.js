@@ -2910,9 +2910,26 @@ function updateLeaderboard() {
 let allHistoryData = [];
 
 function updateHistory(data) {
-  allHistoryData = data.filter(function(r) {
-    return r.type && ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Doa','Setoran Hadits','Absensi Guru Mandiri','Absensi Guru Manual','Poin'].indexOf(r.type) > -1;
-  }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  let dataRecords = data.filter(function(r) {
+    return r.type && ['Setoran Jilid','Setoran Jilid & Tilawah','Setoran Hafalan','Setoran Doa','Setoran Hadits','Absensi Guru Manual','Poin'].indexOf(r.type) > -1;
+  });
+
+  // Ambil data dari Absensi Guru dan ubah formatnya agar sesuai tampilan riwayat
+  let guruRecords = recordsAbsensiGuru.map(function(a) {
+    return {
+      date: a.date,
+      type: 'Absensi Guru Mandiri',
+      guru: a.guru,
+      child_name: '',
+      status_geofence: a.sesi + ' (' + [a.posisi_1_peran, a.posisi_2_peran].filter(Boolean).join(' + ') + ')',
+      attendance_status: 'Hadir',
+      __backendId: a.__backendId,
+      isGuruAbsen: true
+    };
+  });
+
+  allHistoryData = dataRecords.concat(guruRecords).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  
   if (activeUser.role && activeUser.role.toLowerCase() === 'wali') {
     const children = (activeUser.nama_terkait || '').split(',').map(function(s) { return normalizeName(s); });
     allHistoryData = allHistoryData.filter(function(r) { return children.indexOf(r.child_name) > -1; });
@@ -2973,7 +2990,11 @@ function renderHistoryList(histData) {
       };
       i.querySelector('.delete-btn').onclick = async function() {
         if (confirm('Hapus data ini?')) {
-          await window.appSdk.delete('Data', r);
+          if (r.isGuruAbsen) {
+            await window.gas.deleteSheetData('AbsensiGuru', r);
+          } else {
+            await window.appSdk.delete('Data', r);
+          }
           window.showToast('Data dihapus', 'success');
           window.appSdk.init(handler, false);
         }
