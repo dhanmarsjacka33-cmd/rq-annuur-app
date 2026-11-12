@@ -3281,6 +3281,15 @@ try {
 let qpAllMurid = [];
 let qpActiveTab = 'hadir';
 
+window.updateQpKelasOptions = function() {
+  const unit = document.getElementById('qp-filter-unit').value;
+  const kelasSel = document.getElementById('qp-filter-kelas');
+  const kelasOptions = { PAUDQU: ['A', 'B'], TPQ: ['A', 'B', 'C'], TKQ: ['A', 'B'], Bimbel: ['Calistung', 'B. Inggris', 'Matematika'] };
+  const opts = unit ? kelasOptions[unit] || [] : [];
+  kelasSel.innerHTML = '<option value="">Semua Kelas</option>' + opts.map(k => '<option value="' + k + '">' + k + '</option>').join('');
+  renderQpMuridList(document.getElementById('qp-search').value);
+};
+
 function openQuickPoint() {
   if (!dataReady) return window.showToast('Memuat data...', 'info');
   qpAllMurid = Array.from(new Set(records.filter(function(r) { return r.child_name && r.unit; }).map(function(r) { return r.child_name; }))).sort();
@@ -3293,6 +3302,8 @@ function openQuickPoint() {
   qpActivePreset = null;
   qpSelectedMurid = new Set();
   document.getElementById('qp-search').value = '';
+  document.getElementById('qp-filter-unit').value = '';
+  updateQpKelasOptions(); // Reset kelas ke semua
   document.getElementById('qp-status').textContent = '';
   document.getElementById('qp-save-btn').disabled = true;
   document.getElementById('qp-custom-name').value = '';
@@ -3319,9 +3330,14 @@ function closeQuickPoint() {
 function getQpHadirList() {
   const today = getLocalDateString();
   const hadirSet = new Set();
+  const filterUnit = document.getElementById('qp-filter-unit') ? document.getElementById('qp-filter-unit').value : '';
+  const filterKelas = document.getElementById('qp-filter-kelas') ? document.getElementById('qp-filter-kelas').value : '';
+
   records.forEach(function(r) {
     if (r.type === 'Absensi' && r.attendance_type === 'murid' && r.attendance_status === 'Hadir') {
       if (r.date && r.date.startsWith(today) && r.child_name) {
+        if (filterUnit && r.unit !== filterUnit) return;
+        if (filterKelas && r.kelas !== filterKelas) return;
         hadirSet.add(r.child_name);
       }
     }
@@ -3422,7 +3438,21 @@ function renderQpRecent() {
 function renderQpMuridList(filter) {
   const container = document.getElementById('qp-murid-list');
   const f = (filter || '').toLowerCase();
-  const source = qpActiveTab === 'hadir' ? getQpHadirList() : qpAllMurid;
+  const filterUnit = document.getElementById('qp-filter-unit') ? document.getElementById('qp-filter-unit').value : '';
+  const filterKelas = document.getElementById('qp-filter-kelas') ? document.getElementById('qp-filter-kelas').value : '';
+
+  let source = qpActiveTab === 'hadir' ? getQpHadirList() : qpAllMurid;
+  
+  // Filter "Semua Murid" berdasarkan Lembaga dan Kelas
+  if (qpActiveTab === 'semua' && (filterUnit || filterKelas)) {
+    source = source.filter(function(name) {
+      const rec = records.find(r => r.child_name === name && r.unit && r.kelas);
+      if (!rec) return false;
+      if (filterUnit && rec.unit !== filterUnit) return false;
+      if (filterKelas && rec.kelas !== filterKelas) return false;
+      return true;
+    });
+  }
   if (qpActiveTab === 'hadir' && source.length === 0) {
     container.innerHTML = '<div class="col-span-2 text-center py-6"><div class="text-4xl mb-2">🤔</div><p class="text-xs font-bold" style="color:var(--text-muted)">Belum ada murid yang diabsensi hari ini</p><p class="text-[10px] mt-1" style="color:var(--text-muted)">Coba tab Semua atau absensi dulu</p></div>';
     return;

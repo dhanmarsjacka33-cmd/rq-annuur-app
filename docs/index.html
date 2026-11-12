@@ -271,7 +271,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <button id="fab-point" class="fixed z-40 rounded-full shadow-2xl flex items-center justify-center" style="display:none;bottom:90px;right:20px;width:60px;height:60px;background:linear-gradient(135deg,#FFD166,#FF6B6B);color:white;font-size:1.8rem;border:3px solid rgba(255,255,255,.3);cursor:pointer" title="⚡ Poin Cepat">⚡</button>
 
 <div id="modal-quickpoint" class="modal-scroll is-hidden" style="z-index:70">
-  <div class="modal-card" style="padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 32px)">
+  <div class="modal-card" style="padding:0;display:flex;flex-direction:column;height:85dvh;max-height:calc(100vh - 32px)">
     <div class="p-4 flex justify-between items-center border-b" style="border-color:var(--border)">
       <h3 class="font-extrabold text-lg">⚡ Poin Cepat</h3>
       <button onclick="closeQuickPoint()" class="text-gray-400 text-2xl leading-none">✕</button>
@@ -285,9 +285,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <button onclick="applyCustomPoint()" class="bg-emerald-500 text-white font-bold px-3 rounded-lg text-xs">OK</button>
       </div>
     </div>
-    <div class="p-3 flex-1" style="overflow-y:auto">
+    <div class="p-3 flex-1" style="overflow-y:auto; min-height: 0;">
       <div id="qp-active-info" class="text-[10px] font-bold mb-2 is-hidden">
         Pilih murid untuk: <span id="qp-active-preset" class="text-amber-700"></span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <select id="qp-filter-unit" class="field text-xs p-2" onchange="updateQpKelasOptions()">
+          <option value="">Semua Lembaga</option>
+          <option>PAUDQU</option><option>TPQ</option><option>TKQ</option><option>Bimbel</option>
+        </select>
+        <select id="qp-filter-kelas" class="field text-xs p-2" onchange="renderQpMuridList(document.getElementById('qp-search').value)">
+          <option value="">Semua Kelas</option>
+        </select>
       </div>
       <input type="text" id="qp-search" class="field text-sm mb-2" placeholder="🔍 Cari nama murid...">
       <div class="grid grid-cols-2 gap-1.5 mb-3">
@@ -301,7 +310,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <p id="qp-list-label" class="text-[10px] font-bold mb-1" style="color:var(--text-muted)">📋 Semua Murid:</p>
       <div id="qp-murid-list" class="grid grid-cols-2 gap-2"></div>
     </div>
-    <div class="p-3 border-t" style="border-color:var(--border);background:var(--bg)">
+    <div class="p-3 border-t" style="border-color:var(--border);background:var(--bg);flex-shrink:0;">
       <p id="qp-status" class="text-[10px] font-bold text-center mb-2" style="min-height:14px"></p>
       <button id="qp-save-btn" onclick="saveQuickPoint()" class="w-full bg-gradient-to-r from-[#FFD166] to-[#FF6B6B] text-white rounded-xl py-3 text-sm font-extrabold shadow-lg" disabled>💾 Simpan</button>
     </div>
