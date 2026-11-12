@@ -86,6 +86,16 @@ function normalizeName(str) {
   return s.split(' ').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
 }
 
+// FUNGSI BARU: Untuk mencocokkan nama dengan mengabaikan gelar & tanda baca
+function matchName(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .replace(/ustadzah|ustadz|ust\.|hj\.|h\./g, '')
+    .replace(/s\.pd|s\.kom|s\.ag|s\.si|s\.sos|m\.pd|m\.m|se|s\.e|amd/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
 // Fungsi baru: Hanya ambil guru yang terdaftar aktif (bukan dari riwayat lama)
 function getUniqueActiveGurus() {
   const map = new Map();
@@ -3690,6 +3700,12 @@ function updateNameDropdown(prefix, type) {
   const kelas = kEl.value;
   const select = document.getElementById(prefix + '-' + type + '-select');
   if (!select) return;
+
+  if (!unit || !kelas) {
+    select.innerHTML = '<option value="">Pilih lembaga & kelas...</option>';
+    return;
+  }
+
   const key = type === 'child' ? 'child_name' : 'guru';
   
   let rawValues = records.filter(function(r) {
@@ -3700,6 +3716,7 @@ function updateNameDropdown(prefix, type) {
   let uniqueMap = new Map();
   rawValues.forEach(function(name) {
     const matchKey = matchName(name);
+    if (!matchKey) return;
     if (!uniqueMap.has(matchKey)) {
       uniqueMap.set(matchKey, name);
     } else {
@@ -3712,31 +3729,33 @@ function updateNameDropdown(prefix, type) {
 
   let values = Array.from(uniqueMap.values()).sort(function(a, b) { return a.localeCompare(b, 'id'); });
 
-  select.innerHTML = '<option value="">' + (unit && kelas ? 'Pilih nama...' : 'Pilih lembaga & kelas...') + '</option>' + values.map(function(v) { return '<option value="' + v + '">' + v + '</option>'; }).join('');
+  // AUTO INJECT: Pastikan nama guru yang login selalu ada di daftar
+  let myName = '';
+  if (type === 'guru' && activeUser.role && activeUser.role.toLowerCase() === 'guru') {
+    myName = normalizeName(activeUser.nama_terkait || activeUser.username);
+    const myMatch = matchName(myName);
+    if (myMatch && !uniqueMap.has(myMatch)) {
+      values.push(myName);
+      values.sort(function(a, b) { return a.localeCompare(b, 'id'); });
+    }
+  }
+
+  let html = '<option value="">Pilih nama...</option>';
+  values.forEach(function(v) {
+    let selected = '';
+    // Otomatis pilih jika ini adalah nama guru yang login
+    if (myName && matchName(v) === matchName(myName)) {
+      selected = ' selected';
+    }
+    html += '<option value="' + v + '"' + selected + '>' + v + '</option>';
+  });
+
+  select.innerHTML = html;
 }
 
 function refreshNames(prefix) {
   updateNameDropdown(prefix, 'guru');
   updateNameDropdown(prefix, 'child');
-
-  // FITUR BARU: Auto-fill nama guru jika yang login adalah Guru
-  if (activeUser.role && activeUser.role.toLowerCase() === 'guru') {
-    const myName = matchName(activeUser.nama_terkait || activeUser.username);
-    const guruSelect = document.getElementById(prefix + '-guru-select');
-    
-    if (guruSelect) {
-      // Cari opsi yang cocok dengan nama guru yang login (mengabaikan gelar)
-      for (let i = 0; i < guruSelect.options.length; i++) {
-        const optVal = guruSelect.options[i].value;
-        if (optVal && matchName(optVal) === myName) {
-          guruSelect.value = optVal;
-          // Trigger event change jika ada logika lain yang bergantung padanya
-          guruSelect.dispatchEvent(new Event('change'));
-          break;
-        }
-      }
-    }
-  }
 }
 
 function nameValue(prefix, type) {
