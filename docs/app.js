@@ -3691,15 +3691,46 @@ function updateNameDropdown(prefix, type) {
   const select = document.getElementById(prefix + '-' + type + '-select');
   if (!select) return;
   const key = type === 'child' ? 'child_name' : 'guru';
-  const values = Array.from(new Set(records.filter(function(r) {
+  
+  let values = Array.from(new Set(records.filter(function(r) {
     return r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
-  }).map(function(r) { return r[key]; }))).sort(function(a, b) { return a.localeCompare(b, 'id'); });
+  }).map(function(r) { return normalizeName(r[key]); }))).sort(function(a, b) { return a.localeCompare(b, 'id'); });
+
+  // FITUR BARU: Hapus nama guru yang duplikat (tanpa koma jika ada yang pakai koma)
+  if (type === 'guru') {
+    values = values.filter(function(name, index, self) {
+      if (!name.includes(',')) {
+        // Cari apakah ada nama yang persis sama tapi pakai koma
+        const nameWithComma = self.find(function(n) { 
+          return n.includes(',') && n.replace(/,/g, '').trim() === name.replace(/,/g, '').trim(); 
+        });
+        if (nameWithComma) return false; // Buang yang tanpa koma
+      }
+      return true;
+    });
+  }
+
   select.innerHTML = '<option value="">' + (unit && kelas ? 'Pilih nama...' : 'Pilih lembaga & kelas...') + '</option>' + values.map(function(v) { return '<option value="' + v + '">' + v + '</option>'; }).join('');
 }
 
 function refreshNames(prefix) {
   updateNameDropdown(prefix, 'guru');
   updateNameDropdown(prefix, 'child');
+
+  // FITUR BARU: Auto-fill nama guru jika yang login adalah Guru
+  if (activeUser.role && activeUser.role.toLowerCase() === 'guru') {
+    const guruName = normalizeName(activeUser.nama_terkait || activeUser.username);
+    const guruSelect = document.getElementById(prefix + '-guru-select');
+    if (guruSelect) {
+      // Cari opsi yang cocok dengan nama guru yang login
+      for (let i = 0; i < guruSelect.options.length; i++) {
+        if (normalizeName(guruSelect.options[i].value) === guruName) {
+          guruSelect.value = guruSelect.options[i].value;
+          break;
+        }
+      }
+    }
+  }
 }
 
 function nameValue(prefix, type) {
