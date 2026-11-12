@@ -3692,6 +3692,57 @@ function updateKelasOptions(prefix) {
   });
 });
 
+// 1. FUNGSI BARU: Deteksi duplikat super kuat (abaikan semua simbol, spasi, dan gelar)
+function matchName(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .replace(/ustadzah|ustadz|ust\.|hj\.|h\./g, '')
+    .replace(/[^a-z]/g, ''); // Hanya sisakan huruf murni untuk pencocokan
+}
+
+// 2. FUNGSI BARU: Standarisasi tampilan nama menjadi "Nama, Gelar"
+function formatName(str) {
+  if (!str) return '';
+  let s = str.trim().replace(/\s+/g, ' ');
+  
+  let parts = s.split(',');
+  let name = parts[0].trim();
+  let degree = parts[1] ? parts[1].trim() : '';
+
+  // Jika tidak ada koma, coba deteksi gelar di akhir nama (misal: "Putri S.Kom")
+  if (!degree) {
+    const degreeRegex = /\s+(s\.?\s?kom|s\.?\s?pd|s\.?\s?ag|s\.?\s?si|s\.?\s?sos|m\.?\s?pd|m\.?\s?m|se|s\.?\s?e|amd)\.?$/i;
+    const match = name.match(degreeRegex);
+    if (match) {
+      degree = match[0].trim();
+      name = name.replace(degreeRegex, '').trim();
+    }
+  }
+
+  // Standarisasi Nama (Title Case)
+  name = name.replace(/\b\w/g, l => l.toUpperCase());
+
+  // Standarisasi Gelar (S.KOM -> S.Kom, S.PD -> S.Pd, dll)
+  if (degree) {
+    let cleanDegree = degree.toUpperCase()
+      .replace(/\./g, '')
+      .replace(/^SKOM$/, 'S.Kom')
+      .replace(/^SPD$/, 'S.Pd')
+      .replace(/^SAG$/, 'S.Ag')
+      .replace(/^SSI$/, 'S.Si')
+      .replace(/^SSOS$/, 'S.Sos')
+      .replace(/^MPD$/, 'M.Pd')
+      .replace(/^MM$/, 'M.M')
+      .replace(/^SE$/, 'S.E')
+      .replace(/^AMD$/, 'Amd');
+      
+    return name + ', ' + cleanDegree;
+  }
+
+  return name;
+}
+
+// 3. UPDATE FUNGSI DROPDOWN DENGAN STANDARISASI
 function updateNameDropdown(prefix, type) {
   const uEl = document.getElementById(prefix + '-unit');
   const kEl = document.getElementById(prefix + '-kelas');
@@ -3710,32 +3761,33 @@ function updateNameDropdown(prefix, type) {
   
   let rawValues = records.filter(function(r) {
     return r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
-  }).map(function(r) { return normalizeName(r[key]); });
+  }).map(function(r) { return r[key]; }); // Ambil string asli
 
-  // FILTER DUPLIKAT: Gunakan matchName untuk mencari kemiripan
+  // Urutkan dari yang paling panjang ke pendek, agar format yang paling lengkap terpilih
+  rawValues.sort((a, b) => b.length - a.length);
+
   let uniqueMap = new Map();
   rawValues.forEach(function(name) {
     const matchKey = matchName(name);
     if (!matchKey) return;
     if (!uniqueMap.has(matchKey)) {
-      uniqueMap.set(matchKey, name);
-    } else {
-      // Jika sudah ada, pilih nama yang lebih panjang (biasanya yang ada gelar/koma)
-      if (name.length > uniqueMap.get(matchKey).length) {
-        uniqueMap.set(matchKey, name);
-      }
+      uniqueMap.set(matchKey, formatName(name)); // Simpan format yang sudah distandarkan
     }
   });
 
   let values = Array.from(uniqueMap.values()).sort(function(a, b) { return a.localeCompare(b, 'id'); });
 
-  // AUTO INJECT: Pastikan nama guru yang login selalu ada di daftar
+  // AUTO INJECT & AUTO SELECT (Untuk login Guru)
   let myName = '';
   if (type === 'guru' && activeUser.role && activeUser.role.toLowerCase() === 'guru') {
     myName = normalizeName(activeUser.nama_terkait || activeUser.username);
     const myMatch = matchName(myName);
-    if (myMatch && !uniqueMap.has(myMatch)) {
-      values.push(myName);
+    let found = false;
+    for (let i = 0; i < values.length; i++) {
+      if (matchName(values[i]) === myMatch) { found = true; break; }
+    }
+    if (!found && myMatch) {
+      values.push(formatName(myName));
       values.sort(function(a, b) { return a.localeCompare(b, 'id'); });
     }
   }
@@ -3743,7 +3795,6 @@ function updateNameDropdown(prefix, type) {
   let html = '<option value="">Pilih nama...</option>';
   values.forEach(function(v) {
     let selected = '';
-    // Otomatis pilih jika ini adalah nama guru yang login
     if (myName && matchName(v) === matchName(myName)) {
       selected = ' selected';
     }
