@@ -3692,23 +3692,25 @@ function updateNameDropdown(prefix, type) {
   if (!select) return;
   const key = type === 'child' ? 'child_name' : 'guru';
   
-  let values = Array.from(new Set(records.filter(function(r) {
+  let rawValues = records.filter(function(r) {
     return r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
-  }).map(function(r) { return normalizeName(r[key]); }))).sort(function(a, b) { return a.localeCompare(b, 'id'); });
+  }).map(function(r) { return normalizeName(r[key]); });
 
-  // FITUR BARU: Hapus nama guru yang duplikat (tanpa koma jika ada yang pakai koma)
-  if (type === 'guru') {
-    values = values.filter(function(name, index, self) {
-      if (!name.includes(',')) {
-        // Cari apakah ada nama yang persis sama tapi pakai koma
-        const nameWithComma = self.find(function(n) { 
-          return n.includes(',') && n.replace(/,/g, '').trim() === name.replace(/,/g, '').trim(); 
-        });
-        if (nameWithComma) return false; // Buang yang tanpa koma
+  // FILTER DUPLIKAT: Gunakan matchName untuk mencari kemiripan
+  let uniqueMap = new Map();
+  rawValues.forEach(function(name) {
+    const matchKey = matchName(name);
+    if (!uniqueMap.has(matchKey)) {
+      uniqueMap.set(matchKey, name);
+    } else {
+      // Jika sudah ada, pilih nama yang lebih panjang (biasanya yang ada gelar/koma)
+      if (name.length > uniqueMap.get(matchKey).length) {
+        uniqueMap.set(matchKey, name);
       }
-      return true;
-    });
-  }
+    }
+  });
+
+  let values = Array.from(uniqueMap.values()).sort(function(a, b) { return a.localeCompare(b, 'id'); });
 
   select.innerHTML = '<option value="">' + (unit && kelas ? 'Pilih nama...' : 'Pilih lembaga & kelas...') + '</option>' + values.map(function(v) { return '<option value="' + v + '">' + v + '</option>'; }).join('');
 }
@@ -3719,13 +3721,17 @@ function refreshNames(prefix) {
 
   // FITUR BARU: Auto-fill nama guru jika yang login adalah Guru
   if (activeUser.role && activeUser.role.toLowerCase() === 'guru') {
-    const guruName = normalizeName(activeUser.nama_terkait || activeUser.username);
+    const myName = matchName(activeUser.nama_terkait || activeUser.username);
     const guruSelect = document.getElementById(prefix + '-guru-select');
+    
     if (guruSelect) {
-      // Cari opsi yang cocok dengan nama guru yang login
+      // Cari opsi yang cocok dengan nama guru yang login (mengabaikan gelar)
       for (let i = 0; i < guruSelect.options.length; i++) {
-        if (normalizeName(guruSelect.options[i].value) === guruName) {
-          guruSelect.value = guruSelect.options[i].value;
+        const optVal = guruSelect.options[i].value;
+        if (optVal && matchName(optVal) === myName) {
+          guruSelect.value = optVal;
+          // Trigger event change jika ada logika lain yang bergantung padanya
+          guruSelect.dispatchEvent(new Event('change'));
           break;
         }
       }
