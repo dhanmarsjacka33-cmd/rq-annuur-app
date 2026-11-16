@@ -86,6 +86,48 @@ function normalizeName(str) {
   return s.split(' ').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
 }
 
+function formatStandardName(str) {
+  if (!str) return '';
+  let s = str.trim().replace(/\s+/g, ' ');
+  let parts = s.split(',');
+  let name = parts[0].trim();
+  let degree = parts[1] ? parts[1].trim() : '';
+
+  if (!degree) {
+    const degreeRegex = /\s+(s\.?\s?kom|s\.?\s?pd|s\.?\s?ag|s\.?\s?si|s\.?\s?sos|m\.?\s?pd|m\.?\s?m|se|s\.?\s?e|amd)\.?$/i;
+    const match = name.match(degreeRegex);
+    if (match) {
+      degree = match[0].trim();
+      name = name.replace(degreeRegex, '').trim();
+    }
+  }
+
+  name = name.replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+
+  if (degree) {
+    let cleanDegree = degree.toUpperCase()
+      .replace(/\./g, '')
+      .replace(/^SKOM$/, 'S.Kom')
+      .replace(/^SPD$/, 'S.Pd')
+      .replace(/^SAG$/, 'S.Ag')
+      .replace(/^SSI$/, 'S.Si')
+      .replace(/^SSOS$/, 'S.Sos')
+      .replace(/^MPD$/, 'M.Pd')
+      .replace(/^MM$/, 'M.M')
+      .replace(/^SE$/, 'S.E')
+      .replace(/^AMD$/, 'Amd');
+    return name + ', ' + cleanDegree;
+  }
+  return name;
+}
+
+function matchName(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .replace(/ustadzah|ustadz|ust\.|hj\.|h\./g, '')
+    .replace(/[^a-z]/g, ''); 
+}
+
 // FUNGSI BARU: Untuk mencocokkan nama dengan mengabaikan gelar & tanda baca
 function matchName(str) {
   if (!str) return '';
@@ -3743,6 +3785,52 @@ function formatName(str) {
 }
 
 // 3. UPDATE FUNGSI DROPDOWN DENGAN STANDARISASI
+// --- FUNGSI STANDARISASI NAMA & GELAR ---
+function formatStandardName(str) {
+  if (!str) return '';
+  let s = str.trim().replace(/\s+/g, ' ');
+  
+  let parts = s.split(',');
+  let name = parts[0].trim();
+  let degree = parts[1] ? parts[1].trim() : '';
+
+  if (!degree) {
+    const degreeRegex = /\s+(s\.?\s?kom|s\.?\s?pd|s\.?\s?ag|s\.?\s?si|s\.?\s?sos|m\.?\s?pd|m\.?\s?m|se|s\.?\s?e|amd)\.?$/i;
+    const match = name.match(degreeRegex);
+    if (match) {
+      degree = match[0].trim();
+      name = name.replace(degreeRegex, '').trim();
+    }
+  }
+
+  name = name.replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+
+  if (degree) {
+    let cleanDegree = degree.toUpperCase()
+      .replace(/\./g, '')
+      .replace(/^SKOM$/, 'S.Kom')
+      .replace(/^SPD$/, 'S.Pd')
+      .replace(/^SAG$/, 'S.Ag')
+      .replace(/^SSI$/, 'S.Si')
+      .replace(/^SSOS$/, 'S.Sos')
+      .replace(/^MPD$/, 'M.Pd')
+      .replace(/^MM$/, 'M.M')
+      .replace(/^SE$/, 'S.E')
+      .replace(/^AMD$/, 'Amd');
+    return name + ', ' + cleanDegree;
+  }
+  return name;
+}
+
+// --- FUNGSI PENCARIAN KEMIRIPAN NAMA ---
+function matchName(str) {
+  if (!str) return '';
+  return str.toString().toLowerCase()
+    .replace(/ustadzah|ustadz|ust\.|hj\.|h\./g, '')
+    .replace(/[^a-z]/g, ''); 
+}
+
+// --- FUNGSI DROPDOWN UTAMA ---
 function updateNameDropdown(prefix, type) {
   const uEl = document.getElementById(prefix + '-unit');
   const kEl = document.getElementById(prefix + '-kelas');
@@ -3761,41 +3849,48 @@ function updateNameDropdown(prefix, type) {
   
   let rawValues = records.filter(function(r) {
     return r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
-  }).map(function(r) { return r[key]; }); // Ambil string asli
+  }).map(function(r) { return r[key]; });
 
-  // Urutkan dari yang paling panjang ke pendek, agar format yang paling lengkap terpilih
-  rawValues.sort((a, b) => b.length - a.length);
+  // Urutkan dari nama terpanjang agar yang punya gelar lengkap diutamakan
+  rawValues.sort(function(a, b) { return b.length - a.length; });
 
   let uniqueMap = new Map();
   rawValues.forEach(function(name) {
     const matchKey = matchName(name);
     if (!matchKey) return;
     if (!uniqueMap.has(matchKey)) {
-      uniqueMap.set(matchKey, formatName(name)); // Simpan format yang sudah distandarkan
+      uniqueMap.set(matchKey, formatStandardName(name));
     }
   });
 
   let values = Array.from(uniqueMap.values()).sort(function(a, b) { return a.localeCompare(b, 'id'); });
 
-  // AUTO INJECT & AUTO SELECT (Untuk login Guru)
-  let myName = '';
+  let html = '<option value="">Pilih nama...</option>';
+  
+  let activeGuruMatchKey = '';
+  let activeGuruName = '';
+  
   if (type === 'guru' && activeUser.role && activeUser.role.toLowerCase() === 'guru') {
-    myName = normalizeName(activeUser.nama_terkait || activeUser.username);
-    const myMatch = matchName(myName);
-    let found = false;
-    for (let i = 0; i < values.length; i++) {
-      if (matchName(values[i]) === myMatch) { found = true; break; }
-    }
-    if (!found && myMatch) {
-      values.push(formatName(myName));
-      values.sort(function(a, b) { return a.localeCompare(b, 'id'); });
+    activeGuruName = activeUser.nama_terkait || activeUser.username;
+    activeGuruMatchKey = matchName(activeGuruName);
+    
+    // Pastikan nama guru yang login ada di list
+    if (activeGuruMatchKey) {
+      let isExist = false;
+      for (let i = 0; i < values.length; i++) {
+        if (matchName(values[i]) === activeGuruMatchKey) { isExist = true; break; }
+      }
+      if (!isExist) {
+        values.push(formatStandardName(activeGuruName));
+        values.sort(function(a, b) { return a.localeCompare(b, 'id'); });
+      }
     }
   }
 
-  let html = '<option value="">Pilih nama...</option>';
   values.forEach(function(v) {
     let selected = '';
-    if (myName && matchName(v) === matchName(myName)) {
+    // Otomatis pilih jika ini nama guru yang login
+    if (activeGuruMatchKey && matchName(v) === activeGuruMatchKey) {
       selected = ' selected';
     }
     html += '<option value="' + v + '"' + selected + '>' + v + '</option>';
