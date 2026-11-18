@@ -1318,7 +1318,10 @@ document.getElementById('points-rule').addEventListener('change', function(e) {
 function updatePointsChildList() {
   const u = document.getElementById('points-unit').value;
   const k = document.getElementById('points-kelas').value;
-  const ch = Array.from(new Set(records.filter(function(r) { return r.unit === u && r.kelas === k && r.child_name; }).map(function(r) { return r.child_name; }))).sort();
+  const ch = Array.from(new Set(records.filter(function(r) { 
+    const isMaster = (!r.type || r.type.trim() === '');
+    return isMaster && r.unit === u && r.kelas === k && r.child_name; 
+  }).map(function(r) { return r.child_name; }))).sort();
   document.getElementById('points-child-select').innerHTML = '<option value="">Pilih murid...</option>' + ch.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
   document.getElementById('selected-points-children').innerHTML = ch.map(function(c) { return '<label class="flex items-center gap-2 text-xs"><input type="checkbox" value="' + c + '" class="point-child-check">' + c + '</label>'; }).join('');
 }
@@ -1377,7 +1380,10 @@ document.getElementById('points-form').addEventListener('submit', async function
 function updateAbsenLists() {
   const u = document.getElementById('absen-unit').value;
   const k = document.getElementById('absen-kelas').value;
-  const m = Array.from(new Set(records.filter(function(r) { return r.unit === u && r.kelas === k && r.child_name; }).map(function(r) { return r.child_name; }))).sort();
+  const m = Array.from(new Set(records.filter(function(r) { 
+    const isMaster = (!r.type || r.type.trim() === '');
+    return isMaster && r.unit === u && r.kelas === k && r.child_name; 
+  }).map(function(r) { return r.child_name; }))).sort();
   const opts = '<option value="Hadir">Hadir</option><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Alpha">Alpha</option>';
   document.getElementById('absen-murid-list').innerHTML = m.length ? m.map(function(n) {
     const av = getChildAvatar(n);
@@ -3848,7 +3854,9 @@ function updateNameDropdown(prefix, type) {
   const key = type === 'child' ? 'child_name' : 'guru';
   
   let rawValues = records.filter(function(r) {
-    return r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
+    // Hanya ambil data master (type kosong)
+    const isMaster = (!r.type || r.type.trim() === '');
+    return isMaster && r.unit === unit && r.kelas === kelas && r[key] && r[key].trim();
   }).map(function(r) { return r[key]; });
 
   // Urutkan dari nama terpanjang agar yang punya gelar lengkap diutamakan
