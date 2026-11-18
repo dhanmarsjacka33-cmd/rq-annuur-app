@@ -1579,9 +1579,9 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
   container.querySelectorAll('.modal-posisi-cb').forEach(function(cb) {
     cb.addEventListener('change', function(e) {
       const checked = container.querySelectorAll('.modal-posisi-cb:checked');
-      if (checked.length > 2) {
+      if (checked.length > 4) {
         e.target.checked = false;
-        window.showToast('Maksimal 2 posisi per sesi', 'error');
+        window.showToast('Maksimal 4 posisi per sesi', 'error');
         return;
       }
       const input = e.target.closest('label').querySelector('.modal-murid-input');
@@ -1677,6 +1677,32 @@ if (modalAbsenKonfirmasi) {
         rec.posisi_2_murid = jml;
       }
       rec.posisi_2_tarif = t2;
+    }
+    if (checked[2]) {
+      rec.posisi_3_peran = checked[2].dataset.peran;
+      const sel = document.querySelector('.modal-kelas-select[data-idx="' + checked[2].dataset.idx + '"]');
+      rec.posisi_3_kelas = sel ? sel.value : '';
+      let t3 = parseInt(checked[2].dataset.tarif) || 0;
+      if (checked[2].dataset.isbimbel === 'true') {
+        const inp = checked[2].closest('label').querySelector('.modal-murid-input');
+        const jml = parseInt(inp.value) || 1;
+        t3 = t3 * jml;
+        rec.posisi_3_murid = jml;
+      }
+      rec.posisi_3_tarif = t3;
+    }
+    if (checked[3]) {
+      rec.posisi_4_peran = checked[3].dataset.peran;
+      const sel = document.querySelector('.modal-kelas-select[data-idx="' + checked[3].dataset.idx + '"]');
+      rec.posisi_4_kelas = sel ? sel.value : '';
+      let t4 = parseInt(checked[3].dataset.tarif) || 0;
+      if (checked[3].dataset.isbimbel === 'true') {
+        const inp = checked[3].closest('label').querySelector('.modal-murid-input');
+        const jml = parseInt(inp.value) || 1;
+        t4 = t4 * jml;
+        rec.posisi_4_murid = jml;
+      }
+      rec.posisi_4_tarif = t4;
     }
     if (document.getElementById('modal-pengganti-toggle').checked) {
       const guruTujuan = document.getElementById('modal-pengganti-guru').value;
@@ -1811,6 +1837,8 @@ window.showKalenderDetail = function(dateStr) {
       const pos = [];
       if (a.posisi_1_peran) pos.push(a.posisi_1_peran + (a.posisi_1_kelas ? ' ' + a.posisi_1_kelas : ''));
       if (a.posisi_2_peran) pos.push(a.posisi_2_peran + (a.posisi_2_kelas ? ' ' + a.posisi_2_kelas : ''));
+      if (a.posisi_3_peran) pos.push(a.posisi_3_peran + (a.posisi_3_kelas ? ' ' + a.posisi_3_kelas : ''));
+      if (a.posisi_4_peran) pos.push(a.posisi_4_peran + (a.posisi_4_kelas ? ' ' + a.posisi_4_kelas : ''));
       if (a.pengganti_peran) pos.push('Ganti ' + (a.pengganti_untuk || '') + ': ' + a.pengganti_peran);
       return '<div class="p-3 rounded-xl border" style="background:var(--card);border-color:var(--border)"><div class="flex justify-between items-start gap-2 mb-1"><div class="flex-1 min-w-0"><p class="font-bold text-xs truncate">' + escapeHtml(a.guru) + '</p><p class="text-[10px]" style="color:var(--text-muted)">' + escapeHtml(a.sesi || '-') + '</p></div><span class="text-xs font-extrabold" style="color:#06d6a0">Rp ' + (parseInt(a.total_fee) || 0).toLocaleString('id-ID') + '</span></div><p class="text-[10px] mb-2" style="color:var(--text-muted)">' + (escapeHtml(pos.join(' + ')) || 'Tanpa posisi') + '</p><div class="flex gap-2"><button onclick="openEditAbsen(\'' + a.__backendId + '\')" class="flex-1 bg-blue-500 text-white rounded-lg py-1.5 text-[10px] font-bold">✏️ Edit</button><button onclick="deleteAbsenFromDetail(\'' + a.__backendId + '\')" class="flex-1 bg-red-500 text-white rounded-lg py-1.5 text-[10px] font-bold">🗑️ Hapus</button></div></div>';
     }).join('');
