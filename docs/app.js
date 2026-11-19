@@ -482,7 +482,10 @@ function processRoleUI(role) {
     document.getElementById('wali-dashboard').classList.remove('is-hidden');
     document.getElementById('history-section').classList.remove('is-hidden');
   } else {
-    ['menu-container','report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
+    ['report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
+    // Pastikan menu-container tetap tersembunyi (karena menu sudah pindah ke Bottom Nav)
+    const mc = document.getElementById('menu-container');
+    if (mc) mc.classList.add('is-hidden');
     if (role === 'guru') {
       document.getElementById('guru-attendance-card').classList.remove('is-hidden');
       // Sembunyikan menu admin dari dashboard guru (dipindah ke menu sheet)
@@ -1634,9 +1637,17 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
   });
   document.getElementById('modal-pengganti-toggle').checked = false;
   document.getElementById('modal-pengganti-fields').classList.add('is-hidden');
+  
+  // Reset & Setup Pengganti 2
+  document.getElementById('modal-pengganti-2-toggle').checked = false;
+  document.getElementById('modal-pengganti-2-fields').classList.add('is-hidden');
+
   const guruList = getUniqueActiveGurus();
   document.getElementById('modal-pengganti-guru').innerHTML = '<option value="">Pilih guru yang digantikan...</option>' + guruList.map(function(g) { return '<option value="' + g + '">' + g + '</option>'; }).join('');
   document.getElementById('modal-pengganti-peran').innerHTML = POSISI_OPTIONS.map(function(p) { return '<option value="' + p.peran + '" data-tarif="' + p.tarif + '">' + p.peran + ' (' + (p.tarif / 1000) + 'k)</option>'; }).join('');
+
+  document.getElementById('modal-pengganti-2-guru').innerHTML = '<option value="">Pilih guru yang digantikan...</option>' + guruList.map(function(g) { return '<option value="' + g + '">' + g + '</option>'; }).join('');
+  document.getElementById('modal-pengganti-2-peran').innerHTML = POSISI_OPTIONS.map(function(p) { return '<option value="' + p.peran + '" data-tarif="' + p.tarif + '">' + p.peran + ' (' + (p.tarif / 1000) + 'k)</option>'; }).join('');
   const m = document.getElementById('modal-absen');
   m.classList.remove('is-hidden');
   m.style.display = 'flex';
@@ -1658,6 +1669,11 @@ function updateModalTotal() {
     const opt = sel.selectedOptions[0];
     if (opt) total += parseInt(opt.dataset.tarif) || 0;
   }
+  if (document.getElementById('modal-pengganti-2-toggle').checked) {
+    const sel2 = document.getElementById('modal-pengganti-2-peran');
+    const opt2 = sel2.selectedOptions[0];
+    if (opt2) total += parseInt(opt2.dataset.tarif) || 0;
+  }
   document.getElementById('modal-absen-total').textContent = total.toLocaleString('id-ID');
 }
 
@@ -1671,6 +1687,17 @@ if (penggantiToggle) {
 
 const penggantiPeran = document.getElementById('modal-pengganti-peran');
 if (penggantiPeran) penggantiPeran.addEventListener('change', updateModalTotal);
+
+const pengganti2Toggle = document.getElementById('modal-pengganti-2-toggle');
+if (pengganti2Toggle) {
+  pengganti2Toggle.addEventListener('change', function(e) {
+    document.getElementById('modal-pengganti-2-fields').classList.toggle('is-hidden', !e.target.checked);
+    updateModalTotal();
+  });
+}
+
+const pengganti2Peran = document.getElementById('modal-pengganti-2-peran');
+if (pengganti2Peran) pengganti2Peran.addEventListener('change', updateModalTotal);
 
 const modalAbsenClose = document.getElementById('modal-absen-close');
 if (modalAbsenClose) {
@@ -1755,6 +1782,17 @@ if (modalAbsenKonfirmasi) {
       rec.pengganti_peran = peranSel.value;
       rec.pengganti_tarif = peranSel.selectedOptions[0].dataset.tarif;
       rec.pengganti_kelas = '';
+    }
+    
+    // LOGIKA PENGGANTI KE-2
+    if (document.getElementById('modal-pengganti-2-toggle').checked) {
+      const guruTujuan2 = document.getElementById('modal-pengganti-2-guru').value;
+      const peranSel2 = document.getElementById('modal-pengganti-2-peran');
+      if (!guruTujuan2) return window.showToast('Pilih guru yang digantikan (Ke-2)', 'error');
+      rec.pengganti_2_untuk = guruTujuan2;
+      rec.pengganti_2_peran = peranSel2.value;
+      rec.pengganti_2_tarif = peranSel2.selectedOptions[0].dataset.tarif;
+      rec.pengganti_2_kelas = '';
     }
     setSaving(btn, true);
     try {
@@ -3157,8 +3195,10 @@ function updateReportChildList() {
   }
   const u = document.getElementById('report-unit').value;
   const k = document.getElementById('report-kelas').value;
+  // FILTER DATA MASTER: Hanya ambil yang ada di Data Master (type kosong)
   const ch = Array.from(new Set(records.filter(function(r) {
-    return r.child_name && (u === '' || r.unit === u) && (k === '' || r.kelas === k);
+    const isMaster = (!r.type || r.type.trim() === '');
+    return isMaster && r.child_name && (u === '' || r.unit === u) && (k === '' || r.kelas === k);
   }).map(function(r) { return r.child_name; }))).sort();
   document.getElementById('report-child').innerHTML = '<option value="">Pilih murid...</option>' + ch.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
 }

@@ -141,7 +141,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh;padding-bottom:80px}.bottom-nav{max-width:100%}}
 @media(min-width:521px){.bottom-nav{display:none!important}}
-/* Perbaikan Dark Mode untuk Card Pastel */
+/* Perbaikan Dark Mode Total */
 [data-theme="dark"] .bg-\[\#FFF9E6\], [data-theme="dark"] .bg-\[\#FFEFC5\],
 [data-theme="dark"] .bg-\[\#E2F4E8\], [data-theme="dark"] .bg-\[\#C1EBD1\],
 [data-theme="dark"] .bg-\[\#CCE5F0\], [data-theme="dark"] .bg-\[\#A2D4E8\],
@@ -151,17 +151,47 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 [data-theme="dark"] .bg-\[\#FFE8E8\], [data-theme="dark"] .bg-\[\#FCE4EC\],
 [data-theme="dark"] .bg-yellow-50, [data-theme="dark"] .bg-green-50, 
 [data-theme="dark"] .bg-blue-50, [data-theme="dark"] .bg-red-50, 
-[data-theme="dark"] .bg-amber-50, [data-theme="dark"] .bg-emerald-50 {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+[data-theme="dark"] .bg-amber-50, [data-theme="dark"] .bg-emerald-50,
+[data-theme="dark"] .menu-card, [data-theme="dark"] .bg-white {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
     color: var(--text) !important;
 }
 [data-theme="dark"] .text-amber-800, [data-theme="dark"] .text-amber-900,
 [data-theme="dark"] .text-teal-900, [data-theme="dark"] .text-indigo-900,
 [data-theme="dark"] .text-red-900, [data-theme="dark"] .text-pink-900,
-[data-theme="dark"] .text-purple-900, [data-theme="dark"] .text-green-800 {
+[data-theme="dark"] .text-purple-900, [data-theme="dark"] .text-green-800,
+[data-theme="dark"] .text-gray-800, [data-theme="dark"] .text-gray-900 {
     color: #FFD166 !important;
 }
+[data-theme="dark"] table td, [data-theme="dark"] table th {
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+/* Perbaikan Kontras Dark Mode */
+[data-theme="dark"] .bg-\[\#FFF9E6\], [data-theme="dark"] .bg-\[\#FFEFC5\],
+[data-theme="dark"] .bg-\[\#E2F4E8\], [data-theme="dark"] .bg-\[\#C1EBD1\],
+[data-theme="dark"] .bg-\[\#CCE5F0\], [data-theme="dark"] .bg-\[\#A2D4E8\],
+[data-theme="dark"] .bg-\[\#FFF3CE\], [data-theme="dark"] .bg-\[\#FFE599\],
+[data-theme="dark"] .bg-\[\#FDF3FF\], [data-theme="dark"] .bg-\[\#EFE0FF\],
+[data-theme="dark"] .bg-\[\#E0F7F3\], [data-theme="dark"] .bg-\[\#EEF2FF\],
+[data-theme="dark"] .bg-\[\#FFE8E8\], [data-theme="dark"] .bg-\[\#FCE4EC\],
+[data-theme="dark"] .bg-yellow-50, [data-theme="dark"] .bg-green-50, 
+[data-theme="dark"] .bg-blue-50, [data-theme="dark"] .bg-red-50, 
+[data-theme="dark"] .bg-amber-50, [data-theme="dark"] .bg-emerald-50,
+[data-theme="dark"] .menu-card, [data-theme="dark"] .bg-white {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+[data-theme="dark"] .text-amber-800, [data-theme="dark"] .text-amber-900,
+[data-theme="dark"] .text-teal-900, [data-theme="dark"] .text-indigo-900,
+[data-theme="dark"] .text-red-900, [data-theme="dark"] .text-pink-900,
+[data-theme="dark"] .text-purple-900, [data-theme="dark"] .text-green-800,
+[data-theme="dark"] .text-gray-800, [data-theme="dark"] .text-gray-900 {
+    color: #FFD166 !important;
+}
+
 @media print{body *{visibility:hidden}#raport-cetak,#raport-cetak *,#slip-gaji-printout,#slip-gaji-printout *{visibility:visible}#raport-cetak,#slip-gaji-printout{position:absolute;left:0;top:0;width:100%}.bottom-nav{display:none!important}@page{margin:10mm}}
 </style>
 </head>
@@ -208,6 +238,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div id="modal-pengganti-fields" class="is-hidden mt-2 space-y-2 pl-6">
         <select id="modal-pengganti-guru" class="field text-xs p-2"></select>
         <select id="modal-pengganti-peran" class="field text-xs p-2"></select>
+      </div>
+      <div class="border-t pt-3 mt-3" style="border-color:var(--border)">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="modal-pengganti-2-toggle" class="w-4 h-4 accent-[#FF6B6B]">
+          <span class="text-xs font-bold">🎯 Menggantikan guru lain (Ke-2)</span>
+        </label>
+        <div id="modal-pengganti-2-fields" class="is-hidden mt-2 space-y-2 pl-6">
+          <select id="modal-pengganti-2-guru" class="field text-xs p-2"></select>
+          <select id="modal-pengganti-2-peran" class="field text-xs p-2"></select>
+        </div>
       </div>
     </div>
     <div class="p-3 rounded-xl mb-4 flex justify-between items-center" style="background:linear-gradient(135deg,#FFF3CE,#FFE599)">
