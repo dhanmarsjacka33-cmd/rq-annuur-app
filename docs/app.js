@@ -24,6 +24,42 @@ let modalAbsenState = { sesi: '', posisiPilihan: [] };
 let kalenderState = { guru: '', month: '' };
 let kalenderSelectedDate = '';
 
+window.openMenuSheet = function() {
+  const role = activeUser.role ? activeUser.role.toLowerCase() : '';
+  const menuContainer = document.getElementById('menu-sheet-content');
+  let html = '';
+
+  const menus = [
+    { id: 'open-kalender-guru', icon: '📅', label: 'Kalender', roles: ['guru', 'admin', 'bendahara'] },
+    { id: 'open-manage', icon: '👥', label: 'Data Master', roles: ['admin', 'bendahara'] },
+    { id: 'open-bendahara', icon: '💰', label: 'Penggajian', roles: ['admin', 'bendahara'] },
+    { id: 'open-fotoupload', icon: '📸', label: 'Foto & Pencapaian', roles: ['admin', 'bendahara'] },
+    { id: 'open-audit', icon: '🔍', label: 'Audit Keuangan', roles: ['admin', 'bendahara'] },
+    { id: 'open-leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['guru', 'wali', 'admin', 'bendahara'] },
+    { id: 'open-hall', icon: '🌟', label: 'Hall of Fame', roles: ['guru', 'wali', 'admin', 'bendahara'] },
+    { id: 'open-keu-santri', icon: '🪙', label: 'Keuangan', roles: ['admin', 'bendahara'] },
+    { id: 'open-kas', icon: '🏦', label: 'Buku Kas', roles: ['admin', 'bendahara'] },
+    { id: 'open-penagihan', icon: '📢', label: 'Penagihan', roles: ['admin', 'bendahara'] }
+  ];
+
+  menus.forEach(m => {
+    if (m.roles.includes(role)) {
+      html += `<button type="button" onclick="document.getElementById('${m.id}').click(); window.closeMenuSheet();" class="menu-card rounded-[20px] p-3 flex flex-col items-center justify-center text-center" style="background:var(--card); border:2px solid var(--border);"><span class="text-2xl mb-1">${m.icon}</span><span class="font-extrabold text-[10px]">${m.label}</span></button>`;
+    }
+  });
+
+  menuContainer.innerHTML = html || '<p class="text-xs text-center col-span-3">Tidak ada menu tambahan.</p>';
+  const modal = document.getElementById('modal-menu-sheet');
+  modal.classList.remove('is-hidden');
+  modal.style.display = 'flex';
+};
+
+window.closeMenuSheet = function() {
+  const modal = document.getElementById('modal-menu-sheet');
+  modal.classList.add('is-hidden');
+  modal.style.display = 'none';
+};
+
 const POSISI_OPTIONS = [
   { peran: 'Wali PAUDQU', tarif: 30000, adaKelas: true },
   { peran: 'Pendamping PAUDQU', tarif: 20000, adaKelas: true },
@@ -447,7 +483,14 @@ function processRoleUI(role) {
     document.getElementById('history-section').classList.remove('is-hidden');
   } else {
     ['menu-container','report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
-    if (role === 'guru') document.getElementById('guru-attendance-card').classList.remove('is-hidden');
+    if (role === 'guru') {
+      document.getElementById('guru-attendance-card').classList.remove('is-hidden');
+      // Sembunyikan menu admin dari dashboard guru (dipindah ke menu sheet)
+      ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','open-manage'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none'; // Sembunyikan dari dashboard utama
+      });
+    }
     else if (role === 'bendahara' || role === 'admin') {
       ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','guru-attendance-card'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
       const tLocal = getLocalDateString();
@@ -3198,6 +3241,35 @@ document.getElementById('btn-print-raport').addEventListener('click', function()
   const c = document.getElementById('report-child').value;
   if (!c) return alert('Pilih murid dulu!');
   window.print();
+});
+
+document.getElementById('btn-download-raport').addEventListener('click', function() {
+  const c = document.getElementById('report-child').value;
+  if (!c) return alert('Pilih murid dulu!');
+  
+  const element = document.getElementById('raport-cetak');
+  const btn = document.getElementById('btn-download-raport');
+  const originalText = btn.innerHTML;
+  
+  btn.innerHTML = '⏳ Memproses...';
+  btn.disabled = true;
+
+  const opt = {
+    margin:       0.5,
+    filename:     'Raport_' + c.replace(/\s+/g, '_') + '.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }).catch(err => {
+    alert('Gagal mengunduh PDF: ' + err);
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  });
 });
 
 function updateManageListsAndDropdowns() {

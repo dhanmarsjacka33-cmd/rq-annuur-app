@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0d5563;--mint:#06d6a0;--blue:#0f7fa1;--pink:#ef476f;--muted:#5a8c9a;--sunshine:#FFD166;--sky:#06AED5;--coral:#FF6B6B;--lime:#A8E06E;--lavender:#B794F6;--peach:#FFB085;--bg:#f3f8f9;--card:#ffffff;--frame:#fbfdfc;--text:#0d5563;--text-muted:#5a8c9a;--border:#dbeef0;--border-soft:#eef5f3}
@@ -140,6 +141,27 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh;padding-bottom:80px}.bottom-nav{max-width:100%}}
 @media(min-width:521px){.bottom-nav{display:none!important}}
+/* Perbaikan Dark Mode untuk Card Pastel */
+[data-theme="dark"] .bg-\[\#FFF9E6\], [data-theme="dark"] .bg-\[\#FFEFC5\],
+[data-theme="dark"] .bg-\[\#E2F4E8\], [data-theme="dark"] .bg-\[\#C1EBD1\],
+[data-theme="dark"] .bg-\[\#CCE5F0\], [data-theme="dark"] .bg-\[\#A2D4E8\],
+[data-theme="dark"] .bg-\[\#FFF3CE\], [data-theme="dark"] .bg-\[\#FFE599\],
+[data-theme="dark"] .bg-\[\#FDF3FF\], [data-theme="dark"] .bg-\[\#EFE0FF\],
+[data-theme="dark"] .bg-\[\#E0F7F3\], [data-theme="dark"] .bg-\[\#EEF2FF\],
+[data-theme="dark"] .bg-\[\#FFE8E8\], [data-theme="dark"] .bg-\[\#FCE4EC\],
+[data-theme="dark"] .bg-yellow-50, [data-theme="dark"] .bg-green-50, 
+[data-theme="dark"] .bg-blue-50, [data-theme="dark"] .bg-red-50, 
+[data-theme="dark"] .bg-amber-50, [data-theme="dark"] .bg-emerald-50 {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text) !important;
+}
+[data-theme="dark"] .text-amber-800, [data-theme="dark"] .text-amber-900,
+[data-theme="dark"] .text-teal-900, [data-theme="dark"] .text-indigo-900,
+[data-theme="dark"] .text-red-900, [data-theme="dark"] .text-pink-900,
+[data-theme="dark"] .text-purple-900, [data-theme="dark"] .text-green-800 {
+    color: #FFD166 !important;
+}
 @media print{body *{visibility:hidden}#raport-cetak,#raport-cetak *,#slip-gaji-printout,#slip-gaji-printout *{visibility:visible}#raport-cetak,#slip-gaji-printout{position:absolute;left:0;top:0;width:100%}.bottom-nav{display:none!important}@page{margin:10mm}}
 </style>
 </head>
@@ -784,9 +806,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div><label class="block text-xs font-bold mb-1">Dari</label><input id="report-start" type="date" class="field text-sm"></div>
       <div><label class="block text-xs font-bold mb-1">Sampai</label><input id="report-end" type="date" class="field text-sm"></div>
     </div>
-    <div class="grid grid-cols-2 gap-2">
-      <button id="generate-report-btn" type="button" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📈 Tampilkan</button>
+    <div class="grid grid-cols-3 gap-2">
+      <button id="generate-report-btn" type="button" class="w-full bg-gradient-to-r from-[#06AED5] to-[#0f7fa1] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📈 Tampil</button>
       <button id="btn-print-raport" type="button" class="w-full bg-gradient-to-r from-[#06d6a0] to-[#087a61] text-white rounded-2xl py-3 font-bold text-sm shadow-lg">🖨️ Cetak</button>
+      <button id="btn-download-raport" type="button" class="w-full bg-gradient-to-r from-red-500 to-red-700 text-white rounded-2xl py-3 font-bold text-sm shadow-lg">📥 PDF</button>
     </div>
   </div>
   <div id="report-output" class="mt-5 is-hidden">
@@ -1163,9 +1186,21 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button class="nav-item" data-nav="mutabaah-screen" data-roles="guru,admin,bendahara"><i data-lucide="book-open" width="22"></i><span>Setoran</span></button>
   <button class="nav-item" data-nav="absen-screen" data-roles="guru,admin,bendahara"><i data-lucide="check-circle" width="22"></i><span>Absen</span></button>
   <button class="nav-item" data-nav="report-screen" data-roles="wali,guru,admin,bendahara"><i data-lucide="bar-chart-3" width="22"></i><span>Raport</span></button>
-  <button class="nav-item" data-nav="kas-screen" data-roles="bendahara,admin"><i data-lucide="wallet" width="22"></i><span>Kas</span></button>
-  <button class="nav-item" data-nav="penagihan-screen" data-roles="bendahara,admin"><i data-lucide="megaphone" width="22"></i><span>Tagih</span></button>
+  <button class="nav-item" onclick="window.openMenuSheet()"><i data-lucide="menu" width="22"></i><span>Menu</span></button>
 </nav>
+
+<!-- MENU BOTTOM SHEET -->
+<div id="modal-menu-sheet" class="modal-scroll is-hidden" style="z-index:60">
+  <div class="modal-card" style="margin-top:auto; border-radius:24px 24px 0 0; max-width:100%; border-bottom-left-radius:0; border-bottom-right-radius:0; padding-bottom:24px;">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-extrabold text-lg">☰ Menu Aplikasi</h3>
+      <button onclick="window.closeMenuSheet()" class="text-gray-400 text-2xl leading-none">✕</button>
+    </div>
+    <div id="menu-sheet-content" class="grid grid-cols-3 gap-3">
+      <!-- Diisi oleh JS -->
+    </div>
+  </div>
+</div>
 
 <template id="history-template">
   <article class="history-item rounded-2xl p-4 mb-3 shadow-sm border" style="background:var(--card);border-color:var(--border-soft)">
