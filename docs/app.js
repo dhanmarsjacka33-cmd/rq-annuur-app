@@ -1579,9 +1579,9 @@ document.getElementById('btn-absen-masuk-guru').addEventListener('click', functi
   container.querySelectorAll('.modal-posisi-cb').forEach(function(cb) {
     cb.addEventListener('change', function(e) {
       const checked = container.querySelectorAll('.modal-posisi-cb:checked');
-      if (checked.length > 4) {
+      if (checked.length > 2) {
         e.target.checked = false;
-        window.showToast('Maksimal 4 posisi per sesi', 'error');
+        window.showToast('Maksimal 2 posisi per sesi', 'error');
         return;
       }
       const input = e.target.closest('label').querySelector('.modal-murid-input');
