@@ -1942,6 +1942,7 @@ window.openEditAbsen = function(recordId) {
   document.getElementById('edit-p1-peran').innerHTML = '<option value="">-</option>' + posOpts;
   document.getElementById('edit-p2-peran').innerHTML = '<option value="">-</option>' + posOpts;
   document.getElementById('edit-pg-peran').innerHTML = posOpts;
+  document.getElementById('edit-pg-2-peran').innerHTML = posOpts;
   if (recordId) {
     const rec = recordsAbsensiGuru.find(function(a) { return a.__backendId === recordId; });
     if (!rec) return;
@@ -1964,6 +1965,13 @@ window.openEditAbsen = function(recordId) {
     document.getElementById('edit-pg-untuk').value = rec.pengganti_untuk || '';
     if (rec.pengganti_peran) document.getElementById('edit-pg-peran').value = rec.pengganti_peran;
     document.getElementById('edit-pg-tarif').value = rec.pengganti_tarif || '';
+    
+    const hasPg2 = !!rec.pengganti_2_peran;
+    document.getElementById('edit-pg-2-toggle').checked = hasPg2;
+    document.getElementById('edit-pg-2-fields').classList.toggle('is-hidden', !hasPg2);
+    document.getElementById('edit-pg-2-untuk').value = rec.pengganti_2_untuk || '';
+    if (rec.pengganti_2_peran) document.getElementById('edit-pg-2-peran').value = rec.pengganti_2_peran;
+    document.getElementById('edit-pg-2-tarif').value = rec.pengganti_2_tarif || '';
     document.getElementById('edit-absen-catatan').value = rec.catatan || '';
     document.getElementById('btn-delete-absen').classList.remove('is-hidden');
   } else {
@@ -1983,6 +1991,10 @@ window.openEditAbsen = function(recordId) {
     document.getElementById('edit-pg-fields').classList.add('is-hidden');
     document.getElementById('edit-pg-untuk').value = '';
     document.getElementById('edit-pg-tarif').value = '';
+    document.getElementById('edit-pg-2-toggle').checked = false;
+    document.getElementById('edit-pg-2-fields').classList.add('is-hidden');
+    document.getElementById('edit-pg-2-untuk').value = '';
+    document.getElementById('edit-pg-2-tarif').value = '';
     document.getElementById('edit-absen-catatan').value = '';
     document.getElementById('btn-delete-absen').classList.add('is-hidden');
   }
@@ -2015,9 +2027,20 @@ if (editPg) editPg.addEventListener('change', function(e) {
   if (opt && opt.dataset.tarif) document.getElementById('edit-pg-tarif').value = opt.dataset.tarif;
 });
 
+const editPg2 = document.getElementById('edit-pg-2-peran');
+if (editPg2) editPg2.addEventListener('change', function(e) {
+  const opt = e.target.selectedOptions[0];
+  if (opt && opt.dataset.tarif) document.getElementById('edit-pg-2-tarif').value = opt.dataset.tarif;
+});
+
 const editPgToggle = document.getElementById('edit-pg-toggle');
 if (editPgToggle) editPgToggle.addEventListener('change', function(e) {
   document.getElementById('edit-pg-fields').classList.toggle('is-hidden', !e.target.checked);
+});
+
+const editPg2Toggle = document.getElementById('edit-pg-2-toggle');
+if (editPg2Toggle) editPg2Toggle.addEventListener('change', function(e) {
+  document.getElementById('edit-pg-2-fields').classList.toggle('is-hidden', !e.target.checked);
 });
 
 window.saveEditAbsen = async function() {
@@ -2048,13 +2071,18 @@ window.saveEditAbsen = async function() {
   const pgPeran = pgOn ? document.getElementById('edit-pg-peran').value : '';
   const pgTarif = pgOn ? (parseInt(document.getElementById('edit-pg-tarif').value) || 0) : 0;
 
+  const pg2On = document.getElementById('edit-pg-2-toggle').checked;
+  const pg2Untuk = pg2On ? document.getElementById('edit-pg-2-untuk').value : '';
+  const pg2Peran = pg2On ? document.getElementById('edit-pg-2-peran').value : '';
+  const pg2Tarif = pg2On ? (parseInt(document.getElementById('edit-pg-2-tarif').value) || 0) : 0;
+
   if (!p1p && !pgPeran) {
     statusEl.textContent = 'Isi minimal 1 posisi!';
     statusEl.style.color = '#c83252';
     return;
   }
 
-  const totalFee = p1t + p2t + pgTarif;
+  const totalFee = p1t + p2t + pgTarif + pg2Tarif;
   const record = {
     record_id: recordId || '',
     date: dateVal + 'T12:00:00+07:00',
@@ -2072,6 +2100,10 @@ window.saveEditAbsen = async function() {
     pengganti_peran: pgPeran,
     pengganti_kelas: '',
     pengganti_tarif: pgTarif,
+    pengganti_2_untuk: pg2Untuk,
+    pengganti_2_peran: pg2Peran,
+    pengganti_2_kelas: '',
+    pengganti_2_tarif: pg2Tarif,
     total_fee: totalFee,
     latitude: '',
     longitude: '',
@@ -3468,7 +3500,7 @@ function getQpPresets() {
   });
 }
 
-let qpActivePreset = null;
+let qpActivePresets = []; // Array untuk menyimpan banyak preset
 let qpSelectedMurid = new Set();
 let qpRecentMurid = [];
 try {
@@ -3497,7 +3529,7 @@ function openQuickPoint() {
       qpMuridMap[r.child_name] = { unit: r.unit, kelas: r.kelas || '' };
     }
   });
-  qpActivePreset = null;
+  qpActivePresets = [];
   qpSelectedMurid = new Set();
   document.getElementById('qp-search').value = '';
   document.getElementById('qp-filter-unit').value = '';
@@ -3577,7 +3609,7 @@ function renderQpPresets() {
   }
   container.innerHTML = presets.map(function(p, i) {
     const isPos = p.amount > 0;
-    const isActive = qpActivePreset && qpActivePreset.name === p.name && qpActivePreset.amount === p.amount;
+    const isActive = qpActivePresets.some(function(ap) { return ap.name === p.name && ap.amount === p.amount; });
     const bg = isActive ? (isPos ? 'linear-gradient(135deg,#06d6a0,#0f7fa1)' : 'linear-gradient(135deg,#FF6B6B,#c83252)') : (isPos ? '#E8FBF2' : '#FFF0F0');
     const color = isActive ? 'white' : (isPos ? '#087a61' : '#c83252');
     const border = isPos ? '#A8E0C0' : '#FFB0B0';
@@ -3589,7 +3621,14 @@ function selectQpPreset(idx) {
   const presets = getQpPresets();
   const p = presets[idx];
   if (!p) return;
-  qpActivePreset = { name: p.name, amount: p.amount };
+  
+  const idxFound = qpActivePresets.findIndex(function(ap) { return ap.name === p.name && ap.amount === p.amount; });
+  if (idxFound > -1) {
+    qpActivePresets.splice(idxFound, 1); // Batal pilih
+  } else {
+    qpActivePresets.push({ name: p.name, amount: p.amount }); // Tambah pilihan
+  }
+  
   renderQpPresets();
   updateQpActiveInfo();
   updateQpSaveBtn();
@@ -3601,21 +3640,23 @@ function applyCustomPoint() {
   const amount = parseInt(document.getElementById('qp-custom-amount').value);
   if (!name || isNaN(amount)) return window.showToast('Isi nama & angka poin', 'error');
   if (amount === 0) return window.showToast('Angka tidak boleh 0', 'error');
-  qpActivePreset = { name: name, amount: amount };
+  qpActivePresets.push({ name: name, amount: amount });
   renderQpPresets();
   updateQpActiveInfo();
   updateQpSaveBtn();
-  window.showToast('Preset: ' + (amount > 0 ? '+' : '') + amount + ' ' + name, 'success', 1500);
+  window.showToast('Preset ditambahkan: ' + (amount > 0 ? '+' : '') + amount + ' ' + name, 'success', 1500);
 }
 
 function updateQpActiveInfo() {
   const el = document.getElementById('qp-active-info');
   const label = document.getElementById('qp-active-preset');
-  if (qpActivePreset) {
+  if (qpActivePresets.length > 0) {
     el.classList.remove('is-hidden');
-    const sign = qpActivePreset.amount > 0 ? '+' : '';
-    label.textContent = sign + qpActivePreset.amount + ' ' + qpActivePreset.name;
-    label.style.color = qpActivePreset.amount > 0 ? '#087a61' : '#c83252';
+    const totalAmt = qpActivePresets.reduce(function(sum, p) { return sum + p.amount; }, 0);
+    const names = qpActivePresets.map(function(p) { return p.name; }).join(', ');
+    const sign = totalAmt > 0 ? '+' : '';
+    label.textContent = sign + totalAmt + ' (' + names + ')';
+    label.style.color = totalAmt > 0 ? '#087a61' : '#c83252';
   } else {
     el.classList.add('is-hidden');
   }
@@ -3670,7 +3711,7 @@ function renderQpMuridBtn(name) {
   const bg = isSelected ? 'linear-gradient(135deg,#FFD166,#FFB085)' : 'var(--bg)';
   const border = isSelected ? '#FFD166' : 'var(--border)';
   const safeName = escapeHtml(name);
-  return '<button type="button" data-qpname="' + safeName + '" class="qp-murid-btn flex items-center gap-2 p-2 rounded-xl border-2 text-left" style="background:' + bg + ';border-color:' + border + '"><div class="avatar" style="' + avStyle + ';width:28px;height:28px;font-size:12px">' + (av.url ? '' : av.initial) + '</div><span class="text-xs font-bold flex-1 truncate">' + safeName + '</span>' + (isSelected ? '<span class="text-sm">✓</span>' : '') + '</button>';
+  return '<button type="button" data-qpname="' + safeName + '" class="qp-murid-btn flex items-start gap-2 p-2 rounded-xl border-2 text-left" style="background:' + bg + ';border-color:' + border + '"><div class="avatar" style="' + avStyle + ';width:28px;height:28px;font-size:12px;margin-top:2px">' + (av.url ? '' : av.initial) + '</div><span class="text-xs font-bold flex-1 break-words leading-tight line-clamp-2">' + safeName + '</span>' + (isSelected ? '<span class="text-sm">✓</span>' : '') + '</button>';
 }
 
 function toggleQpMurid(name) {
@@ -3685,13 +3726,14 @@ function toggleQpMurid(name) {
 
 function updateQpSaveBtn() {
   const btn = document.getElementById('qp-save-btn');
-  const canSave = qpActivePreset && qpSelectedMurid.size > 0;
+  const canSave = qpActivePresets.length > 0 && qpSelectedMurid.size > 0;
   btn.disabled = !canSave;
   btn.style.opacity = canSave ? '1' : '0.5';
   if (canSave) {
-    const sign = qpActivePreset.amount > 0 ? '+' : '';
-    btn.textContent = '💾 Simpan untuk ' + qpSelectedMurid.size + ' murid (' + sign + qpActivePreset.amount + ' ' + qpActivePreset.name + ')';
-  } else if (!qpActivePreset) {
+    const totalAmt = qpActivePresets.reduce(function(sum, p) { return sum + p.amount; }, 0);
+    const sign = totalAmt > 0 ? '+' : '';
+    btn.textContent = '💾 Simpan ' + qpSelectedMurid.size + ' murid (' + sign + totalAmt + ' Poin)';
+  } else if (qpActivePresets.length === 0) {
     btn.textContent = '1️⃣ Pilih preset poin dulu';
   } else {
     btn.textContent = '2️⃣ Pilih murid yang diberi poin';
@@ -3699,33 +3741,36 @@ function updateQpSaveBtn() {
 }
 
 async function saveQuickPoint() {
-  if (!qpActivePreset || qpSelectedMurid.size === 0) return;
+  if (qpActivePresets.length === 0 || qpSelectedMurid.size === 0) return;
   const btn = document.getElementById('qp-save-btn');
   const statusEl = document.getElementById('qp-status');
   btn.disabled = true;
   statusEl.textContent = '⚡ Menyimpan...';
   statusEl.style.color = '#087a61';
 
-  const presetSnapshot = qpActivePreset;
+  const presetSnapshot = qpActivePresets.slice();
   const muridArr = Array.from(qpSelectedMurid);
 
-  const recordsToSend = muridArr.map(function(name) {
+  const recordsToSend = [];
+  muridArr.forEach(function(name) {
     const info = window.qpMuridMap[name] || { unit: '', kelas: '' };
-    return {
-      child_name: name,
-      unit: info.unit,
-      kelas: info.kelas,
-      guru: normalizeName(activeUser.nama_terkait || activeUser.username),
-      type: 'Poin',
-      jilid_number: '', page_from: '', surah_number: '', ayat_count: '', fluency_stars: 0,
-      date: getWIBISOString(),
-      status: '', juz: '', tilawah_surah: '', tilawah_ayat: '',
-      attendance_type: '', attendance_status: '', subject: '',
-      points: presetSnapshot.amount,
-      points_note: presetSnapshot.name,
-      points_rule_name: presetSnapshot.name,
-      points_rule_active: true
-    };
+    presetSnapshot.forEach(function(preset) {
+      recordsToSend.push({
+        child_name: name,
+        unit: info.unit,
+        kelas: info.kelas,
+        guru: normalizeName(activeUser.nama_terkait || activeUser.username),
+        type: 'Poin',
+        jilid_number: '', page_from: '', surah_number: '', ayat_count: '', fluency_stars: 0,
+        date: getWIBISOString(),
+        status: '', juz: '', tilawah_surah: '', tilawah_ayat: '',
+        attendance_type: '', attendance_status: '', subject: '',
+        points: preset.amount,
+        points_note: preset.name,
+        points_rule_name: preset.name,
+        points_rule_active: true
+      });
+    });
   });
 
   const stamp = Date.now();
@@ -3764,17 +3809,18 @@ async function saveQuickPoint() {
 
     statusEl.textContent = '✅ ' + okList.length + ' murid tersimpan' + (failList.length > 0 ? ' (' + failList.length + ' gagal)' : '');
 
-    const sign = presetSnapshot.amount > 0 ? '+' : '';
-    if (presetSnapshot.amount > 0) {
-      window.celebrate(okList.length + ' murid dapat ' + sign + presetSnapshot.amount + ' poin! ⭐');
+    const totalPoin = presetSnapshot.reduce(function(sum, p) { return sum + p.amount; }, 0);
+    const sign = totalPoin > 0 ? '+' : '';
+    if (totalPoin > 0) {
+      window.celebrate(okList.length + ' catatan poin tersimpan! ⭐');
     } else {
-      window.showToast(okList.length + ' murid: ' + sign + presetSnapshot.amount + ' ' + presetSnapshot.name, 'info', 2500);
+      window.showToast(okList.length + ' catatan poin tersimpan', 'info', 2500);
       if (window.playSound) window.playSound('info');
       if (window.vibrate) window.vibrate([40, 30, 40]);
     }
 
     qpSelectedMurid.clear();
-    qpActivePreset = null;
+    qpActivePresets = [];
     setTimeout(function() {
       renderQpPresets();
       renderQpRecent();
