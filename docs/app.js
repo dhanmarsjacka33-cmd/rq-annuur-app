@@ -1361,12 +1361,28 @@ document.getElementById('points-rule').addEventListener('change', function(e) {
 function updatePointsChildList() {
   const u = document.getElementById('points-unit').value;
   const k = document.getElementById('points-kelas').value;
-  const ch = Array.from(new Set(records.filter(function(r) { 
+  const ch = Array.from(new Set(records.filter(function(r) {
     const isMaster = (!r.type || r.type.trim() === '');
-    return isMaster && r.unit === u && r.kelas === k && r.child_name; 
-  }).map(function(r) { return r.child_name; }))).sort();
-  document.getElementById('points-child-select').innerHTML = '<option value="">Pilih murid...</option>' + ch.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
-  document.getElementById('selected-points-children').innerHTML = ch.map(function(c) { return '<label class="flex items-center gap-2 text-xs"><input type="checkbox" value="' + c + '" class="point-child-check">' + c + '</label>'; }).join('');
+    return isMaster && r.unit === u && r.kelas === k && r.child_name;
+  }).map(function(r) { return r.child_name; }))).sort(function(a, b) { return a.localeCompare(b, 'id'); });
+
+  const pointsFor = function(name) {
+    return computeStatsForChild(name).poin;
+  };
+  const select = document.getElementById('points-child-select');
+  if (select) {
+    select.innerHTML = '<option value="">Pilih murid...</option>' + ch.map(function(name) {
+      const poin = pointsFor(name);
+      return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + ' — ' + poin + ' poin</option>';
+    }).join('');
+  }
+  const selected = document.getElementById('selected-points-children');
+  if (selected) {
+    selected.innerHTML = ch.map(function(name) {
+      const poin = pointsFor(name);
+      return '<label class="flex items-center justify-between gap-2 text-xs py-1"><span class="flex items-center gap-2 min-w-0"><input type="checkbox" value="' + escapeHtml(name) + '" class="point-child-check"><span class="truncate">' + escapeHtml(name) + '</span></span><strong class="text-[#0f7fa1] whitespace-nowrap">' + poin + ' poin</strong></label>';
+    }).join('') || '<p class="text-xs opacity-60">Tidak ada murid pada kelas ini.</p>';
+  }
 }
 
 document.getElementById('bulk-points').addEventListener('change', function(e) {
@@ -3070,50 +3086,76 @@ function renderHallOfFame() {
 function updateLeaderboard() {
   const u = document.getElementById('lb-unit').value;
   const k = document.getElementById('lb-kelas').value;
-  const ptMap = {}, hafMap = {}, jilMap = {}, tilMap = {};
+  const students = {};
+
+  // Daftarkan seluruh murid dari data master terlebih dahulu, termasuk yang belum punya capaian.
   records.forEach(function(r) {
     if (!r.child_name || (u && r.unit !== u) || (k && r.kelas !== k)) return;
-    const c = r.child_name;
-    ptMap[c] = (ptMap[c] || 0) + (+r.points || 0);
-    if (r.type === 'Setoran Hafalan' || r.type === 'Setoran Doa' || r.type === 'Setoran Hadits') hafMap[c] = (hafMap[c] || 0) + 1;
+    const isMaster = !r.type || !String(r.type).trim();
+    if (!students[r.child_name]) {
+      students[r.child_name] = {
+        name: r.child_name, points: 0, hafalan: 0,
+        jilidVal: 0, jilidText: 'Belum ada capaian',
+        tilawahVal: 0, tilawahText: 'Belum ada capaian'
+      };
+    }
+    if (isMaster) return;
+
+    const s = students[r.child_name];
+    if (r.type === 'Poin') s.points += (+r.points || 0);
+    if (r.type === 'Setoran Hafalan' || r.type === 'Setoran Doa' || r.type === 'Setoran Hadits') s.hafalan++;
+
     if (r.jilid_number) {
       const jVal = (+r.jilid_number * 100) + (+r.page_from || 0);
-      if (!jilMap[c] || jVal > jilMap[c].val) jilMap[c] = { val: jVal, text: 'Jilid ' + r.jilid_number + ' (Hal ' + r.page_from + ')' };
+      if (jVal > s.jilidVal) {
+        s.jilidVal = jVal;
+        s.jilidText = 'Jilid ' + r.jilid_number + ' (Hal. ' + (r.page_from || 0) + ')';
+      }
     }
     if (r.juz) {
       const jz = +r.juz || 0;
       const sNum = r.tilawah_surah ? parseInt(r.tilawah_surah.split('.')[0]) || 0 : 0;
       const ayt = +r.tilawah_ayat || 0;
       const tVal = (jz * 10000) + (sNum * 100) + ayt;
-      if (!tilMap[c] || tVal > tilMap[c].val) tilMap[c] = { val: tVal, text: 'Juz ' + jz + ' - ' + ((r.tilawah_surah || '').split('.')[1] || '') + ' (Ay.' + ayt + ')' };
+      if (tVal > s.tilawahVal) {
+        s.tilawahVal = tVal;
+        s.tilawahText = 'Juz ' + jz + ' - ' + ((r.tilawah_surah || '').split('.')[1] || '') + ' (Ay. ' + ayt + ')';
+      }
     }
   });
-  const renderPodium = function(mapObj, containerId) {
-    const sorted = Object.entries(mapObj).map(function(entry) {
-      const name = entry[0];
-      const v = entry[1];
-      return { name: name, val: (v && v.val !== undefined) ? v.val : v, text: (v && v.text !== undefined) ? v.text : v + 'x / poin' };
-    }).filter(function(x) { return x.val > 0; }).sort(function(a, b) { return b.val - a.val; }).slice(0, 3);
+
+  const allStudents = Object.keys(students).map(function(name) { return students[name]; });
+  const renderList = function(containerId, metric, valueText, emptyText) {
     const container = document.getElementById(containerId);
-    if (sorted.length === 0) {
-      container.innerHTML = '<div class="text-center py-5"><div class="text-4xl mb-1">🌱</div><p class="text-xs font-bold opacity-70">Belum ada data</p></div>';
+    if (!container) return;
+    const sorted = allStudents.slice().sort(function(a, b) {
+      return (b[metric] - a[metric]) || a.name.localeCompare(b.name, 'id');
+    });
+    if (!sorted.length) {
+      container.innerHTML = '<div class="text-center py-5"><div class="text-4xl mb-1">🌱</div><p class="text-xs font-bold opacity-70">Belum ada data murid</p></div>';
       return;
     }
-    const order = [];
-    if (sorted[1]) order.push(Object.assign({}, sorted[1], { rank: 2 }));
-    if (sorted[0]) order.push(Object.assign({}, sorted[0], { rank: 1 }));
-    if (sorted[2]) order.push(Object.assign({}, sorted[2], { rank: 3 }));
-    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
-    container.innerHTML = '<div class="podium-wrap">' + order.map(function(p) {
-      const av = getChildAvatar(p.name);
-      const style = av.url ? "background:url('" + av.url + "') center/cover;color:white" : 'background:' + av.color + ';color:white';
-      return '<div class="podium-step podium-' + p.rank + ' animate"><span class="podium-medal">' + medals[p.rank] + '</span><div class="podium-avatar" style="' + style + '">' + (av.url ? '' : av.initial) + '</div><div class="podium-name">' + escapeHtml(p.name) + '</div><div class="podium-value">' + p.text + '</div></div>';
+    container.innerHTML = '<div class="leaderboard-list">' + sorted.map(function(s, index) {
+      const av = getChildAvatar(s.name);
+      const avatarStyle = av.url
+        ? "background-image:url('" + av.url + "')"
+        : 'background:' + av.color;
+      const label = valueText(s);
+      const rank = index + 1;
+      const rankLabel = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+      return '<div class="leaderboard-row">' +
+        '<span class="leaderboard-rank">' + rankLabel + '</span>' +
+        '<div class="leaderboard-avatar" style="' + avatarStyle + '">' + (av.url ? '' : escapeHtml(av.initial)) + '</div>' +
+        '<span class="leaderboard-name">' + escapeHtml(s.name) + '</span>' +
+        '<strong class="leaderboard-value">' + escapeHtml(label || emptyText) + '</strong>' +
+      '</div>';
     }).join('') + '</div>';
   };
-  renderPodium(ptMap, 'lb-points');
-  renderPodium(hafMap, 'lb-hafalan');
-  renderPodium(jilMap, 'lb-jilid');
-  renderPodium(tilMap, 'lb-tilawah');
+
+  renderList('lb-points', 'points', function(s) { return s.points + ' poin'; }, '0 poin');
+  renderList('lb-hafalan', 'hafalan', function(s) { return s.hafalan + ' setoran'; }, '0 setoran');
+  renderList('lb-jilid', 'jilidVal', function(s) { return s.jilidText; }, 'Belum ada capaian');
+  renderList('lb-tilawah', 'tilawahVal', function(s) { return s.tilawahText; }, 'Belum ada capaian');
 }
 
 let allHistoryData = [];
