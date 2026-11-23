@@ -502,58 +502,52 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button id="btn-absen-masuk-guru" class="w-full mt-4 bg-gradient-to-r from-[#FFD166] to-[#FFB085] text-[#0d5563] rounded-xl py-3 text-xs font-extrabold shadow-md">📍 Absen Kehadiran</button>
     <p id="guru-live-status-absen" class="text-[11px] font-bold mt-2 text-center text-white"></p>
   </div>
-  <div id="menu-container" class="grid grid-cols-2 gap-3 mt-6">
-    <button id="open-mutabaah" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
-      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📖</span>
-        <div class="text-left"><span class="font-extrabold text-sm block">Catat Mutaba'ah</span><span class="text-[10px] font-bold" style="color:var(--text-muted)">Jilid, Surah, Buku, Doa, Hadits</span></div>
+  <div id="menu-container" class="mt-6 space-y-4">
+    <!-- KATEGORI AKADEMIK -->
+    <div>
+      <h3 class="font-bold text-sm mb-2" style="color:var(--text)">📚 Akademik & Aktivitas</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="open-mutabaah" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFEFC5);border-color:#FFE8A1">
+          <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📖</span>
+            <div class="text-left"><span class="font-extrabold text-sm block">Catat Mutaba'ah</span><span class="text-[10px] font-bold" style="color:var(--text-muted)">Jilid, Surah, Buku, Doa, Hadits</span></div>
+          </div>
+          <i data-lucide="chevron-right" class="mt-2"></i>
+        </button>
+        <button id="open-bimbel" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">🎓</span><span class="block font-extrabold mt-2 text-sm">Bimbel</span></button>
+        <button id="open-absen" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">✅</span><span class="block font-extrabold mt-2 text-sm">Absensi Murid</span></button>
+        <button id="open-points" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">⭐</span><span class="block font-extrabold mt-2 text-sm">Beri Poin</span></button>
+        <button id="open-kalender-guru" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">📅</span><span class="block font-extrabold mt-2 text-sm">Kalender</span></button>
       </div>
-      <i data-lucide="chevron-right" class="mt-2"></i>
-    </button>
-    <button id="open-bimbel" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">🎓</span><span class="block font-extrabold mt-2 text-sm">Bimbel</span></button>
-    <button id="open-absen" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">✅</span><span class="block font-extrabold mt-2 text-sm">Absensi Murid</span></button>
-    <button id="open-points" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">⭐</span><span class="block font-extrabold mt-2 text-sm">Beri Poin</span></button>
-    <button id="open-manage" class="menu-card rounded-[24px] p-4"><span class="text-3xl menu-icon">👥</span><span class="block font-extrabold mt-2 text-sm">Data Master</span></button>
-    <button id="open-kalender-guru" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between">
-      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📅</span><span class="font-extrabold text-sm">Kalender Kehadiran</span></div>
-      <i data-lucide="chevron-right"></i>
-    </button>
-    <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFE8A1);border-color:#FFD166">
-      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏆</span><span class="font-extrabold text-sm text-amber-800">Leaderboard</span></div>
-      <i data-lucide="chevron-right" class="text-amber-800"></i>
-    </button>
-    <button id="open-hall" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between" style="background:linear-gradient(to right,#FDF3FF,#EFE0FF);border-color:#D2A3F3">
-      <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🌟</span><span class="font-extrabold text-sm text-purple-900">Hall of Fame</span></div>
-      <i data-lucide="chevron-right" class="text-purple-800"></i>
-    </button>
+    </div>
+
+    <!-- KATEGORI LAPORAN -->
+    <div>
+      <h3 class="font-bold text-sm mb-2 mt-4" style="color:var(--text)">📊 Laporan & Prestasi</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="open-report" class="menu-card rounded-[24px] p-4 col-span-2 flex justify-between">
+          <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📊</span><span class="font-extrabold text-sm">Laporan & Raport</span></div>
+          <i data-lucide="chevron-right"></i>
+        </button>
+        <button id="open-leaderboard" class="menu-card rounded-[24px] p-4 flex justify-between" style="background:linear-gradient(to right,#FFF9E6,#FFE8A1);border-color:#FFD166">
+          <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏆</span><span class="font-extrabold text-sm text-amber-800">Leaderboard</span></div>
+        </button>
+        <button id="open-hall" class="menu-card rounded-[24px] p-4 flex justify-between" style="background:linear-gradient(to right,#FDF3FF,#EFE0FF);border-color:#D2A3F3">
+          <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🌟</span><span class="font-extrabold text-sm text-purple-900">Hall of Fame</span></div>
+        </button>
+      </div>
+    </div>
   </div>
-  <button id="open-report" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📊</span><span class="font-extrabold text-sm">Laporan & Raport</span></div>
-    <i data-lucide="chevron-right"></i>
-  </button>
-  <button id="open-kas" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#E0F7F3;border-color:#A7E8D9">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🏦</span><span class="font-extrabold text-sm text-teal-900">Buku Kas Umum</span></div>
-    <i data-lucide="chevron-right" class="text-teal-800"></i>
-  </button>
-  <button id="open-keu-santri" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#EEF2FF;border-color:#B0BFFF">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🪙</span><span class="font-extrabold text-sm text-indigo-900">Keuangan Santri</span></div>
-    <i data-lucide="chevron-right" class="text-indigo-800"></i>
-  </button>
-  <button id="open-penagihan" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:linear-gradient(to right,#FFE8E8,#FFD0D0);border-color:#FFA0A0">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📢</span><span class="font-extrabold text-sm text-red-900">Dashboard Penagihan</span></div>
-    <i data-lucide="chevron-right" class="text-red-800"></i>
-  </button>
-  <button id="open-bendahara" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FFF9E6;border-color:#FFE8A1">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">💰</span><span class="font-extrabold text-sm text-amber-900">Penggajian Guru</span></div>
-    <i data-lucide="chevron-right" class="text-amber-800"></i>
-  </button>
-  <button id="open-fotoupload" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#FCE4EC;border-color:#F8BBD0">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">📸</span><span class="font-extrabold text-sm text-pink-900">Foto & Pencapaian</span></div>
-    <i data-lucide="chevron-right" class="text-pink-800"></i>
-  </button>
-  <button id="open-audit" class="mt-3 w-full menu-card rounded-[24px] p-4 flex justify-between is-hidden" style="background:#F0F0F0;border-color:#CCC">
-    <div class="flex items-center gap-3"><span class="text-3xl menu-icon">🔍</span><span class="font-extrabold text-sm text-gray-700">Audit Keuangan</span></div>
-    <i data-lucide="chevron-right" class="text-gray-600"></i>
-  </button>
+
+  <!-- HIDDEN MENUS UNTUK AKSES VIA BOTTOM SHEET -->
+  <div id="hidden-menus" class="is-hidden">
+    <button id="open-manage"></button>
+    <button id="open-bendahara"></button>
+    <button id="open-fotoupload"></button>
+    <button id="open-audit"></button>
+    <button id="open-keu-santri"></button>
+    <button id="open-kas"></button>
+    <button id="open-penagihan"></button>
+  </div>
   <section id="history-section" class="mt-8 pb-5">
     <div class="flex justify-between items-center mb-3">
       <h2 class="font-bold text-lg flex items-center gap-2">📅 <span>Riwayat Terakhir</span></h2>

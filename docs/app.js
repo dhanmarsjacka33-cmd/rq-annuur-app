@@ -30,16 +30,13 @@ window.openMenuSheet = function() {
   let html = '';
 
   const menus = [
-    { id: 'open-kalender-guru', icon: '📅', label: 'Kalender', roles: ['guru', 'admin', 'bendahara'] },
     { id: 'open-manage', icon: '👥', label: 'Data Master', roles: ['admin', 'bendahara'] },
-    { id: 'open-bendahara', icon: '💰', label: 'Penggajian', roles: ['admin', 'bendahara'] },
-    { id: 'open-fotoupload', icon: '📸', label: 'Foto & Pencapaian', roles: ['admin', 'bendahara'] },
-    { id: 'open-audit', icon: '🔍', label: 'Audit Keuangan', roles: ['admin', 'bendahara'] },
-    { id: 'open-leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['guru', 'wali', 'admin', 'bendahara'] },
-    { id: 'open-hall', icon: '🌟', label: 'Hall of Fame', roles: ['guru', 'wali', 'admin', 'bendahara'] },
     { id: 'open-keu-santri', icon: '🪙', label: 'Keuangan', roles: ['admin', 'bendahara'] },
     { id: 'open-kas', icon: '🏦', label: 'Buku Kas', roles: ['admin', 'bendahara'] },
-    { id: 'open-penagihan', icon: '📢', label: 'Penagihan', roles: ['admin', 'bendahara'] }
+    { id: 'open-penagihan', icon: '📢', label: 'Penagihan', roles: ['admin', 'bendahara'] },
+    { id: 'open-bendahara', icon: '💰', label: 'Penggajian', roles: ['admin', 'bendahara'] },
+    { id: 'open-fotoupload', icon: '📸', label: 'Foto & Pencapaian', roles: ['admin', 'bendahara'] },
+    { id: 'open-audit', icon: '🔍', label: 'Audit Keuangan', roles: ['admin', 'bendahara'] }
   ];
 
   menus.forEach(m => {
@@ -157,12 +154,7 @@ function formatStandardName(str) {
   return name;
 }
 
-function matchName(str) {
-  if (!str) return '';
-  return str.toString().toLowerCase()
-    .replace(/ustadzah|ustadz|ust\.|hj\.|h\./g, '')
-    .replace(/[^a-z]/g, ''); 
-}
+
 
 // FUNGSI BARU: Untuk mencocokkan nama dengan mengabaikan gelar & tanda baca
 function matchName(str) {
@@ -481,12 +473,20 @@ function processRoleUI(role) {
   if (role === 'wali') {
     document.getElementById('wali-dashboard').classList.remove('is-hidden');
     document.getElementById('history-section').classList.remove('is-hidden');
-  } else {
-    ['report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
-    // Pastikan menu-container tetap tersembunyi (karena menu sudah pindah ke Bottom Nav)
+    // Sembunyikan menu grid untuk wali (karena wali tidak perlu input)
     const mc = document.getElementById('menu-container');
     if (mc) mc.classList.add('is-hidden');
+  } else {
+    // Tampilkan menu grid untuk Guru/Admin/Bendahara
+    ['menu-container','report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
+    
     if (role === 'guru') {
+      // Sembunyikan tombol admin di dashboard (jika ada sisa)
+      ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','open-manage'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none'; 
+      });
+    }
       document.getElementById('guru-attendance-card').classList.remove('is-hidden');
       // Sembunyikan menu admin dari dashboard guru (dipindah ke menu sheet)
       ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','open-manage'].forEach(function(id) {
