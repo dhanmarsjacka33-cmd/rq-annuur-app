@@ -481,21 +481,18 @@ function processRoleUI(role) {
     ['menu-container','report-filters','history-section'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
     
     if (role === 'guru') {
-      // Sembunyikan tombol admin di dashboard (jika ada sisa)
-      ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','open-manage'].forEach(function(id) {
-        const el = document.getElementById(id);
-        if(el) el.style.display = 'none'; 
-      });
-    }
+      // Tampilkan kartu absensi guru
       document.getElementById('guru-attendance-card').classList.remove('is-hidden');
       // Sembunyikan menu admin dari dashboard guru (dipindah ke menu sheet)
       ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','open-manage'].forEach(function(id) {
         const el = document.getElementById(id);
-        if(el) el.style.display = 'none'; // Sembunyikan dari dashboard utama
+        if (el) el.style.display = 'none';
       });
-    }
-    else if (role === 'bendahara' || role === 'admin') {
-      ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','guru-attendance-card'].forEach(function(id) { document.getElementById(id).classList.remove('is-hidden'); });
+    } else if (role === 'bendahara' || role === 'admin') {
+      ['open-bendahara','open-kas','open-keu-santri','open-penagihan','open-fotoupload','open-audit','guru-attendance-card'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('is-hidden');
+      });
       const tLocal = getLocalDateString();
       ['izin-guru-tanggal','keu-tanggal','kas-tanggal'].forEach(function(id) {
         const e = document.getElementById(id);
