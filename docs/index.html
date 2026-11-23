@@ -139,8 +139,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .qp-murid-btn{transition:transform .15s}
 .qp-murid-btn:active{transform:scale(.95)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.leaderboard-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.leaderboard-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:13px;background:rgba(255,255,255,.72);border:1px solid rgba(13,85,99,.10);min-width:0}
+[data-theme="dark"] .leaderboard-row{background:rgba(10,31,38,.55);border-color:var(--border)}
+.leaderboard-rank{width:30px;flex:0 0 30px;text-align:center;font-size:12px;font-weight:900}
+.leaderboard-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:white;font-size:12px;font-weight:900}
+.leaderboard-name{flex:1;min-width:0;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.leaderboard-value{font-size:11px;text-align:right;white-space:normal;max-width:48%;color:var(--ink)}
 @media(max-width:520px){.app-shell{padding:0}.phone-frame{max-width:none;min-height:100vh;border-radius:0}.screen{min-height:100vh;padding-bottom:80px}.bottom-nav{max-width:100%}}
-@media(min-width:521px){.bottom-nav{display:none!important}}
+@media(min-width:521px){
+  .app-shell{padding:24px 24px 100px}
+  .phone-frame{max-width:1100px;min-height:calc(100vh - 48px);border-radius:24px}
+  .screen{min-height:calc(100vh - 48px);padding:32px clamp(24px,4vw,56px) 100px}
+  .bottom-nav{max-width:min(1000px,calc(100% - 48px));padding:10px 16px 12px;border-radius:18px 18px 0 0}
+  #modal-menu-sheet{align-items:flex-end}
+  #modal-menu-sheet .modal-card{max-width:760px!important;margin:0 auto 24px!important;border-radius:24px!important}
+}
 /* Perbaikan Dark Mode Total */
 [data-theme="dark"] .bg-\[\#FFF9E6\], [data-theme="dark"] .bg-\[\#FFEFC5\],
 [data-theme="dark"] .bg-\[\#E2F4E8\], [data-theme="dark"] .bg-\[\#C1EBD1\],
