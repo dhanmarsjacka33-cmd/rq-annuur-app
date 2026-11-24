@@ -3556,29 +3556,44 @@ window.updateQpKelasOptions = function() {
   const kelasOptions = { PAUDQU: ['A', 'B'], TPQ: ['A', 'B', 'C'], TKQ: ['A', 'B'], Bimbel: ['Calistung', 'B. Inggris', 'Matematika'] };
   const opts = unit ? kelasOptions[unit] || [] : [];
   kelasSel.innerHTML = '<option value="">Semua Kelas</option>' + opts.map(k => '<option value="' + k + '">' + k + '</option>').join('');
-  renderQpMuridList(document.getElementById('qp-search').value);
+  onQpFilterChanged();
 };
 
 function openQuickPoint() {
   if (!dataReady) return window.showToast('Memuat data...', 'info');
-  qpAllMurid = Array.from(new Set(records.filter(function(r) { return r.child_name && r.unit; }).map(function(r) { return r.child_name; }))).sort();
+
+  // Gunakan baris master sebagai sumber daftar dan identitas lembaga/kelas murid.
+  const masterRows = records.filter(function(r) {
+    return r.child_name && r.unit && (!r.type || !String(r.type).trim());
+  });
+  const sourceRows = masterRows.length ? masterRows : records.filter(function(r) { return r.child_name && r.unit; });
+  qpAllMurid = Array.from(new Set(sourceRows.map(function(r) { return r.child_name; }))).sort(function(a, b) {
+    return a.localeCompare(b, 'id');
+  });
   window.qpMuridMap = {};
-  records.forEach(function(r) {
-    if (r.child_name && r.unit && !qpMuridMap[r.child_name]) {
-      qpMuridMap[r.child_name] = { unit: r.unit, kelas: r.kelas || '' };
+  sourceRows.forEach(function(r) {
+    if (r.child_name && !qpMuridMap[r.child_name]) {
+      qpMuridMap[r.child_name] = { unit: r.unit || '', kelas: r.kelas || '' };
     }
   });
+
   qpActivePresets = [];
   qpSelectedMurid = new Set();
+  qpActiveTab = 'hadir';
   document.getElementById('qp-search').value = '';
   document.getElementById('qp-filter-unit').value = '';
-  updateQpKelasOptions(); // Reset kelas ke semua
+  updateQpKelasOptions(); // Reset filter kelas
   document.getElementById('qp-status').textContent = '';
   document.getElementById('qp-save-btn').disabled = true;
   document.getElementById('qp-custom-name').value = '';
   document.getElementById('qp-custom-amount').value = '';
-  const hadirCount = getQpHadirList().length;
-  qpActiveTab = hadirCount > 0 ? 'hadir' : 'semua';
+
+  const hadirList = getQpHadirList();
+  qpActiveTab = hadirList.length > 0 ? 'hadir' : 'semua';
+  // Saat modal dibuka, murid yang hadir hari ini langsung terpilih.
+  qpSelectedMurid.clear();
+  if (qpActiveTab === 'hadir') hadirList.forEach(function(name) { qpSelectedMurid.add(name); });
+
   renderQpPresets();
   renderQpRecent();
   renderQpMuridList('');
@@ -3603,22 +3618,47 @@ function getQpHadirList() {
   const filterKelas = document.getElementById('qp-filter-kelas') ? document.getElementById('qp-filter-kelas').value : '';
 
   records.forEach(function(r) {
-    if (r.type === 'Absensi' && r.attendance_type === 'murid' && r.attendance_status === 'Hadir') {
-      if (r.date && r.date.startsWith(today) && r.child_name) {
-        if (filterUnit && r.unit !== filterUnit) return;
-        if (filterKelas && r.kelas !== filterKelas) return;
-        hadirSet.add(r.child_name);
-      }
-    }
+    if (r.type !== 'Absensi' || String(r.attendance_type || '').toLowerCase() !== 'murid' ||
+        String(r.attendance_status || '').toLowerCase() !== 'hadir') return;
+    if (!r.date || !String(r.date).startsWith(today) || !r.child_name) return;
+
+    // Data absensi menjadi sumber tanggal/kehadiran; master menjadi fallback unit dan kelas.
+    const master = window.qpMuridMap && window.qpMuridMap[r.child_name] ? window.qpMuridMap[r.child_name] : {};
+    const unit = r.unit || master.unit || '';
+    const kelas = r.kelas || master.kelas || '';
+    if (filterUnit && unit !== filterUnit) return;
+    if (filterKelas && kelas !== filterKelas) return;
+    hadirSet.add(r.child_name);
   });
-  return Array.from(hadirSet).sort();
+
+  return Array.from(hadirSet).sort(function(a, b) { return a.localeCompare(b, 'id'); });
+}
+
+function selectAllQpHadir() {
+  const hadirList = getQpHadirList();
+  qpSelectedMurid.clear();
+  hadirList.forEach(function(name) { qpSelectedMurid.add(name); });
+}
+
+function onQpFilterChanged() {
+  // Jika tab Hadir aktif, perubahan filter mengganti pilihan dengan murid hadir
+  // pada lembaga/kelas yang sedang dipilih (bukan menambah murid dari filter lama).
+  if (qpActiveTab === 'hadir') selectAllQpHadir();
+  renderQpTabs();
+  const search = document.getElementById('qp-search');
+  renderQpMuridList(search ? search.value : '');
+  renderQpRecent();
+  updateQpSaveBtn();
 }
 
 function switchQpTab(tab) {
   qpActiveTab = tab;
+  if (tab === 'hadir') selectAllQpHadir();
   renderQpTabs();
   const f = document.getElementById('qp-search').value;
   renderQpMuridList(f);
+  renderQpRecent();
+  updateQpSaveBtn();
   if (window.vibrate) window.vibrate(15);
 }
 
@@ -3724,10 +3764,9 @@ function renderQpMuridList(filter) {
   // Filter "Semua Murid" berdasarkan Lembaga dan Kelas
   if (qpActiveTab === 'semua' && (filterUnit || filterKelas)) {
     source = source.filter(function(name) {
-      const rec = records.find(r => r.child_name === name && r.unit && r.kelas);
-      if (!rec) return false;
-      if (filterUnit && rec.unit !== filterUnit) return false;
-      if (filterKelas && rec.kelas !== filterKelas) return false;
+      const student = window.qpMuridMap && window.qpMuridMap[name] ? window.qpMuridMap[name] : {};
+      if (filterUnit && student.unit !== filterUnit) return false;
+      if (filterKelas && student.kelas !== filterKelas) return false;
       return true;
     });
   }
@@ -3750,7 +3789,15 @@ function renderQpMuridBtn(name) {
   const bg = isSelected ? 'linear-gradient(135deg,#FFD166,#FFB085)' : 'var(--bg)';
   const border = isSelected ? '#FFD166' : 'var(--border)';
   const safeName = escapeHtml(name);
-  return '<button type="button" data-qpname="' + safeName + '" class="qp-murid-btn flex items-start gap-2 p-2 rounded-xl border-2 text-left" style="background:' + bg + ';border-color:' + border + '"><div class="avatar" style="' + avStyle + ';width:28px;height:28px;font-size:12px;margin-top:2px">' + (av.url ? '' : av.initial) + '</div><span class="text-xs font-bold flex-1 break-words leading-tight line-clamp-2">' + safeName + '</span>' + (isSelected ? '<span class="text-sm">✓</span>' : '') + '</button>';
+  const currentPoints = computeStatsForChild(name).poin;
+  return '<button type="button" data-qpname="' + safeName + '" class="qp-murid-btn flex items-center gap-2 p-2 rounded-xl border-2 text-left min-w-0" style="background:' + bg + ';border-color:' + border + '">' +
+    '<div class="avatar" style="' + avStyle + ';width:32px;height:32px;font-size:12px;flex:0 0 32px">' + (av.url ? '' : escapeHtml(av.initial)) + '</div>' +
+    '<span class="flex-1 min-w-0">' +
+      '<span class="block text-xs font-extrabold break-words leading-tight">' + safeName + '</span>' +
+      '<span class="block text-[10px] font-extrabold mt-1" style="color:var(--blue)">⭐ ' + currentPoints + ' poin saat ini</span>' +
+    '</span>' +
+    (isSelected ? '<span class="text-sm font-extrabold flex-shrink-0">✓</span>' : '') +
+  '</button>';
 }
 
 function toggleQpMurid(name) {
